@@ -1,0 +1,33 @@
+spring:
+  application:
+    name: api-gateway
+
+server:
+  port: 8084
+
+# Service URLs
+services:
+  auth:
+    url: http://localhost:8081
+  tenant:
+    url: http://localhost:8082
+  profile:
+    url: http://localhost:8083
+  permission:
+    url: http://localhost:8080
+
+# Actuator endpoints
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+
+# Logging
+logging:
+  level:
+    com.learning.api_gateway: DEBUG
+    org.springframework.web.reactive: DEBUG
