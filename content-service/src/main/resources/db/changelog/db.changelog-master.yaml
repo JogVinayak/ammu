@@ -1,0 +1,213 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-contents
+      author: codex
+      changes:
+        - createTable:
+            tableName: contents
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: type
+                  type: varchar(32)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: title
+                  type: varchar(200)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: description
+                  type: varchar(2000)
+              - column:
+                  name: status
+                  type: varchar(32)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: current_version
+                  type: integer
+                  defaultValueNumeric: 1
+                  constraints:
+                    nullable: false
+              - column:
+                  name: latest_draft_version
+                  type: integer
+              - column:
+                  name: visibility
+                  type: varchar(32)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: topic_id
+                  type: uuid
+              - column:
+                  name: module_id
+                  type: uuid
+              - column:
+                  name: created_by
+                  type: uuid
+              - column:
+                  name: updated_by
+                  type: uuid
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  defaultValueComputed: "CURRENT_TIMESTAMP"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamp with time zone
+                  defaultValueComputed: "CURRENT_TIMESTAMP"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: deleted
+                  type: boolean
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+  - changeSet:
+      id: 002-create-content-tags
+      author: codex
+      changes:
+        - createTable:
+            tableName: content_tags
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: content_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: tag
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+        - addUniqueConstraint:
+            tableName: content_tags
+            columnNames: tenant_id, content_id, tag
+            constraintName: uk_content_tag
+  - changeSet:
+      id: 003-create-outbox-events
+      author: codex
+      changes:
+        - createTable:
+            tableName: outbox_events
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: aggregate_type
+                  type: varchar(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: aggregate_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: event_type
+                  type: varchar(128)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: payload_json
+                  type: text
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  defaultValueComputed: "CURRENT_TIMESTAMP"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: published_at
+                  type: timestamp with time zone
+              - column:
+                  name: status
+                  type: varchar(32)
+                  constraints:
+                    nullable: false
+  - changeSet:
+      id: 004-add-content-indexes
+      author: codex
+      changes:
+        - createIndex:
+            tableName: contents
+            indexName: idx_content_tenant_type_status
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: type
+              - column:
+                  name: status
+        - createIndex:
+            tableName: contents
+            indexName: idx_content_tenant_topic
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: topic_id
+        - createIndex:
+            tableName: contents
+            indexName: idx_content_tenant_module
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: module_id
+        - createIndex:
+            tableName: contents
+            indexName: idx_content_tenant_title
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: title
+  - changeSet:
+      id: 005-add-outbox-indexes
+      author: codex
+      changes:
+        - createIndex:
+            tableName: outbox_events
+            indexName: idx_outbox_tenant_status
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: status

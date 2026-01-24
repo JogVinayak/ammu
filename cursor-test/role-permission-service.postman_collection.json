@@ -1,0 +1,542 @@
+{
+  "info": {
+    "name": "role-permission-service",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Postman collection for role-permission-service APIs"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "tenantId",
+      "value": "1"
+    },
+    {
+      "key": "roleId",
+      "value": "1"
+    },
+    {
+      "key": "permissionId",
+      "value": "1"
+    },
+    {
+      "key": "permissionCode",
+      "value": "NOTE:READ"
+    },
+    {
+      "key": "scopeCode",
+      "value": "CLASS"
+    },
+    {
+      "key": "userId",
+      "value": "10"
+    },
+    {
+      "key": "grantId",
+      "value": "1"
+    },
+    {
+      "key": "assignmentId",
+      "value": "1"
+    },
+    {
+      "key": "policyId",
+      "value": "1"
+    },
+    {
+      "key": "scopeId",
+      "value": "1"
+    }
+  ],
+  "item": [
+    {
+      "name": "Roles",
+      "item": [
+        {
+          "name": "Create Role",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-User-Id",
+                "value": "admin"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tenants/{{tenantId}}/roles",
+              "host": ["{{baseUrl}}"],
+              "path": ["tenants", "{{tenantId}}", "roles"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"TEACHER\",\n  \"description\": \"Teacher role\",\n  \"active\": true\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Role",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-User-Id",
+                "value": "admin"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tenants/{{tenantId}}/roles/{{roleId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["tenants", "{{tenantId}}", "roles", "{{roleId}}"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"MENTOR\",\n  \"description\": \"Mentor role\",\n  \"active\": true\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Role",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/tenants/{{tenantId}}/roles/{{roleId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["tenants", "{{tenantId}}", "roles", "{{roleId}}"]
+            }
+          }
+        },
+        {
+          "name": "List Roles",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/tenants/{{tenantId}}/roles",
+              "host": ["{{baseUrl}}"],
+              "path": ["tenants", "{{tenantId}}", "roles"]
+            }
+          }
+        },
+        {
+          "name": "Delete Role",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/tenants/{{tenantId}}/roles/{{roleId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["tenants", "{{tenantId}}", "roles", "{{roleId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Permissions",
+      "item": [
+        {
+          "name": "Create Permission",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/permissions",
+              "host": ["{{baseUrl}}"],
+              "path": ["permissions"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"NOTE:READ\",\n  \"description\": \"Read notes\",\n  \"resource\": \"NOTE\",\n  \"action\": \"READ\",\n  \"active\": true\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Permission",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/permissions/{{permissionId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["permissions", "{{permissionId}}"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"NOTE:WRITE\",\n  \"description\": \"Write notes\",\n  \"resource\": \"NOTE\",\n  \"action\": \"WRITE\",\n  \"active\": true\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Permission By Code",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/permissions/{{permissionCode}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["permissions", "{{permissionCode}}"]
+            }
+          }
+        },
+        {
+          "name": "List Permissions",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/permissions",
+              "host": ["{{baseUrl}}"],
+              "path": ["permissions"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Permission Scopes",
+      "item": [
+        {
+          "name": "Create Scope",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/permission-scopes",
+              "host": ["{{baseUrl}}"],
+              "path": ["permission-scopes"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"CLASS\",\n  \"description\": \"Class scope\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Scope",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/permission-scopes/{{scopeId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["permission-scopes", "{{scopeId}}"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"GROUP\",\n  \"description\": \"Group scope\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Scope",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/permission-scopes/{{scopeId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["permission-scopes", "{{scopeId}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Scope By Code",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/permission-scopes/code/{{scopeCode}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["permission-scopes", "code", "{{scopeCode}}"]
+            }
+          }
+        },
+        {
+          "name": "List Scopes",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/permission-scopes",
+              "host": ["{{baseUrl}}"],
+              "path": ["permission-scopes"]
+            }
+          }
+        },
+        {
+          "name": "Delete Scope",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/permission-scopes/{{scopeId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["permission-scopes", "{{scopeId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Role Grants",
+      "item": [
+        {
+          "name": "Create Grant",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-User-Id",
+                "value": "admin"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tenants/{{tenantId}}/roles/{{roleId}}/grants",
+              "host": ["{{baseUrl}}"],
+              "path": ["tenants", "{{tenantId}}", "roles", "{{roleId}}", "grants"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"permissionCode\": \"NOTE:READ\",\n  \"scopeCode\": \"CLASS\",\n  \"constraintsJson\": null\n}"
+            }
+          }
+        },
+        {
+          "name": "Assign Permissions",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-User-Id",
+                "value": "admin"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tenants/{{tenantId}}/roles/{{roleId}}/grants/assign",
+              "host": ["{{baseUrl}}"],
+              "path": ["tenants", "{{tenantId}}", "roles", "{{roleId}}", "grants", "assign"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"roleId\": {{roleId}},\n  \"permissionIds\": [1]\n}"
+            }
+          }
+        },
+        {
+          "name": "List Grants",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/tenants/{{tenantId}}/roles/{{roleId}}/grants",
+              "host": ["{{baseUrl}}"],
+              "path": ["tenants", "{{tenantId}}", "roles", "{{roleId}}", "grants"]
+            }
+          }
+        },
+        {
+          "name": "Delete Grant",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/tenants/{{tenantId}}/roles/{{roleId}}/grants/{{grantId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["tenants", "{{tenantId}}", "roles", "{{roleId}}", "grants", "{{grantId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "User Role Assignments",
+      "item": [
+        {
+          "name": "Assign Role",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-User-Id",
+                "value": "admin"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tenants/{{tenantId}}/users/{{userId}}/roles",
+              "host": ["{{baseUrl}}"],
+              "path": ["tenants", "{{tenantId}}", "users", "{{userId}}", "roles"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"roleId\": {{roleId}},\n  \"scopeType\": \"CLASS\",\n  \"scopeId\": \"101\",\n  \"status\": \"ACTIVE\"\n}"
+            }
+          }
+        },
+        {
+          "name": "List Assignments",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/tenants/{{tenantId}}/users/{{userId}}/roles",
+              "host": ["{{baseUrl}}"],
+              "path": ["tenants", "{{tenantId}}", "users", "{{userId}}", "roles"]
+            }
+          }
+        },
+        {
+          "name": "Revoke Assignment",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/tenants/{{tenantId}}/users/{{userId}}/roles/{{assignmentId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["tenants", "{{tenantId}}", "users", "{{userId}}", "roles", "{{assignmentId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Access Policies",
+      "item": [
+        {
+          "name": "Create Policy",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-User-Id",
+                "value": "admin"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tenants/{{tenantId}}/policies",
+              "host": ["{{baseUrl}}"],
+              "path": ["tenants", "{{tenantId}}", "policies"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Mentor access\",\n  \"effect\": \"ALLOW\",\n  \"priority\": 100,\n  \"resource\": \"PROGRESS\",\n  \"action\": \"READ\",\n  \"conditionJson\": \"{\\\"subjectAttr\\\":\\\"user.id\\\",\\\"operator\\\":\\\"IN\\\",\\\"resourceAttr\\\":\\\"student.mentorIds\\\"}\",\n  \"status\": \"ACTIVE\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Policy",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tenants/{{tenantId}}/policies/{{policyId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["tenants", "{{tenantId}}", "policies", "{{policyId}}"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Mentor access\",\n  \"effect\": \"ALLOW\",\n  \"priority\": 100,\n  \"resource\": \"PROGRESS\",\n  \"action\": \"READ\",\n  \"conditionJson\": \"{\\\"subjectAttr\\\":\\\"user.id\\\",\\\"operator\\\":\\\"IN\\\",\\\"resourceAttr\\\":\\\"student.mentorIds\\\"}\",\n  \"status\": \"ACTIVE\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Policy",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/tenants/{{tenantId}}/policies/{{policyId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["tenants", "{{tenantId}}", "policies", "{{policyId}}"]
+            }
+          }
+        },
+        {
+          "name": "List Policies",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/tenants/{{tenantId}}/policies",
+              "host": ["{{baseUrl}}"],
+              "path": ["tenants", "{{tenantId}}", "policies"]
+            }
+          }
+        },
+        {
+          "name": "Delete Policy",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/tenants/{{tenantId}}/policies/{{policyId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["tenants", "{{tenantId}}", "policies", "{{policyId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Authorization",
+      "item": [
+        {
+          "name": "Check Permission",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/authorize/check",
+              "host": ["{{baseUrl}}"],
+              "path": ["authorize", "check"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tenantId\": {{tenantId}},\n  \"userId\": {{userId}},\n  \"resource\": \"NOTE\",\n  \"action\": \"READ\",\n  \"resourceId\": \"1\",\n  \"context\": {\n    \"ownerId\": {{userId}},\n    \"contentStatus\": \"PUBLISHED\"\n  }\n}"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
