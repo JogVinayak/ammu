@@ -1,0 +1,252 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1
+      author: user-profile-service
+      changes:
+        - createTable:
+            tableName: user_profiles
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: display_name
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: first_name
+                  type: varchar(255)
+              - column:
+                  name: last_name
+                  type: varchar(255)
+              - column:
+                  name: email
+                  type: varchar(255)
+              - column:
+                  name: phone
+                  type: varchar(50)
+              - column:
+                  name: avatar_url
+                  type: varchar(1000)
+              - column:
+                  name: user_type
+                  type: varchar(50)
+              - column:
+                  name: status
+                  type: varchar(50)
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+              - column:
+                  name: created_by
+                  type: varchar(255)
+              - column:
+                  name: updated_at
+                  type: timestamp with time zone
+              - column:
+                  name: updated_by
+                  type: varchar(255)
+              - column:
+                  name: version
+                  type: bigint
+                  defaultValueNumeric: 0
+        - addUniqueConstraint:
+            tableName: user_profiles
+            columnNames: tenant_id, user_id
+            constraintName: uk_user_profiles_tenant_user
+        - createIndex:
+            tableName: user_profiles
+            indexName: idx_user_profiles_tenant_status
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: status
+        - createIndex:
+            tableName: user_profiles
+            indexName: idx_user_profiles_tenant_display_name
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: display_name
+
+  - changeSet:
+      id: 2
+      author: user-profile-service
+      changes:
+        - createTable:
+            tableName: student_profiles
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: grade
+                  type: varchar(50)
+              - column:
+                  name: section
+                  type: varchar(50)
+              - column:
+                  name: roll_number
+                  type: varchar(50)
+              - column:
+                  name: class_id
+                  type: uuid
+              - column:
+                  name: board
+                  type: varchar(100)
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+              - column:
+                  name: updated_at
+                  type: timestamp with time zone
+        - addUniqueConstraint:
+            tableName: student_profiles
+            columnNames: tenant_id, user_id
+            constraintName: uk_student_profiles_tenant_user
+        - createIndex:
+            tableName: student_profiles
+            indexName: idx_student_profiles_tenant_user
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: user_id
+
+  - changeSet:
+      id: 3
+      author: user-profile-service
+      changes:
+        - createTable:
+            tableName: user_preferences
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: language
+                  type: varchar(20)
+              - column:
+                  name: timezone
+                  type: varchar(100)
+              - column:
+                  name: notifications_enabled
+                  type: boolean
+              - column:
+                  name: channels
+                  type: jsonb
+              - column:
+                  name: extra
+                  type: jsonb
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+              - column:
+                  name: updated_at
+                  type: timestamp with time zone
+        - addUniqueConstraint:
+            tableName: user_preferences
+            columnNames: tenant_id, user_id
+            constraintName: uk_user_preferences_tenant_user
+        - createIndex:
+            tableName: user_preferences
+            indexName: idx_user_preferences_tenant_user
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: user_id
+
+  - changeSet:
+      id: 4
+      author: user-profile-service
+      changes:
+        - createTable:
+            tableName: user_relationships
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: related_user_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: relationship_type
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+              - column:
+                  name: created_by
+                  type: varchar(255)
+        - addUniqueConstraint:
+            tableName: user_relationships
+            columnNames: tenant_id, user_id, related_user_id, relationship_type
+            constraintName: uk_user_relationships_tenant_user_related
+        - createIndex:
+            tableName: user_relationships
+            indexName: idx_user_relationships_tenant_user
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: user_id

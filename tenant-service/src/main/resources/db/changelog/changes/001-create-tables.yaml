@@ -1,0 +1,249 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1
+      author: tenant-service
+      changes:
+        - createTable:
+            tableName: tenants
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_key
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: name
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: varchar(50)
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+              - column:
+                  name: created_by
+                  type: varchar(255)
+              - column:
+                  name: updated_at
+                  type: timestamp with time zone
+              - column:
+                  name: updated_by
+                  type: varchar(255)
+              - column:
+                  name: version
+                  type: bigint
+                  defaultValueNumeric: 0
+
+  - changeSet:
+      id: 2
+      author: tenant-service
+      changes:
+        - createTable:
+            tableName: tenant_policies
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: allow_self_signup
+                  type: boolean
+              - column:
+                  name: require_admin_approval
+                  type: boolean
+              - column:
+                  name: allowed_signup_domains
+                  type: varchar(1000)
+              - column:
+                  name: session_max_days
+                  type: integer
+              - column:
+                  name: quiet_hours_start
+                  type: varchar(10)
+              - column:
+                  name: quiet_hours_end
+                  type: varchar(10)
+              - column:
+                  name: extra
+                  type: jsonb
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+              - column:
+                  name: updated_at
+                  type: timestamp with time zone
+        - addForeignKeyConstraint:
+            baseTableName: tenant_policies
+            baseColumnNames: tenant_id
+            referencedTableName: tenants
+            referencedColumnNames: id
+            constraintName: fk_tenant_policies_tenant
+
+  - changeSet:
+      id: 3
+      author: tenant-service
+      changes:
+        - createTable:
+            tableName: tenant_policy_auth_methods
+            columns:
+              - column:
+                  name: tenant_policy_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: auth_method
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            baseTableName: tenant_policy_auth_methods
+            baseColumnNames: tenant_policy_id
+            referencedTableName: tenant_policies
+            referencedColumnNames: id
+            constraintName: fk_auth_methods_tenant_policy
+
+  - changeSet:
+      id: 4
+      author: tenant-service
+      changes:
+        - createTable:
+            tableName: tenant_branding
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: display_name
+                  type: varchar(255)
+              - column:
+                  name: logo_url
+                  type: varchar(1000)
+              - column:
+                  name: primary_color
+                  type: varchar(20)
+              - column:
+                  name: accent_color
+                  type: varchar(20)
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+              - column:
+                  name: updated_at
+                  type: timestamp with time zone
+        - addForeignKeyConstraint:
+            baseTableName: tenant_branding
+            baseColumnNames: tenant_id
+            referencedTableName: tenants
+            referencedColumnNames: id
+            constraintName: fk_tenant_branding_tenant
+
+  - changeSet:
+      id: 5
+      author: tenant-service
+      changes:
+        - createTable:
+            tableName: tenant_domain_mappings
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: hostname
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: type
+                  type: varchar(50)
+              - column:
+                  name: verified
+                  type: boolean
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+              - column:
+                  name: updated_at
+                  type: timestamp with time zone
+        - addForeignKeyConstraint:
+            baseTableName: tenant_domain_mappings
+            baseColumnNames: tenant_id
+            referencedTableName: tenants
+            referencedColumnNames: id
+            constraintName: fk_tenant_domain_mappings_tenant
+
+  - changeSet:
+      id: 6
+      author: tenant-service
+      changes:
+        - createTable:
+            tableName: tenant_plans
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: plan_code
+                  type: varchar(50)
+              - column:
+                  name: max_users
+                  type: integer
+              - column:
+                  name: max_storage_mb
+                  type: integer
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+              - column:
+                  name: updated_at
+                  type: timestamp with time zone
+        - addForeignKeyConstraint:
+            baseTableName: tenant_plans
+            baseColumnNames: tenant_id
+            referencedTableName: tenants
+            referencedColumnNames: id
+            constraintName: fk_tenant_plans_tenant

@@ -1,0 +1,426 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-user-identities
+      author: codex
+      changes:
+        - createTable:
+            tableName: user_identities
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: primary_email
+                  type: varchar(320)
+              - column:
+                  name: primary_phone
+                  type: varchar(32)
+              - column:
+                  name: email_verified
+                  type: boolean
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: phone_verified
+                  type: boolean
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: password_hash
+                  type: varchar(255)
+              - column:
+                  name: status
+                  type: varchar(32)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  defaultValueComputed: "CURRENT_TIMESTAMP"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamp with time zone
+                  defaultValueComputed: "CURRENT_TIMESTAMP"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: last_login_at
+                  type: timestamp with time zone
+              - column:
+                  name: failed_login_count
+                  type: integer
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: lock_until
+                  type: timestamp with time zone
+  - changeSet:
+      id: 002-create-tenant-memberships
+      author: codex
+      changes:
+        - createTable:
+            tableName: tenant_memberships
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: varchar(32)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: join_method
+                  type: varchar(32)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  defaultValueComputed: "CURRENT_TIMESTAMP"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_by
+                  type: uuid
+              - column:
+                  name: approved_at
+                  type: timestamp with time zone
+              - column:
+                  name: approved_by
+                  type: uuid
+  - changeSet:
+      id: 003-create-credentials
+      author: codex
+      changes:
+        - createTable:
+            tableName: credentials
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: type
+                  type: varchar(32)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: secret_ref
+                  type: varchar(255)
+              - column:
+                  name: status
+                  type: varchar(32)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  defaultValueComputed: "CURRENT_TIMESTAMP"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamp with time zone
+                  defaultValueComputed: "CURRENT_TIMESTAMP"
+                  constraints:
+                    nullable: false
+  - changeSet:
+      id: 004-create-verification-challenges
+      author: codex
+      changes:
+        - createTable:
+            tableName: verification_challenges
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: uuid
+              - column:
+                  name: tenant_id
+                  type: uuid
+              - column:
+                  name: channel
+                  type: varchar(32)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: purpose
+                  type: varchar(32)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: target
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: otp_hash
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: expires_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+              - column:
+                  name: max_attempts
+                  type: integer
+                  constraints:
+                    nullable: false
+              - column:
+                  name: attempts_used
+                  type: integer
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: consumed_at
+                  type: timestamp with time zone
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  defaultValueComputed: "CURRENT_TIMESTAMP"
+                  constraints:
+                    nullable: false
+  - changeSet:
+      id: 005-create-invites
+      author: codex
+      changes:
+        - createTable:
+            tableName: invites
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: email_or_phone
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: invited_role_hints
+                  type: varchar(255)
+              - column:
+                  name: status
+                  type: varchar(32)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: token_hash
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: expires_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+              - column:
+                  name: invited_by
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  defaultValueComputed: "CURRENT_TIMESTAMP"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: accepted_at
+                  type: timestamp with time zone
+  - changeSet:
+      id: 006-create-sessions
+      author: codex
+      changes:
+        - createTable:
+            tableName: sessions
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: refresh_token_hash
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: device_id
+                  type: varchar(128)
+              - column:
+                  name: user_agent
+                  type: varchar(512)
+              - column:
+                  name: ip_hash
+                  type: varchar(255)
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  defaultValueComputed: "CURRENT_TIMESTAMP"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: last_used_at
+                  type: timestamp with time zone
+                  defaultValueComputed: "CURRENT_TIMESTAMP"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: expires_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+              - column:
+                  name: revoked_at
+                  type: timestamp with time zone
+              - column:
+                  name: revoke_reason
+                  type: varchar(255)
+  - changeSet:
+      id: 007-create-indexes
+      author: codex
+      changes:
+        - createIndex:
+            tableName: user_identities
+            indexName: idx_user_identities_primary_email
+            unique: true
+            columns:
+              - column:
+                  name: primary_email
+        - createIndex:
+            tableName: user_identities
+            indexName: idx_user_identities_primary_phone
+            unique: true
+            columns:
+              - column:
+                  name: primary_phone
+        - createIndex:
+            tableName: tenant_memberships
+            indexName: idx_tenant_memberships_tenant_user
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: user_id
+        - createIndex:
+            tableName: tenant_memberships
+            indexName: idx_tenant_memberships_tenant_status
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: status
+        - createIndex:
+            tableName: credentials
+            indexName: idx_credentials_user_id
+            columns:
+              - column:
+                  name: user_id
+        - createIndex:
+            tableName: verification_challenges
+            indexName: idx_verification_challenges_target_purpose
+            columns:
+              - column:
+                  name: target
+              - column:
+                  name: purpose
+        - createIndex:
+            tableName: verification_challenges
+            indexName: idx_verification_challenges_expires_at
+            columns:
+              - column:
+                  name: expires_at
+        - createIndex:
+            tableName: invites
+            indexName: idx_invites_token_hash
+            unique: true
+            columns:
+              - column:
+                  name: token_hash
+        - createIndex:
+            tableName: invites
+            indexName: idx_invites_tenant_id
+            columns:
+              - column:
+                  name: tenant_id
+        - createIndex:
+            tableName: invites
+            indexName: idx_invites_email_or_phone
+            columns:
+              - column:
+                  name: email_or_phone
+        - createIndex:
+            tableName: sessions
+            indexName: idx_sessions_user_id
+            columns:
+              - column:
+                  name: user_id
+        - createIndex:
+            tableName: sessions
+            indexName: idx_sessions_tenant_id
+            columns:
+              - column:
+                  name: tenant_id
+        - createIndex:
+            tableName: sessions
+            indexName: idx_sessions_refresh_token_hash
+            unique: true
+            columns:
+              - column:
+                  name: refresh_token_hash

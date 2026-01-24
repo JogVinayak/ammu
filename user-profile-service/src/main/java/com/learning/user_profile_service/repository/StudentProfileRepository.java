@@ -1,0 +1,10 @@
+package com.learning.user_profile_service.repository;
+
+import com.learning.user_profile_service.model.entity.StudentProfile;
+import java.util.Optional;
+import java.util.UUID;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface StudentProfileRepository extends JpaRepository<StudentProfile, UUID> {
+    Optional<StudentProfile> findByTenantIdAndUserId(UUID tenantId, UUID userId);
+}

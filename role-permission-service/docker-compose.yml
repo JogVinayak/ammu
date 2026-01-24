@@ -1,0 +1,30 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: role-permission-postgres
+    environment:
+      POSTGRES_DB: role_permission
+      POSTGRES_USER: role_permission_user
+      POSTGRES_PASSWORD: role_permission_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  role-permission-service:
+    build: .
+    container_name: role-permission-service
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/role_permission
+      SPRING_DATASOURCE_USERNAME: role_permission_user
+      SPRING_DATASOURCE_PASSWORD: role_permission_password
+      SPRING_LIQUIBASE_ENABLED: "true"
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

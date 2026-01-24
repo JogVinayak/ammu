@@ -1,0 +1,308 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-roles
+      author: codex
+      changes:
+        - createTable:
+            tableName: roles
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: name
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: description
+                  type: VARCHAR(255)
+              - column:
+                  name: is_system
+                  type: BOOLEAN
+              - column:
+                  name: status
+                  type: VARCHAR(32)
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+              - column:
+                  name: created_by
+                  type: VARCHAR(100)
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+              - column:
+                  name: updated_by
+                  type: VARCHAR(100)
+        - addUniqueConstraint:
+            tableName: roles
+            columnNames: tenant_id, name
+            constraintName: uk_roles_tenant_name
+        - createIndex:
+            tableName: roles
+            indexName: idx_roles_tenant_name
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: name
+
+  - changeSet:
+      id: 002-create-permissions
+      author: codex
+      changes:
+        - createTable:
+            tableName: permissions
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: code
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: resource
+                  type: VARCHAR(100)
+              - column:
+                  name: action
+                  type: VARCHAR(100)
+              - column:
+                  name: description
+                  type: VARCHAR(255)
+              - column:
+                  name: is_deprecated
+                  type: BOOLEAN
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+        - addUniqueConstraint:
+            tableName: permissions
+            columnNames: code
+            constraintName: uk_permissions_code
+
+  - changeSet:
+      id: 003-create-permission-scopes
+      author: codex
+      changes:
+        - createTable:
+            tableName: permission_scopes
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: code
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: description
+                  type: VARCHAR(255)
+        - addUniqueConstraint:
+            tableName: permission_scopes
+            columnNames: code
+            constraintName: uk_permission_scopes_code
+
+  - changeSet:
+      id: 004-create-role-permission-grants
+      author: codex
+      changes:
+        - createTable:
+            tableName: role_permission_grants
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: role_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: permission_code
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: scope_code
+                  type: VARCHAR(50)
+              - column:
+                  name: constraints_json
+                  type: TEXT
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+              - column:
+                  name: created_by
+                  type: VARCHAR(100)
+        - addForeignKeyConstraint:
+            baseTableName: role_permission_grants
+            baseColumnNames: role_id
+            referencedTableName: roles
+            referencedColumnNames: id
+            constraintName: fk_role_permission_grants_role
+        - addForeignKeyConstraint:
+            baseTableName: role_permission_grants
+            baseColumnNames: permission_code
+            referencedTableName: permissions
+            referencedColumnNames: code
+            constraintName: fk_role_permission_grants_permission
+        - addForeignKeyConstraint:
+            baseTableName: role_permission_grants
+            baseColumnNames: scope_code
+            referencedTableName: permission_scopes
+            referencedColumnNames: code
+            constraintName: fk_role_permission_grants_scope
+        - createIndex:
+            tableName: role_permission_grants
+            indexName: idx_role_permission_grants_tenant_role
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: role_id
+
+  - changeSet:
+      id: 005-create-user-role-assignments
+      author: codex
+      changes:
+        - createTable:
+            tableName: user_role_assignments
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: role_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: scope_type
+                  type: VARCHAR(32)
+              - column:
+                  name: scope_id
+                  type: VARCHAR(128)
+              - column:
+                  name: status
+                  type: VARCHAR(32)
+              - column:
+                  name: valid_from
+                  type: TIMESTAMP
+              - column:
+                  name: valid_to
+                  type: TIMESTAMP
+              - column:
+                  name: assigned_by
+                  type: VARCHAR(100)
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+        - addForeignKeyConstraint:
+            baseTableName: user_role_assignments
+            baseColumnNames: role_id
+            referencedTableName: roles
+            referencedColumnNames: id
+            constraintName: fk_user_role_assignments_role
+        - createIndex:
+            tableName: user_role_assignments
+            indexName: idx_user_role_assignments_tenant_user_status
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: user_id
+              - column:
+                  name: status
+
+  - changeSet:
+      id: 006-create-access-policies
+      author: codex
+      changes:
+        - createTable:
+            tableName: access_policies
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: name
+                  type: VARCHAR(120)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: effect
+                  type: VARCHAR(16)
+              - column:
+                  name: priority
+                  type: INT
+              - column:
+                  name: resource
+                  type: VARCHAR(100)
+              - column:
+                  name: action
+                  type: VARCHAR(100)
+              - column:
+                  name: condition_json
+                  type: TEXT
+              - column:
+                  name: status
+                  type: VARCHAR(32)
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+              - column:
+                  name: created_by
+                  type: VARCHAR(100)
