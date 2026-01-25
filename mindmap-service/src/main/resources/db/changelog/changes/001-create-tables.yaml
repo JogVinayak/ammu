@@ -1,0 +1,278 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1
+      author: mindmap-service
+      changes:
+        - createTable:
+            tableName: mind_maps
+            columns:
+              - column:
+                  name: mind_map_id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: varchar(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: title
+                  type: varchar(200)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: description
+                  type: varchar(2000)
+              - column:
+                  name: subject
+                  type: varchar(100)
+              - column:
+                  name: grade
+                  type: varchar(50)
+              - column:
+                  name: tags_json
+                  type: jsonb
+              - column:
+                  name: status
+                  type: varchar(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: visibility
+                  type: varchar(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_by
+                  type: uuid
+              - column:
+                  name: updated_by
+                  type: uuid
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+              - column:
+                  name: updated_at
+                  type: timestamp with time zone
+              - column:
+                  name: published_version_id
+                  type: uuid
+              - column:
+                  name: lock_version
+                  type: bigint
+                  defaultValueNumeric: 0
+        - createIndex:
+            tableName: mind_maps
+            indexName: idx_mind_maps_tenant
+            columns:
+              - column:
+                  name: tenant_id
+
+  - changeSet:
+      id: 2
+      author: mindmap-service
+      changes:
+        - createTable:
+            tableName: mind_map_versions
+            columns:
+              - column:
+                  name: mind_map_version_id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: mind_map_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: version_number
+                  type: integer
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: varchar(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_by
+                  type: uuid
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+        - createIndex:
+            tableName: mind_map_versions
+            indexName: idx_mind_map_versions_map
+            columns:
+              - column:
+                  name: mind_map_id
+
+  - changeSet:
+      id: 3
+      author: mindmap-service
+      changes:
+        - createTable:
+            tableName: nodes
+            columns:
+              - column:
+                  name: node_id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: varchar(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: mind_map_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: type
+                  type: varchar(30)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: title
+                  type: varchar(200)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: body_markdown
+                  type: text
+              - column:
+                  name: content_id
+                  type: uuid
+              - column:
+                  name: content_version_id
+                  type: uuid
+              - column:
+                  name: pos_x
+                  type: double precision
+              - column:
+                  name: pos_y
+                  type: double precision
+              - column:
+                  name: meta_json
+                  type: jsonb
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+              - column:
+                  name: updated_at
+                  type: timestamp with time zone
+        - createIndex:
+            tableName: nodes
+            indexName: idx_nodes_tenant_map
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: mind_map_id
+        - createIndex:
+            tableName: nodes
+            indexName: idx_nodes_tenant_title
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: title
+
+  - changeSet:
+      id: 4
+      author: mindmap-service
+      changes:
+        - createTable:
+            tableName: edges
+            columns:
+              - column:
+                  name: edge_id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: varchar(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: mind_map_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: from_node_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: to_node_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: relation
+                  type: varchar(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: weight
+                  type: double precision
+              - column:
+                  name: strength
+                  type: double precision
+              - column:
+                  name: ttl_seconds
+                  type: bigint
+              - column:
+                  name: last_reviewed_at
+                  type: timestamp with time zone
+              - column:
+                  name: expires_at
+                  type: timestamp with time zone
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+              - column:
+                  name: updated_at
+                  type: timestamp with time zone
+        - createIndex:
+            tableName: edges
+            indexName: idx_edges_tenant_map
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: mind_map_id
+        - createIndex:
+            tableName: edges
+            indexName: idx_edges_expires
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: expires_at
+        - createIndex:
+            tableName: edges
+            indexName: idx_edges_from
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: from_node_id
+        - createIndex:
+            tableName: edges
+            indexName: idx_edges_to
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: to_node_id

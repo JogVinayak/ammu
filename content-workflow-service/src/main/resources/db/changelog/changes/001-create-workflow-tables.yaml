@@ -1,0 +1,218 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-workflows
+      author: codex
+      changes:
+        - createTable:
+            tableName: workflows
+            columns:
+              - column:
+                  name: workflow_id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: content_id
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: content_version_id
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: title_snapshot
+                  type: varchar(200)
+              - column:
+                  name: state
+                  type: varchar(32)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: required_approvals
+                  type: integer
+              - column:
+                  name: created_by
+                  type: varchar(255)
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  defaultValueComputed: "CURRENT_TIMESTAMP"
+              - column:
+                  name: last_updated_by
+                  type: varchar(255)
+              - column:
+                  name: last_updated_at
+                  type: timestamp with time zone
+                  defaultValueComputed: "CURRENT_TIMESTAMP"
+              - column:
+                  name: current_step
+                  type: varchar(255)
+              - column:
+                  name: publish_targets_json
+                  type: text
+              - column:
+                  name: lock_version
+                  type: bigint
+        - addUniqueConstraint:
+            tableName: workflows
+            columnNames: tenant_id, content_id, content_version_id
+            constraintName: uk_workflow_tenant_content_version
+        - createIndex:
+            tableName: workflows
+            indexName: idx_workflow_tenant_content
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: content_id
+        - createIndex:
+            tableName: workflows
+            indexName: idx_workflow_tenant_content_version
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: content_version_id
+        - createIndex:
+            tableName: workflows
+            indexName: idx_workflow_tenant_state
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: state
+        - createIndex:
+            tableName: workflows
+            indexName: idx_workflow_tenant_created_by
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: created_by
+  - changeSet:
+      id: 002-create-review-tasks
+      author: codex
+      changes:
+        - createTable:
+            tableName: review_tasks
+            columns:
+              - column:
+                  name: task_id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: workflow_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: assignee_user_id
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: varchar(32)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: comment
+                  type: varchar(2000)
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  defaultValueComputed: "CURRENT_TIMESTAMP"
+              - column:
+                  name: updated_at
+                  type: timestamp with time zone
+                  defaultValueComputed: "CURRENT_TIMESTAMP"
+        - addForeignKeyConstraint:
+            baseTableName: review_tasks
+            baseColumnNames: workflow_id
+            referencedTableName: workflows
+            referencedColumnNames: workflow_id
+            constraintName: fk_review_task_workflow
+            onDelete: CASCADE
+        - createIndex:
+            tableName: review_tasks
+            indexName: idx_review_task_workflow
+            columns:
+              - column:
+                  name: workflow_id
+        - createIndex:
+            tableName: review_tasks
+            indexName: idx_review_task_assignee
+            columns:
+              - column:
+                  name: assignee_user_id
+  - changeSet:
+      id: 003-create-change-requests
+      author: codex
+      changes:
+        - createTable:
+            tableName: change_requests
+            columns:
+              - column:
+                  name: change_request_id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: workflow_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: requested_by_user_id
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: summary
+                  type: varchar(200)
+              - column:
+                  name: details
+                  type: varchar(4000)
+              - column:
+                  name: status
+                  type: varchar(32)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  defaultValueComputed: "CURRENT_TIMESTAMP"
+              - column:
+                  name: updated_at
+                  type: timestamp with time zone
+                  defaultValueComputed: "CURRENT_TIMESTAMP"
+        - addForeignKeyConstraint:
+            baseTableName: change_requests
+            baseColumnNames: workflow_id
+            referencedTableName: workflows
+            referencedColumnNames: workflow_id
+            constraintName: fk_change_request_workflow
+            onDelete: CASCADE
+        - createIndex:
+            tableName: change_requests
+            indexName: idx_change_request_workflow
+            columns:
+              - column:
+                  name: workflow_id
+        - createIndex:
+            tableName: change_requests
+            indexName: idx_change_request_requester
+            columns:
+              - column:
+                  name: requested_by_user_id
