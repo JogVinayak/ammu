@@ -1,0 +1,288 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-graphs
+      author: codex
+      changes:
+        - createTable:
+            tableName: graphs
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: scope_type
+                  type: varchar(32)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: scope_id
+                  type: uuid
+              - column:
+                  name: name
+                  type: text
+                  constraints:
+                    nullable: false
+              - column:
+                  name: description
+                  type: text
+              - column:
+                  name: status
+                  type: varchar(32)
+              - column:
+                  name: created_by
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+        - createIndex:
+            tableName: graphs
+            indexName: idx_graphs_tenant
+            columns:
+              - column:
+                  name: tenant_id
+
+  - changeSet:
+      id: 002-create-nodes
+      author: codex
+      changes:
+        - createTable:
+            tableName: nodes
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: graph_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: node_type
+                  type: varchar(32)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: ref_service
+                  type: text
+              - column:
+                  name: ref_type
+                  type: text
+              - column:
+                  name: ref_id
+                  type: uuid
+              - column:
+                  name: label
+                  type: text
+                  constraints:
+                    nullable: false
+              - column:
+                  name: meta
+                  type: jsonb
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+        - createIndex:
+            tableName: nodes
+            indexName: idx_nodes_tenant
+            columns:
+              - column:
+                  name: tenant_id
+        - createIndex:
+            tableName: nodes
+            indexName: idx_nodes_graph
+            columns:
+              - column:
+                  name: graph_id
+        - addUniqueConstraint:
+            tableName: nodes
+            constraintName: uq_nodes_ref
+            columnNames: tenant_id, graph_id, ref_service, ref_type, ref_id
+
+  - changeSet:
+      id: 003-create-edges
+      author: codex
+      changes:
+        - createTable:
+            tableName: edges
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: graph_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: from_node_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: to_node_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: relation_type
+                  type: varchar(48)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: directed
+                  type: boolean
+                  constraints:
+                    nullable: false
+              - column:
+                  name: strength
+                  type: double precision
+                  constraints:
+                    nullable: false
+              - column:
+                  name: ttl_hours
+                  type: int
+                  constraints:
+                    nullable: false
+              - column:
+                  name: last_reinforced_at
+                  type: timestamp with time zone
+              - column:
+                  name: last_reviewed_at
+                  type: timestamp with time zone
+              - column:
+                  name: meta
+                  type: jsonb
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+        - createIndex:
+            tableName: edges
+            indexName: idx_edges_tenant
+            columns:
+              - column:
+                  name: tenant_id
+        - createIndex:
+            tableName: edges
+            indexName: idx_edges_graph
+            columns:
+              - column:
+                  name: graph_id
+        - createIndex:
+            tableName: edges
+            indexName: idx_edges_from
+            columns:
+              - column:
+                  name: from_node_id
+        - createIndex:
+            tableName: edges
+            indexName: idx_edges_to
+            columns:
+              - column:
+                  name: to_node_id
+        - addUniqueConstraint:
+            tableName: edges
+            constraintName: uq_edges_relation
+            columnNames: tenant_id, graph_id, from_node_id, to_node_id, relation_type
+
+  - changeSet:
+      id: 004-create-edge-signals
+      author: codex
+      changes:
+        - createTable:
+            tableName: edge_signals
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: graph_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: edge_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: signal_type
+                  type: varchar(32)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: signal_value
+                  type: double precision
+              - column:
+                  name: occurred_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+              - column:
+                  name: meta
+                  type: jsonb
+        - createIndex:
+            tableName: edge_signals
+            indexName: idx_edge_signals_edge
+            columns:
+              - column:
+                  name: edge_id
