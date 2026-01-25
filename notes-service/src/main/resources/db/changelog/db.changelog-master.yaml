@@ -1,0 +1,197 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-notes
+      author: codex
+      changes:
+        - createTable:
+            tableName: notes
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: title
+                  type: varchar(500)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: summary
+                  type: varchar(2000)
+              - column:
+                  name: status
+                  type: varchar(32)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_by
+                  type: uuid
+              - column:
+                  name: updated_by
+                  type: uuid
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  defaultValueComputed: "CURRENT_TIMESTAMP"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamp with time zone
+                  defaultValueComputed: "CURRENT_TIMESTAMP"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: published_at
+                  type: timestamp with time zone
+              - column:
+                  name: latest_version_id
+                  type: uuid
+              - column:
+                  name: latest_published_version_id
+                  type: uuid
+              - column:
+                  name: scope_type
+                  type: varchar(32)
+              - column:
+                  name: scope_id
+                  type: uuid
+              - column:
+                  name: is_deleted
+                  type: boolean
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+  - changeSet:
+      id: 002-create-note-versions
+      author: codex
+      changes:
+        - createTable:
+            tableName: note_versions
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: note_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: version_no
+                  type: integer
+                  constraints:
+                    nullable: false
+              - column:
+                  name: content_md
+                  type: text
+                  constraints:
+                    nullable: false
+              - column:
+                  name: content_hash
+                  type: text
+              - column:
+                  name: change_summary
+                  type: text
+              - column:
+                  name: created_by
+                  type: uuid
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  defaultValueComputed: "CURRENT_TIMESTAMP"
+                  constraints:
+                    nullable: false
+        - addUniqueConstraint:
+            tableName: note_versions
+            columnNames: tenant_id, note_id, version_no
+            constraintName: uk_note_version_no
+  - changeSet:
+      id: 003-create-note-tags
+      author: codex
+      changes:
+        - createTable:
+            tableName: note_tags
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: note_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: tag
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  defaultValueComputed: "CURRENT_TIMESTAMP"
+                  constraints:
+                    nullable: false
+        - addUniqueConstraint:
+            tableName: note_tags
+            columnNames: tenant_id, note_id, tag
+            constraintName: uk_note_tag
+  - changeSet:
+      id: 004-add-note-indexes
+      author: codex
+      changes:
+        - createIndex:
+            tableName: notes
+            indexName: idx_notes_tenant_status
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: status
+        - createIndex:
+            tableName: notes
+            indexName: idx_notes_tenant_created_by
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: created_by
+        - createIndex:
+            tableName: notes
+            indexName: idx_notes_tenant_updated_at
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: updated_at
+        - createIndex:
+            tableName: note_versions
+            indexName: idx_note_versions_tenant_note
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: note_id
