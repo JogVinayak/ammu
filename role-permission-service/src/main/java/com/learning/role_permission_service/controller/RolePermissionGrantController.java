@@ -28,7 +28,7 @@ public class RolePermissionGrantController {
 
 	@PostMapping
 	public RolePermissionGrantResponse createGrant(
-			@PathVariable Long tenantId,
+			@PathVariable String tenantId,
 			@PathVariable Long roleId,
 			@RequestBody RolePermissionGrantRequest request,
 			@RequestHeader(value = "X-User-Id", required = false) String userId) {
@@ -42,7 +42,7 @@ public class RolePermissionGrantController {
 
 	@PostMapping("/assign")
 	public List<RolePermissionGrantResponse> assignPermissions(
-			@PathVariable Long tenantId,
+			@PathVariable String tenantId,
 			@PathVariable Long roleId,
 			@RequestBody AssignPermissionsRequest request,
 			@RequestHeader(value = "X-User-Id", required = false) String userId) {
@@ -54,13 +54,13 @@ public class RolePermissionGrantController {
 
 	@GetMapping
 	public List<RolePermissionGrantResponse> getGrants(
-			@PathVariable Long tenantId,
+			@PathVariable String tenantId,
 			@PathVariable Long roleId) {
 		return grantService.getGrants(tenantId, roleId).stream().map(this::toResponse).toList();
 	}
 
 	@DeleteMapping("/{grantId}")
-	public void deleteGrant(@PathVariable Long tenantId, @PathVariable Long grantId) {
+	public void deleteGrant(@PathVariable String tenantId, @PathVariable Long grantId) {
 		grantService.deleteGrant(tenantId, grantId);
 	}
 

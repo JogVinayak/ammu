@@ -119,7 +119,7 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 			String scopeCode,
 			List<UserRoleAssignmentEntity> assignments,
 			Map<String, Object> context,
-			Long userId) {
+			String userId) {
 		if (scopeCode == null || scopeCode.isBlank()) {
 			return true;
 		}
@@ -139,14 +139,14 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 		}
 	}
 
-	private boolean matchesOwner(Map<String, Object> context, Long userId) {
+	private boolean matchesOwner(Map<String, Object> context, String userId) {
 		if (context == null) {
 			return false;
 		}
 		return matchesUserId(context.get("ownerId"), userId);
 	}
 
-	private boolean matchesAssigned(Map<String, Object> context, Long userId) {
+	private boolean matchesAssigned(Map<String, Object> context, String userId) {
 		if (context == null) {
 			return false;
 		}
@@ -201,12 +201,9 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 		return status != null && "PUBLISHED".equalsIgnoreCase(String.valueOf(status));
 	}
 
-	private boolean matchesUserId(Object value, Long userId) {
-		if (value == null || userId == null) {
+	private boolean matchesUserId(Object value, String userId) {
+		if (value == null || userId == null || userId.isBlank()) {
 			return false;
-		}
-		if (value instanceof Number) {
-			return ((Number) value).longValue() == userId;
 		}
 		if (value instanceof Iterable) {
 			for (Object item : (Iterable<?>) value) {
@@ -227,13 +224,13 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 			return false;
 		}
 		String text = String.valueOf(value).trim();
-		if (text.equals(String.valueOf(userId))) {
+		if (text.equalsIgnoreCase(userId)) {
 			return true;
 		}
 		if (text.contains(",")) {
 			String[] parts = text.split(",");
 			for (String part : parts) {
-				if (part.trim().equals(String.valueOf(userId))) {
+				if (part.trim().equalsIgnoreCase(userId)) {
 					return true;
 				}
 			}

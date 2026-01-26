@@ -1,0 +1,11 @@
+databaseChangeLog:
+  - changeSet:
+      id: 011-seed-permission-scopes
+      author: codex
+      changes:
+        - sql:
+            sql: |
+              INSERT INTO permission_scopes (code, description) VALUES ('TENANT', 'Permission applies to all resources within the tenant') ON CONFLICT (code) DO NOTHING;
+              INSERT INTO permission_scopes (code, description) VALUES ('CLASS', 'Permission applies to resources within assigned classes') ON CONFLICT (code) DO NOTHING;
+              INSERT INTO permission_scopes (code, description) VALUES ('OWN', 'Permission applies only to resources owned by the user') ON CONFLICT (code) DO NOTHING;
+              INSERT INTO permission_scopes (code, description) VALUES ('DEPARTMENT', 'Permission applies to resources within assigned departments') ON CONFLICT (code) DO NOTHING;

@@ -29,7 +29,7 @@ public class RoleController {
 
 	@PostMapping
 	public RoleResponse createRole(
-			@PathVariable Long tenantId,
+			@PathVariable String tenantId,
 			@RequestBody CreateRoleRequest request,
 			@RequestHeader(value = "X-User-Id", required = false) String userId) {
 		RoleEntity role = roleService.createRole(tenantId, request, userId);
@@ -38,7 +38,7 @@ public class RoleController {
 
 	@PutMapping("/{roleId}")
 	public RoleResponse updateRole(
-			@PathVariable Long tenantId,
+			@PathVariable String tenantId,
 			@PathVariable Long roleId,
 			@RequestBody UpdateRoleRequest request,
 			@RequestHeader(value = "X-User-Id", required = false) String userId) {
@@ -48,17 +48,17 @@ public class RoleController {
 	}
 
 	@GetMapping("/{roleId}")
-	public RoleResponse getRole(@PathVariable Long tenantId, @PathVariable Long roleId) {
+	public RoleResponse getRole(@PathVariable String tenantId, @PathVariable Long roleId) {
 		return toResponse(roleService.getRole(tenantId, roleId));
 	}
 
 	@GetMapping
-	public List<RoleResponse> getRoles(@PathVariable Long tenantId) {
+	public List<RoleResponse> getRoles(@PathVariable String tenantId) {
 		return roleService.getRoles(tenantId).stream().map(this::toResponse).toList();
 	}
 
 	@DeleteMapping("/{roleId}")
-	public void deleteRole(@PathVariable Long tenantId, @PathVariable Long roleId) {
+	public void deleteRole(@PathVariable String tenantId, @PathVariable Long roleId) {
 		roleService.deleteRole(tenantId, roleId);
 	}
 

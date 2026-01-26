@@ -8,9 +8,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import com.learning.role_permission_service.entity.RoleEntity;
 
 public interface RoleRepository extends JpaRepository<RoleEntity, Long> {
-	List<RoleEntity> findByTenantId(Long tenantId);
+	List<RoleEntity> findByTenantId(String tenantId);
 
-	Optional<RoleEntity> findByIdAndTenantId(Long id, Long tenantId);
+	Optional<RoleEntity> findByIdAndTenantId(Long id, String tenantId);
 
-	boolean existsByTenantIdAndName(Long tenantId, String name);
+	boolean existsByTenantIdAndName(String tenantId, String name);
 }

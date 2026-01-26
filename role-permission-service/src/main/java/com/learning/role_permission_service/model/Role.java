@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class Role {
 	private Long id;
-	private Long tenantId;
+	private String tenantId;
 	private String name;
 	private String description;
 	private Boolean isSystem;

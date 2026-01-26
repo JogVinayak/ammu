@@ -1,3 +1,9 @@
 databaseChangeLog:
   - include:
       file: db/changelog/changes/001-create-core-tables.yaml
+  - include:
+      file: db/changelog/changes/002-alter-tenant-id-to-varchar.yaml
+  - include:
+      file: db/changelog/changes/003-seed-permission-scopes.yaml
+  - include:
+      file: db/changelog/changes/004-alter-user-id-to-varchar.yaml

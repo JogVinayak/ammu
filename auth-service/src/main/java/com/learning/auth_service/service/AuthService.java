@@ -17,6 +17,7 @@ import com.learning.auth_service.model.dto.SignupRequest;
 import com.learning.auth_service.model.dto.TokenIntrospectRequest;
 import com.learning.auth_service.model.dto.TokenIntrospectResponse;
 import com.learning.auth_service.model.dto.VerifyOtpRequest;
+import java.util.UUID;
 
 public interface AuthService {
     AuthResponse signup(SignupRequest request);
@@ -44,4 +45,6 @@ public interface AuthService {
     AuthResponse acceptInvite(InviteAcceptRequest request);
 
     TokenIntrospectResponse introspect(TokenIntrospectRequest request);
+
+    void deleteUser(UUID userId);
 }

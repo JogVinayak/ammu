@@ -5,13 +5,13 @@ import java.util.List;
 import com.learning.role_permission_service.entity.AccessPolicyEntity;
 
 public interface AccessPolicyService {
-	AccessPolicyEntity createPolicy(Long tenantId, AccessPolicyEntity policy, String createdBy);
+	AccessPolicyEntity createPolicy(String tenantId, AccessPolicyEntity policy, String createdBy);
 
-	AccessPolicyEntity updatePolicy(Long tenantId, Long policyId, AccessPolicyEntity policy);
+	AccessPolicyEntity updatePolicy(String tenantId, Long policyId, AccessPolicyEntity policy);
 
-	AccessPolicyEntity getPolicy(Long tenantId, Long policyId);
+	AccessPolicyEntity getPolicy(String tenantId, Long policyId);
 
-	List<AccessPolicyEntity> getPolicies(Long tenantId);
+	List<AccessPolicyEntity> getPolicies(String tenantId);
 
-	void deletePolicy(Long tenantId, Long policyId);
+	void deletePolicy(String tenantId, Long policyId);
 }

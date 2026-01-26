@@ -23,11 +23,11 @@ public class UserRoleAssignmentEntity {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	@Column(name = "tenant_id", nullable = false)
-	private Long tenantId;
+	@Column(name = "tenant_id", nullable = false, length = 36)
+	private String tenantId;
 
-	@Column(name = "user_id", nullable = false)
-	private Long userId;
+	@Column(name = "user_id", nullable = false, length = 36)
+	private String userId;
 
 	@Column(name = "role_id", nullable = false)
 	private Long roleId;

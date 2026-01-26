@@ -1,0 +1,26 @@
+databaseChangeLog:
+  - changeSet:
+      id: 011-alter-user-role-assignments-user-id
+      author: codex
+      changes:
+        - dropIndex:
+            tableName: user_role_assignments
+            indexName: idx_user_role_assignments_tenant_user_status
+        - modifyDataType:
+            tableName: user_role_assignments
+            columnName: user_id
+            newDataType: VARCHAR(36)
+        - addNotNullConstraint:
+            tableName: user_role_assignments
+            columnName: user_id
+            columnDataType: VARCHAR(36)
+        - createIndex:
+            tableName: user_role_assignments
+            indexName: idx_user_role_assignments_tenant_user_status
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: user_id
+              - column:
+                  name: status

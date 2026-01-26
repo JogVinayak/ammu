@@ -23,7 +23,7 @@ public class RoleServiceImpl implements RoleService {
 
 	@Override
 	@Transactional
-	public RoleEntity createRole(Long tenantId, CreateRoleRequest request, String createdBy) {
+	public RoleEntity createRole(String tenantId, CreateRoleRequest request, String createdBy) {
 		if (roleRepository.existsByTenantIdAndName(tenantId, request.getName())) {
 			throw new IllegalStateException("Role name already exists for tenant");
 		}
@@ -44,7 +44,7 @@ public class RoleServiceImpl implements RoleService {
 
 	@Override
 	@Transactional
-	public RoleEntity updateRole(Long tenantId, Long roleId, UpdateRoleRequest request, String updatedBy) {
+	public RoleEntity updateRole(String tenantId, Long roleId, UpdateRoleRequest request, String updatedBy) {
 		RoleEntity existing = getRole(tenantId, roleId);
 		if (Boolean.TRUE.equals(existing.getIsSystem())) {
 			throw new IllegalStateException("System roles cannot be modified");
@@ -60,20 +60,20 @@ public class RoleServiceImpl implements RoleService {
 
 	@Override
 	@Transactional(readOnly = true)
-	public RoleEntity getRole(Long tenantId, Long roleId) {
+	public RoleEntity getRole(String tenantId, Long roleId) {
 		return roleRepository.findByIdAndTenantId(roleId, tenantId)
 				.orElseThrow(() -> new ResourceNotFoundException("Role not found"));
 	}
 
 	@Override
 	@Transactional(readOnly = true)
-	public List<RoleEntity> getRoles(Long tenantId) {
+	public List<RoleEntity> getRoles(String tenantId) {
 		return roleRepository.findByTenantId(tenantId);
 	}
 
 	@Override
 	@Transactional
-	public void deleteRole(Long tenantId, Long roleId) {
+	public void deleteRole(String tenantId, Long roleId) {
 		RoleEntity existing = getRole(tenantId, roleId);
 		if (Boolean.TRUE.equals(existing.getIsSystem())) {
 			throw new IllegalStateException("System roles cannot be deleted");

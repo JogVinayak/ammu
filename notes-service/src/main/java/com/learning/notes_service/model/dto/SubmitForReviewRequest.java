@@ -8,7 +8,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-public class PublishNoteRequest {
-    private UUID versionId;
-    private UUID publishedBy;
+public class SubmitForReviewRequest {
+    private UUID submittedBy;
+    private String submissionNotes;  // Optional notes for reviewer
 }

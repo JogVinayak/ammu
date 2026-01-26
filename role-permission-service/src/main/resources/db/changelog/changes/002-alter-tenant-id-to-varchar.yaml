@@ -1,0 +1,94 @@
+databaseChangeLog:
+  - changeSet:
+      id: 007-alter-roles-tenant-id
+      author: codex
+      changes:
+        - dropUniqueConstraint:
+            tableName: roles
+            constraintName: uk_roles_tenant_name
+        - dropIndex:
+            tableName: roles
+            indexName: idx_roles_tenant_name
+        - modifyDataType:
+            tableName: roles
+            columnName: tenant_id
+            newDataType: VARCHAR(36)
+        - addNotNullConstraint:
+            tableName: roles
+            columnName: tenant_id
+            columnDataType: VARCHAR(36)
+        - addUniqueConstraint:
+            tableName: roles
+            columnNames: tenant_id, name
+            constraintName: uk_roles_tenant_name
+        - createIndex:
+            tableName: roles
+            indexName: idx_roles_tenant_name
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: name
+
+  - changeSet:
+      id: 008-alter-role-permission-grants-tenant-id
+      author: codex
+      changes:
+        - dropIndex:
+            tableName: role_permission_grants
+            indexName: idx_role_permission_grants_tenant_role
+        - modifyDataType:
+            tableName: role_permission_grants
+            columnName: tenant_id
+            newDataType: VARCHAR(36)
+        - addNotNullConstraint:
+            tableName: role_permission_grants
+            columnName: tenant_id
+            columnDataType: VARCHAR(36)
+        - createIndex:
+            tableName: role_permission_grants
+            indexName: idx_role_permission_grants_tenant_role
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: role_id
+
+  - changeSet:
+      id: 009-alter-user-role-assignments-tenant-id
+      author: codex
+      changes:
+        - dropIndex:
+            tableName: user_role_assignments
+            indexName: idx_user_role_assignments_tenant_user_status
+        - modifyDataType:
+            tableName: user_role_assignments
+            columnName: tenant_id
+            newDataType: VARCHAR(36)
+        - addNotNullConstraint:
+            tableName: user_role_assignments
+            columnName: tenant_id
+            columnDataType: VARCHAR(36)
+        - createIndex:
+            tableName: user_role_assignments
+            indexName: idx_user_role_assignments_tenant_user_status
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: user_id
+              - column:
+                  name: status
+
+  - changeSet:
+      id: 010-alter-access-policies-tenant-id
+      author: codex
+      changes:
+        - modifyDataType:
+            tableName: access_policies
+            columnName: tenant_id
+            newDataType: VARCHAR(36)
+        - addNotNullConstraint:
+            tableName: access_policies
+            columnName: tenant_id
+            columnDataType: VARCHAR(36)

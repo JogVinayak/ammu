@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class RolePermissionGrant {
 	private Long id;
-	private Long tenantId;
+	private String tenantId;
 	private Long roleId;
 	private String permissionCode;
 	private String scopeCode;

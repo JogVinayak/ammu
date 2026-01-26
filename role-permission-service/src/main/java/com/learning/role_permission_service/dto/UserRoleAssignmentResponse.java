@@ -11,8 +11,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class UserRoleAssignmentResponse {
 	private Long id;
-	private Long tenantId;
-	private Long userId;
+	private String tenantId;
+	private String userId;
 	private Long roleId;
 	private String scopeType;
 	private String scopeId;

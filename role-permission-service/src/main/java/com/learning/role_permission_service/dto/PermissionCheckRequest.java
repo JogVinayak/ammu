@@ -10,8 +10,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PermissionCheckRequest {
-	private Long tenantId;
-	private Long userId;
+	private String tenantId;
+	private String userId;
 	private String resource;
 	private String action;
 	private String resourceId;

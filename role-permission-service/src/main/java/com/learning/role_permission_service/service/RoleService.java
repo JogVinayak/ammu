@@ -7,13 +7,13 @@ import com.learning.role_permission_service.dto.UpdateRoleRequest;
 import com.learning.role_permission_service.entity.RoleEntity;
 
 public interface RoleService {
-	RoleEntity createRole(Long tenantId, CreateRoleRequest request, String createdBy);
+	RoleEntity createRole(String tenantId, CreateRoleRequest request, String createdBy);
 
-	RoleEntity updateRole(Long tenantId, Long roleId, UpdateRoleRequest request, String updatedBy);
+	RoleEntity updateRole(String tenantId, Long roleId, UpdateRoleRequest request, String updatedBy);
 
-	RoleEntity getRole(Long tenantId, Long roleId);
+	RoleEntity getRole(String tenantId, Long roleId);
 
-	List<RoleEntity> getRoles(Long tenantId);
+	List<RoleEntity> getRoles(String tenantId);
 
-	void deleteRole(Long tenantId, Long roleId);
+	void deleteRole(String tenantId, Long roleId);
 }

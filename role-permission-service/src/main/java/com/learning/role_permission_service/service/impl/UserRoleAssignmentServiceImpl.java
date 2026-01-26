@@ -26,7 +26,7 @@ public class UserRoleAssignmentServiceImpl implements UserRoleAssignmentService 
 
 	@Override
 	@Transactional
-	public UserRoleAssignmentEntity assignRole(Long tenantId, UserRoleAssignmentEntity assignment, String assignedBy) {
+	public UserRoleAssignmentEntity assignRole(String tenantId, UserRoleAssignmentEntity assignment, String assignedBy) {
 		roleRepository.findByIdAndTenantId(assignment.getRoleId(), tenantId)
 				.orElseThrow(() -> new ResourceNotFoundException("Role not found"));
 
@@ -46,13 +46,13 @@ public class UserRoleAssignmentServiceImpl implements UserRoleAssignmentService 
 
 	@Override
 	@Transactional(readOnly = true)
-	public List<UserRoleAssignmentEntity> getAssignments(Long tenantId, Long userId) {
+	public List<UserRoleAssignmentEntity> getAssignments(String tenantId, String userId) {
 		return assignmentRepository.findByTenantIdAndUserId(tenantId, userId);
 	}
 
 	@Override
 	@Transactional
-	public UserRoleAssignmentEntity revokeAssignment(Long tenantId, Long assignmentId) {
+	public UserRoleAssignmentEntity revokeAssignment(String tenantId, Long assignmentId) {
 		UserRoleAssignmentEntity existing = assignmentRepository.findByIdAndTenantId(assignmentId, tenantId)
 				.orElseThrow(() -> new ResourceNotFoundException("Assignment not found"));
 		existing.setStatus("REVOKED");

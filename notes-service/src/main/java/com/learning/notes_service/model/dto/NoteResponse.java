@@ -22,9 +22,25 @@ public class NoteResponse {
     private UUID updatedBy;
     private Instant createdAt;
     private Instant updatedAt;
-    private Instant publishedAt;
+    
+    // Review workflow
+    private Instant submittedAt;
+    private UUID submittedBy;
+    private Instant reviewedAt;
+    private UUID reviewedBy;
+    private String rejectionReason;
+    
+    // Release
+    private Instant releasedAt;
+    private UUID releasedBy;
     private UUID latestVersionId;
-    private UUID latestPublishedVersionId;
+    private UUID latestReleasedVersionId;
+    
+    // Archive
+    private Instant archivedAt;
+    private UUID archivedBy;
+    private String archiveReason;
+    
     private boolean deleted;
     private List<String> tags;
     private NoteScopeType scopeType;

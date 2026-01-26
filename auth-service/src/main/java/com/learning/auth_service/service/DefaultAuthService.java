@@ -117,6 +117,12 @@ public class DefaultAuthService implements AuthService {
         return response;
     }
 
+    @Override
+    public void deleteUser(UUID userId) {
+        // Mock implementation - no actual persistence to delete from
+        // In a real implementation, this would delete the user and related data
+    }
+
     private AuthResponse buildAuthResponse(UUID userId, UUID tenantId) {
         AuthResponse response = new AuthResponse();
         response.setAccessToken(UUID.randomUUID().toString());

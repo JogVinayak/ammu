@@ -15,6 +15,8 @@ import java.util.UUID;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table(
@@ -45,6 +47,7 @@ public class MindMap {
     @Column(length = 50)
     private String grade;
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "tags_json", columnDefinition = "jsonb")
     private String tagsJson;
 

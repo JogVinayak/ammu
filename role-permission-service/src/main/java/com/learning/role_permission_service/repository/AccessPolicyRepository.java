@@ -8,9 +8,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import com.learning.role_permission_service.entity.AccessPolicyEntity;
 
 public interface AccessPolicyRepository extends JpaRepository<AccessPolicyEntity, Long> {
-	List<AccessPolicyEntity> findByTenantId(Long tenantId);
+	List<AccessPolicyEntity> findByTenantId(String tenantId);
 
-	List<AccessPolicyEntity> findByTenantIdAndStatus(Long tenantId, String status);
+	List<AccessPolicyEntity> findByTenantIdAndStatus(String tenantId, String status);
 
-	Optional<AccessPolicyEntity> findByIdAndTenantId(Long id, Long tenantId);
+	Optional<AccessPolicyEntity> findByIdAndTenantId(Long id, String tenantId);
 }

@@ -35,7 +35,7 @@ public class RolePermissionGrantServiceImpl implements RolePermissionGrantServic
 
 	@Override
 	@Transactional
-	public RolePermissionGrantEntity createGrant(Long tenantId, RolePermissionGrantEntity grant, String createdBy) {
+	public RolePermissionGrantEntity createGrant(String tenantId, RolePermissionGrantEntity grant, String createdBy) {
 		roleRepository.findByIdAndTenantId(grant.getRoleId(), tenantId)
 				.orElseThrow(() -> new ResourceNotFoundException("Role not found"));
 
@@ -52,7 +52,7 @@ public class RolePermissionGrantServiceImpl implements RolePermissionGrantServic
 
 	@Override
 	@Transactional
-	public List<RolePermissionGrantEntity> assignPermissions(Long tenantId, AssignPermissionsRequest request, String createdBy) {
+	public List<RolePermissionGrantEntity> assignPermissions(String tenantId, AssignPermissionsRequest request, String createdBy) {
 		roleRepository.findByIdAndTenantId(request.getRoleId(), tenantId)
 				.orElseThrow(() -> new ResourceNotFoundException("Role not found"));
 
@@ -80,13 +80,13 @@ public class RolePermissionGrantServiceImpl implements RolePermissionGrantServic
 
 	@Override
 	@Transactional(readOnly = true)
-	public List<RolePermissionGrantEntity> getGrants(Long tenantId, Long roleId) {
+	public List<RolePermissionGrantEntity> getGrants(String tenantId, Long roleId) {
 		return grantRepository.findByTenantIdAndRoleId(tenantId, roleId);
 	}
 
 	@Override
 	@Transactional
-	public void deleteGrant(Long tenantId, Long grantId) {
+	public void deleteGrant(String tenantId, Long grantId) {
 		RolePermissionGrantEntity existing = grantRepository.findByIdAndTenantId(grantId, tenantId)
 				.orElseThrow(() -> new ResourceNotFoundException("Grant not found"));
 		grantRepository.delete(existing);

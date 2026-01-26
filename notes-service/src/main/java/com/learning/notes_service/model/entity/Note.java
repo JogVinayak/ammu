@@ -55,14 +55,44 @@ public class Note {
     @Column(name = "updated_at")
     private Instant updatedAt;
 
-    @Column(name = "published_at")
-    private Instant publishedAt;
+    // Review workflow fields
+    @Column(name = "submitted_at")
+    private Instant submittedAt;
+
+    @Column(name = "submitted_by")
+    private UUID submittedBy;
+
+    @Column(name = "reviewed_at")
+    private Instant reviewedAt;
+
+    @Column(name = "reviewed_by")
+    private UUID reviewedBy;
+
+    @Column(name = "rejection_reason", length = 1000)
+    private String rejectionReason;
+
+    // Release fields (renamed from published)
+    @Column(name = "released_at")
+    private Instant releasedAt;
+
+    @Column(name = "released_by")
+    private UUID releasedBy;
+
+    // Archive fields
+    @Column(name = "archived_at")
+    private Instant archivedAt;
+
+    @Column(name = "archived_by")
+    private UUID archivedBy;
+
+    @Column(name = "archive_reason", length = 500)
+    private String archiveReason;
 
     @Column(name = "latest_version_id")
     private UUID latestVersionId;
 
-    @Column(name = "latest_published_version_id")
-    private UUID latestPublishedVersionId;
+    @Column(name = "latest_released_version_id")
+    private UUID latestReleasedVersionId;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "scope_type")

@@ -6,11 +6,11 @@ import com.learning.role_permission_service.dto.AssignPermissionsRequest;
 import com.learning.role_permission_service.entity.RolePermissionGrantEntity;
 
 public interface RolePermissionGrantService {
-	RolePermissionGrantEntity createGrant(Long tenantId, RolePermissionGrantEntity grant, String createdBy);
+	RolePermissionGrantEntity createGrant(String tenantId, RolePermissionGrantEntity grant, String createdBy);
 
-	List<RolePermissionGrantEntity> assignPermissions(Long tenantId, AssignPermissionsRequest request, String createdBy);
+	List<RolePermissionGrantEntity> assignPermissions(String tenantId, AssignPermissionsRequest request, String createdBy);
 
-	List<RolePermissionGrantEntity> getGrants(Long tenantId, Long roleId);
+	List<RolePermissionGrantEntity> getGrants(String tenantId, Long roleId);
 
-	void deleteGrant(Long tenantId, Long grantId);
+	void deleteGrant(String tenantId, Long grantId);
 }

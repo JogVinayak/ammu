@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class AccessPolicy {
 	private Long id;
-	private Long tenantId;
+	private String tenantId;
 	private String name;
 	private String effect;
 	private Integer priority;

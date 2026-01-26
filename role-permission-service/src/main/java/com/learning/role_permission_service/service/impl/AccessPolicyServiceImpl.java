@@ -21,7 +21,7 @@ public class AccessPolicyServiceImpl implements AccessPolicyService {
 
 	@Override
 	@Transactional
-	public AccessPolicyEntity createPolicy(Long tenantId, AccessPolicyEntity policy, String createdBy) {
+	public AccessPolicyEntity createPolicy(String tenantId, AccessPolicyEntity policy, String createdBy) {
 		AccessPolicyEntity entity = new AccessPolicyEntity();
 		entity.setTenantId(tenantId);
 		entity.setName(policy.getName());
@@ -38,7 +38,7 @@ public class AccessPolicyServiceImpl implements AccessPolicyService {
 
 	@Override
 	@Transactional
-	public AccessPolicyEntity updatePolicy(Long tenantId, Long policyId, AccessPolicyEntity policy) {
+	public AccessPolicyEntity updatePolicy(String tenantId, Long policyId, AccessPolicyEntity policy) {
 		AccessPolicyEntity existing = getPolicy(tenantId, policyId);
 		existing.setName(policy.getName());
 		existing.setEffect(policy.getEffect());
@@ -52,20 +52,20 @@ public class AccessPolicyServiceImpl implements AccessPolicyService {
 
 	@Override
 	@Transactional(readOnly = true)
-	public AccessPolicyEntity getPolicy(Long tenantId, Long policyId) {
+	public AccessPolicyEntity getPolicy(String tenantId, Long policyId) {
 		return policyRepository.findByIdAndTenantId(policyId, tenantId)
 				.orElseThrow(() -> new ResourceNotFoundException("Policy not found"));
 	}
 
 	@Override
 	@Transactional(readOnly = true)
-	public List<AccessPolicyEntity> getPolicies(Long tenantId) {
+	public List<AccessPolicyEntity> getPolicies(String tenantId) {
 		return policyRepository.findByTenantId(tenantId);
 	}
 
 	@Override
 	@Transactional
-	public void deletePolicy(Long tenantId, Long policyId) {
+	public void deletePolicy(String tenantId, Long policyId) {
 		policyRepository.delete(getPolicy(tenantId, policyId));
 	}
 }

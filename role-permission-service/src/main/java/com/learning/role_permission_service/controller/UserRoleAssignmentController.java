@@ -27,8 +27,8 @@ public class UserRoleAssignmentController {
 
 	@PostMapping
 	public UserRoleAssignmentResponse assignRole(
-			@PathVariable Long tenantId,
-			@PathVariable Long userId,
+			@PathVariable String tenantId,
+			@PathVariable String userId,
 			@RequestBody UserRoleAssignmentRequest request,
 			@RequestHeader(value = "X-User-Id", required = false) String assignedBy) {
 		UserRoleAssignmentEntity assignment = new UserRoleAssignmentEntity();
@@ -43,13 +43,13 @@ public class UserRoleAssignmentController {
 	}
 
 	@GetMapping
-	public List<UserRoleAssignmentResponse> getAssignments(@PathVariable Long tenantId, @PathVariable Long userId) {
+	public List<UserRoleAssignmentResponse> getAssignments(@PathVariable String tenantId, @PathVariable String userId) {
 		return assignmentService.getAssignments(tenantId, userId).stream().map(this::toResponse).toList();
 	}
 
 	@DeleteMapping("/{assignmentId}")
 	public UserRoleAssignmentResponse revokeAssignment(
-			@PathVariable Long tenantId,
+			@PathVariable String tenantId,
 			@PathVariable Long assignmentId) {
 		return toResponse(assignmentService.revokeAssignment(tenantId, assignmentId));
 	}

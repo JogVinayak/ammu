@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>OOP Mind Map — React Flow</title>
+
+    <!-- React Flow styles -->
+    <link rel="stylesheet" href="https://unpkg.com/reactflow/dist/style.css" />
+
+    <style>
+      :root {
+        --bg0: #070a12;
+        --bg1: #0b1222;
+        --card: rgba(255, 255, 255, 0.06);
+        --card2: rgba(255, 255, 255, 0.08);
+        --border: rgba(255, 255, 255, 0.10);
+        --text: rgba(255, 255, 255, 0.92);
+        --muted: rgba(255, 255, 255, 0.66);
+        --shadow: 0 18px 50px rgba(0, 0, 0, 0.55);
+        --shadow2: 0 10px 24px rgba(0, 0, 0, 0.40);
+        --radius: 18px;
+        --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+          "Courier New", monospace;
+        --sans: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      }
+
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        background: radial-gradient(1200px 600px at 20% 10%, #1a2d5a 0%, rgba(26, 45, 90, 0) 60%),
+          radial-gradient(900px 520px at 80% 15%, #3b1b5b 0%, rgba(59, 27, 91, 0) 55%),
+          linear-gradient(180deg, var(--bg0), var(--bg1));
+        color: var(--text);
+        font-family: var(--sans);
+        overflow: hidden;
+      }
+
+      #app {
+        height: 100%;
+        display: grid;
+        grid-template-rows: auto 1fr;
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 14px 16px;
+        margin: 16px 16px 10px;
+        border: 1px solid var(--border);
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.04));
+        border-radius: var(--radius);
+        box-shadow: var(--shadow2);
+        backdrop-filter: blur(10px);
+      }
+
+      .title {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .title h1 {
+        margin: 0;
+        font-size: 16px;
+        letter-spacing: 0.2px;
+        font-weight: 650;
+      }
+
+      .title .sub {
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      .actions {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 12px;
+        border: 1px solid var(--border);
+        background: rgba(0, 0, 0, 0.18);
+        border-radius: 999px;
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+        cursor: pointer;
+        user-select: none;
+        transition: transform 0.12s ease, background 0.12s ease, border-color 0.12s ease;
+        color: var(--text);
+        font-size: 12px;
+      }
+      .pill:hover {
+        transform: translateY(-1px);
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(255, 255, 255, 0.18);
+      }
+      .pill kbd {
+        font-family: var(--mono);
+        font-size: 11px;
+        padding: 2px 6px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.06);
+        color: var(--muted);
+      }
+
+      .canvas {
+        margin: 0 16px 16px;
+        border-radius: var(--radius);
+        border: 1px solid var(--border);
+        overflow: hidden;
+        box-shadow: var(--shadow);
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02));
+        backdrop-filter: blur(10px);
+        position: relative;
+      }
+
+      /* React Flow theming */
+      .react-flow__renderer {
+        background: transparent;
+      }
+      .react-flow__controls {
+        box-shadow: none;
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        overflow: hidden;
+        background: rgba(0, 0, 0, 0.2);
+        backdrop-filter: blur(8px);
+      }
+      .react-flow__controls button {
+        background: transparent;
+        border: none;
+        color: var(--text);
+      }
+      .react-flow__minimap {
+        border-radius: 14px;
+        overflow: hidden;
+        border: 1px solid var(--border);
+        background: rgba(0, 0, 0, 0.18);
+        backdrop-filter: blur(8px);
+      }
+      .react-flow__attribution {
+        display: none;
+      }
+
+      /* Node visual polish */
+      .mm-node {
+        width: 270px;
+        border-radius: 18px;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0.06));
+        box-shadow: 0 14px 34px rgba(0, 0, 0, 0.55);
+        padding: 12px 12px 10px;
+        backdrop-filter: blur(10px);
+        position: relative;
+      }
+
+      .mm-node::before {
+        content: "";
+        position: absolute;
+        inset: -1px;
+        border-radius: 18px;
+        background: radial-gradient(600px 120px at 20% 0%, rgba(120, 200, 255, 0.20), transparent 55%),
+          radial-gradient(500px 100px at 80% 10%, rgba(255, 120, 210, 0.16), transparent 60%);
+        pointer-events: none;
+        opacity: 0.9;
+        z-index: 0;
+      }
+
+      .mm-node > * {
+        position: relative;
+        z-index: 1;
+      }
+
+      .mm-top {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .mm-title {
+        font-weight: 700;
+        letter-spacing: 0.2px;
+        font-size: 14px;
+        line-height: 1.2;
+        margin: 0;
+      }
+
+      .mm-type {
+        font-size: 11px;
+        font-family: var(--mono);
+        padding: 3px 8px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: rgba(0, 0, 0, 0.18);
+        color: var(--muted);
+        white-space: nowrap;
+      }
+
+      .mm-body {
+        margin-top: 8px;
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.78);
+        line-height: 1.35;
+      }
+
+      .mm-footer {
+        margin-top: 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .mm-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 11px;
+        padding: 5px 9px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: rgba(255, 255, 255, 0.06);
+        color: rgba(255, 255, 255, 0.80);
+      }
+
+      .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.7);
+        box-shadow: 0 0 18px rgba(255, 255, 255, 0.22);
+      }
+
+      /* Handle polish - positioned at node border */
+      .react-flow__handle {
+        width: 12px;
+        height: 12px;
+        background: rgba(255, 255, 255, 0.65);
+        border: 2px solid rgba(0, 0, 0, 0.4);
+        opacity: 0;  /* Hide handles visually for cleaner look */
+      }
+      .react-flow__handle:hover {
+        transform: scale(1.1);
+      }
+      .react-flow__handle-top {
+        top: -6px !important;
+      }
+      .react-flow__handle-bottom {
+        bottom: -6px !important;
+      }
+      .react-flow__handle-left {
+        left: -6px !important;
+      }
+      .react-flow__handle-right {
+        right: -6px !important;
+      }
+    </style>
+    <!-- Import map for ESM modules -->
+    <script type="importmap">
+      {
+        "imports": {
+          "react": "https://esm.sh/react@18.2.0",
+          "react-dom": "https://esm.sh/react-dom@18.2.0",
+          "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+          "reactflow": "https://esm.sh/reactflow@11.10.1?deps=react@18.2.0,react-dom@18.2.0"
+        }
+      }
+    </script>
+  </head>
+
+  <body>
+    <div id="app"></div>
+
+    <!-- React Flow via ESM module -->
+    <script type="module">
+      import React from 'react';
+      import ReactDOM from 'react-dom/client';
+      import ReactFlow, {
+        Background,
+        Controls,
+        MiniMap,
+        Handle,
+        Position,
+        MarkerType,
+        useNodesState,
+        useEdgesState,
+        useReactFlow,
+        ReactFlowProvider
+      } from 'reactflow';
+
+      // ---------- Data from your JSON ----------
+      // Clean radial layout like reference - each branch in its own direction
+      const NODE_DATA = [
+        {
+          id: "00000000-0000-0000-0000-000000000001",
+          title: "Object-Oriented Programming",
+          type: "CONCEPT",
+          body: "OOP is a programming paradigm based on the concept of objects",
+          position: { x: 550, y: 350 }  // Center
+        },
+        // Topics branch outward in 4 directions from center
+        {
+          id: "00000000-0000-0000-0000-000000000002",
+          title: "Encapsulation",
+          type: "TOPIC",
+          body: "Bundling data and methods that operate on that data within a single unit (class), restricting direct access to some components",
+          position: { x: 150, y: 180 }  // Top-left
+        },
+        {
+          id: "00000000-0000-0000-0000-000000000003",
+          title: "Inheritance",
+          type: "TOPIC",
+          body: "A mechanism where a new class inherits properties and behaviors from an existing class",
+          position: { x: 150, y: 520 }  // Bottom-left
+        },
+        {
+          id: "00000000-0000-0000-0000-000000000004",
+          title: "Polymorphism",
+          type: "TOPIC",
+          body: "The ability of objects to take on many forms - same interface, different implementations",
+          position: { x: 950, y: 520 }  // Bottom-right
+        },
+        {
+          id: "00000000-0000-0000-0000-000000000005",
+          title: "Abstraction",
+          type: "TOPIC",
+          body: "Hiding complex implementation details and showing only essential features",
+          position: { x: 950, y: 180 }  // Top-right
+        },
+        // Subtopics extend FURTHER outward from their parent topics
+        {
+          id: "00000000-0000-0000-0000-000000000006",
+          title: "Private Fields",
+          type: "SUBTOPIC",
+          body: "Use private access modifier to hide internal state",
+          position: { x: -250, y: 80 }  // Far top-left (from Encapsulation)
+        },
+        {
+          id: "00000000-0000-0000-0000-000000000007",
+          title: "Getters/Setters",
+          type: "SUBTOPIC",
+          body: "Public methods to access and modify private fields",
+          position: { x: -250, y: 280 }  // Left (from Encapsulation)
+        },
+        {
+          id: "00000000-0000-0000-0000-000000000008",
+          title: "extends keyword",
+          type: "SUBTOPIC",
+          body: "Used to inherit from a parent class",
+          position: { x: -250, y: 480 }  // Left (from Inheritance)
+        },
+        {
+          id: "00000000-0000-0000-0000-000000000009",
+          title: "super keyword",
+          type: "SUBTOPIC",
+          body: "Reference to parent class constructor/methods",
+          position: { x: -250, y: 680 }  // Far bottom-left (from Inheritance)
+        }
+      ];
+
+      const EDGE_DATA = [
+        // PART_OF - Topics connect to center OOP node (clean direct connections)
+        {
+          id: "00000000-0000-0000-0001-000000000001",
+          source: "00000000-0000-0000-0000-000000000001",  // OOP
+          target: "00000000-0000-0000-0000-000000000002",  // Encapsulation
+          sourceHandle: "left",
+          targetHandle: "right",
+          relation: "PART_OF",
+          strength: 0.5
+        },
+        {
+          id: "00000000-0000-0000-0001-000000000002",
+          source: "00000000-0000-0000-0000-000000000001",  // OOP
+          target: "00000000-0000-0000-0000-000000000003",  // Inheritance
+          sourceHandle: "left",
+          targetHandle: "right",
+          relation: "PART_OF",
+          strength: 0.5
+        },
+        {
+          id: "00000000-0000-0000-0001-000000000003",
+          source: "00000000-0000-0000-0000-000000000001",  // OOP
+          target: "00000000-0000-0000-0000-000000000004",  // Polymorphism
+          sourceHandle: "right",
+          targetHandle: "left",
+          relation: "PART_OF",
+          strength: 0.5
+        },
+        {
+          id: "00000000-0000-0000-0001-000000000004",
+          source: "00000000-0000-0000-0000-000000000001",  // OOP
+          target: "00000000-0000-0000-0000-000000000005",  // Abstraction
+          sourceHandle: "right",
+          targetHandle: "left",
+          relation: "PART_OF",
+          strength: 0.5
+        },
+
+        // EXPLAINS - Topics connect to their subtopics (outward direction)
+        {
+          id: "00000000-0000-0000-0001-000000000005",
+          source: "00000000-0000-0000-0000-000000000002",  // Encapsulation
+          target: "00000000-0000-0000-0000-000000000006",  // Private Fields
+          sourceHandle: "left",
+          targetHandle: "right",
+          relation: "EXPLAINS",
+          strength: 0.5
+        },
+        {
+          id: "00000000-0000-0000-0001-000000000006",
+          source: "00000000-0000-0000-0000-000000000002",  // Encapsulation
+          target: "00000000-0000-0000-0000-000000000007",  // Getters/Setters
+          sourceHandle: "left",
+          targetHandle: "right",
+          relation: "EXPLAINS",
+          strength: 0.5
+        },
+        {
+          id: "00000000-0000-0000-0001-000000000007",
+          source: "00000000-0000-0000-0000-000000000003",  // Inheritance
+          target: "00000000-0000-0000-0000-000000000008",  // extends keyword
+          sourceHandle: "left",
+          targetHandle: "right",
+          relation: "EXPLAINS",
+          strength: 0.5
+        },
+        {
+          id: "00000000-0000-0000-0001-000000000008",
+          source: "00000000-0000-0000-0000-000000000003",  // Inheritance
+          target: "00000000-0000-0000-0000-000000000009",  // super keyword
+          sourceHandle: "left",
+          targetHandle: "right",
+          relation: "EXPLAINS",
+          strength: 0.5
+        }
+      ];
+
+      // ---------- Styling helpers ----------
+      const REL_STYLE = {
+        PART_OF: {
+          type: "default",  // Bezier curve
+          width: 2.5
+        },
+        EXPLAINS: {
+          type: "default",  // Bezier curve
+          width: 2
+        },
+        PREREQ: {
+          type: "default",  // Bezier curve
+          width: 2
+        }
+      };
+
+      function strokeWidthByStrength(base, strength) {
+        return base;  // Clean consistent width
+      }
+
+      function edgeColor(relation) {
+        // Clean consistent edge color
+        return "rgba(255,255,255,0.5)";
+      }
+
+      // ---------- Custom Node ----------
+      function MindMapNode({ data }) {
+        const type = data.type || "NODE";
+        const relationHint =
+          type === "CONCEPT" ? "Core concept" : type === "TOPIC" ? "Key topic" : "Supporting detail";
+
+        return React.createElement(
+          "div",
+          { className: "mm-node" },
+          // Source handles at node borders
+          React.createElement(Handle, { id: "top", type: "source", position: Position.Top }),
+          React.createElement(Handle, { id: "bottom", type: "source", position: Position.Bottom }),
+          React.createElement(Handle, { id: "left", type: "source", position: Position.Left }),
+          React.createElement(Handle, { id: "right", type: "source", position: Position.Right }),
+          // Target handles at node borders
+          React.createElement(Handle, { id: "top", type: "target", position: Position.Top }),
+          React.createElement(Handle, { id: "bottom", type: "target", position: Position.Bottom }),
+          React.createElement(Handle, { id: "left", type: "target", position: Position.Left }),
+          React.createElement(Handle, { id: "right", type: "target", position: Position.Right }),
+
+          React.createElement(
+            "div",
+            { className: "mm-top" },
+            React.createElement("div", null, React.createElement("div", { className: "mm-title" }, data.title)),
+            React.createElement("div", { className: "mm-type" }, type)
+          ),
+          React.createElement("div", { className: "mm-body" }, data.body),
+          React.createElement(
+            "div",
+            { className: "mm-footer" },
+            React.createElement(
+              "div",
+              { className: "mm-chip" },
+              React.createElement("span", { className: "dot" }),
+              React.createElement("span", null, relationHint)
+            ),
+            React.createElement(
+              "div",
+              { className: "mm-chip", style: { fontFamily: "var(--mono)", color: "rgba(255,255,255,0.72)" } },
+              data.id.slice(-6)
+            )
+          )
+        );
+      }
+
+      const nodeTypes = { mindNode: MindMapNode };
+
+      // ---------- Fit / Center Controls ----------
+      function TopBar({ onFit, onLayoutHint }) {
+        return React.createElement(
+          "div",
+          { className: "topbar" },
+          React.createElement(
+            "div",
+            { className: "title" },
+            React.createElement("h1", null, "OOP Mind Map"),
+            React.createElement(
+              "div",
+              { className: "sub" },
+              "Drag nodes • Smooth curved edges • Zoom/Pan • MiniMap • Premium dark glass UI"
+            )
+          ),
+          React.createElement(
+            "div",
+            { className: "actions" },
+            React.createElement(
+              "div",
+              {
+                className: "pill",
+                onClick: onFit,
+                title: "Fit view"
+              },
+              "Fit View ",
+              React.createElement("kbd", null, "F")
+            ),
+            React.createElement(
+              "div",
+              {
+                className: "pill",
+                onClick: onLayoutHint,
+                title: "Tip: try selecting nodes and moving them around"
+              },
+              "Tips ",
+              React.createElement("kbd", null, "?")
+            )
+          )
+        );
+      }
+
+      function App() {
+        const initialNodes = React.useMemo(() => {
+          return NODE_DATA.map((n) => ({
+            id: n.id,
+            type: "mindNode",
+            position: n.position,
+            data: { title: n.title, body: n.body, type: n.type, id: n.id }
+          }));
+        }, []);
+
+        const initialEdges = React.useMemo(() => {
+          return EDGE_DATA.map((e) => {
+            const s = REL_STYLE[e.relation] || REL_STYLE.PART_OF;
+            const w = strokeWidthByStrength(s.width, e.strength);
+
+            return {
+              id: e.id,
+              source: e.source,
+              target: e.target,
+              sourceHandle: e.sourceHandle,
+              targetHandle: e.targetHandle,
+              type: s.type,
+              animated: false,  // Clean static lines
+              // No labels for cleaner look
+              style: {
+                stroke: edgeColor(e.relation),
+                strokeWidth: w,
+                strokeLinecap: "round",
+                strokeLinejoin: "round"
+              },
+              markerEnd: {
+                type: MarkerType.ArrowClosed,
+                width: 16,
+                height: 16,
+                color: edgeColor(e.relation)
+              }
+            };
+          });
+        }, []);
+
+        const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
+        const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+
+        const rf = useReactFlow();
+
+        const fit = React.useCallback(() => {
+          rf.fitView({ padding: 0.22, duration: 600 });
+        }, [rf]);
+
+        React.useEffect(() => {
+          setTimeout(() => fit(), 60);
+
+          const onKey = (ev) => {
+            if (ev.key.toLowerCase() === "f") fit();
+            if (ev.key === "?") alert("Tips:\n\n• Drag nodes to rearrange\n• Scroll to zoom, drag canvas to pan\n• Use MiniMap to jump around\n• Press 'F' anytime to Fit View");
+          };
+          window.addEventListener("keydown", onKey);
+          return () => window.removeEventListener("keydown", onKey);
+        }, [fit]);
+
+        const onLayoutHint = React.useCallback(() => {
+          alert(
+            "Quick UX tips:\n\n• Keep CONCEPT in center/top.\n• Place TOPIC nodes around it.\n• Keep SUBTOPIC nodes under their TOPIC.\n• PREREQ arrows should generally flow left → right (learning order)."
+          );
+        }, []);
+
+        return React.createElement(
+          React.Fragment,
+          null,
+          React.createElement(TopBar, { onFit: fit, onLayoutHint }),
+          React.createElement(
+            "div",
+            { className: "canvas" },
+            React.createElement(
+              ReactFlow,
+              {
+                nodes,
+                edges,
+                nodeTypes,
+                onNodesChange,
+                onEdgesChange,
+                fitView: true,
+                fitViewOptions: { padding: 0.22 },
+                nodesDraggable: true,
+                nodesConnectable: false,
+                elementsSelectable: true,
+                panOnDrag: true,
+                zoomOnScroll: true,
+                zoomOnPinch: true,
+                snapToGrid: true,
+                snapGrid: [12, 12],
+                defaultEdgeOptions: {
+                  type: "default"  // Bezier curves
+                },
+                proOptions: { hideAttribution: true }
+              },
+              React.createElement(Background, {
+                variant: "dots",
+                gap: 18,
+                size: 1
+              }),
+              React.createElement(Controls, { position: "bottom-right" }),
+              React.createElement(MiniMap, {
+                position: "bottom-left",
+                pannable: true,
+                zoomable: true,
+                nodeStrokeWidth: 2
+              })
+            )
+          )
+        );
+      }
+
+      const root = ReactDOM.createRoot(document.getElementById("app"));
+
+      root.render(
+        React.createElement(
+          ReactFlowProvider,
+          null,
+          React.createElement(App, null)
+        )
+      );
+    </script>
+  </body>
+</html>

@@ -13,6 +13,8 @@ import java.util.UUID;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table(
@@ -57,6 +59,7 @@ public class Node {
     @Column(name = "pos_y")
     private Double posY;
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "meta_json", columnDefinition = "jsonb")
     private String metaJson;
 

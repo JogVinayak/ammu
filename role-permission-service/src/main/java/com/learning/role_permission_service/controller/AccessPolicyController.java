@@ -28,7 +28,7 @@ public class AccessPolicyController {
 
 	@PostMapping
 	public AccessPolicyResponse createPolicy(
-			@PathVariable Long tenantId,
+			@PathVariable String tenantId,
 			@RequestBody AccessPolicyRequest request,
 			@RequestHeader(value = "X-User-Id", required = false) String userId) {
 		AccessPolicyEntity policy = new AccessPolicyEntity();
@@ -44,7 +44,7 @@ public class AccessPolicyController {
 
 	@PutMapping("/{policyId}")
 	public AccessPolicyResponse updatePolicy(
-			@PathVariable Long tenantId,
+			@PathVariable String tenantId,
 			@PathVariable Long policyId,
 			@RequestBody AccessPolicyRequest request) {
 		AccessPolicyEntity policy = new AccessPolicyEntity();
@@ -59,17 +59,17 @@ public class AccessPolicyController {
 	}
 
 	@GetMapping("/{policyId}")
-	public AccessPolicyResponse getPolicy(@PathVariable Long tenantId, @PathVariable Long policyId) {
+	public AccessPolicyResponse getPolicy(@PathVariable String tenantId, @PathVariable Long policyId) {
 		return toResponse(policyService.getPolicy(tenantId, policyId));
 	}
 
 	@GetMapping
-	public List<AccessPolicyResponse> getPolicies(@PathVariable Long tenantId) {
+	public List<AccessPolicyResponse> getPolicies(@PathVariable String tenantId) {
 		return policyService.getPolicies(tenantId).stream().map(this::toResponse).toList();
 	}
 
 	@DeleteMapping("/{policyId}")
-	public void deletePolicy(@PathVariable Long tenantId, @PathVariable Long policyId) {
+	public void deletePolicy(@PathVariable String tenantId, @PathVariable Long policyId) {
 		policyService.deletePolicy(tenantId, policyId);
 	}
 
