@@ -1,0 +1,217 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: learner-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-databases.sql:/docker-entrypoint-initdb.d/init-databases.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - learner-network
+
+  # API Gateway
+  api-gateway:
+    build: ./api-gateway
+    container_name: api-gateway
+    ports:
+      - "8084:8084"
+    environment:
+      - SERVICES_AUTH_URL=http://auth-service:8081
+      - SERVICES_TENANT_URL=http://tenant-service:8082
+      - SERVICES_PROFILE_URL=http://user-profile-service:8083
+      - SERVICES_PERMISSION_URL=http://role-permission-service:8080
+      - SERVICES_NOTES_URL=http://notes-service:8088
+      - SERVICES_MINDMAP_URL=http://mindmap-service:8087
+      - SERVICES_WORKFLOW_URL=http://content-workflow-service:8086
+    depends_on:
+      - auth-service
+      - tenant-service
+      - user-profile-service
+      - role-permission-service
+      - notes-service
+      - mindmap-service
+      - content-workflow-service
+    networks:
+      - learner-network
+
+  # Auth Service
+  auth-service:
+    build: ./auth-service
+    container_name: auth-service
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/auth_service
+      - SPRING_DATASOURCE_USERNAME=auth_service
+      - SPRING_DATASOURCE_PASSWORD=auth_service
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - learner-network
+
+  # Tenant Service
+  tenant-service:
+    build: ./tenant-service
+    container_name: tenant-service
+    ports:
+      - "8082:8082"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/tenant_service
+      - SPRING_DATASOURCE_USERNAME=tenant_service
+      - SPRING_DATASOURCE_PASSWORD=tenant_service
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - learner-network
+
+  # User Profile Service
+  user-profile-service:
+    build: ./user-profile-service
+    container_name: user-profile-service
+    ports:
+      - "8083:8083"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/user_profile
+      - SPRING_DATASOURCE_USERNAME=user_profile_user
+      - SPRING_DATASOURCE_PASSWORD=user_profile_password
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - learner-network
+
+  # Role Permission Service
+  role-permission-service:
+    build: ./role-permission-service
+    container_name: role-permission-service
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/role_permission_service
+      - SPRING_DATASOURCE_USERNAME=role_permission_service
+      - SPRING_DATASOURCE_PASSWORD=role_permission_service
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - learner-network
+
+  # Content Service
+  content-service:
+    build: ./content-service
+    container_name: content-service
+    ports:
+      - "8085:8085"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/content_service
+      - SPRING_DATASOURCE_USERNAME=content_service
+      - SPRING_DATASOURCE_PASSWORD=content_service
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - learner-network
+
+  # Content Workflow Service
+  content-workflow-service:
+    build: ./content-workflow-service
+    container_name: content-workflow-service
+    ports:
+      - "8086:8086"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/content_workflow_service
+      - SPRING_DATASOURCE_USERNAME=content_workflow_service
+      - SPRING_DATASOURCE_PASSWORD=content_workflow_service
+      - SERVICES_USER-PROFILE_URL=http://user-profile-service:8083
+    depends_on:
+      postgres:
+        condition: service_healthy
+      user-profile-service:
+        condition: service_started
+    networks:
+      - learner-network
+
+  # Graph Relations Service
+  graph-relations-service:
+    build: ./graph-relations-service
+    container_name: graph-relations-service
+    ports:
+      - "8089:8087"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/graph_relations_service
+      - SPRING_DATASOURCE_USERNAME=graph_relations_service
+      - SPRING_DATASOURCE_PASSWORD=graph_relations_service
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - learner-network
+
+  # Mindmap Service
+  mindmap-service:
+    build: ./mindmap-service
+    container_name: mindmap-service
+    ports:
+      - "8087:8087"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/mindmap_service
+      - SPRING_DATASOURCE_USERNAME=mindmap_service
+      - SPRING_DATASOURCE_PASSWORD=mindmap_service
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - learner-network
+
+  # Notes Service
+  notes-service:
+    build: ./notes-service
+    container_name: notes-service
+    ports:
+      - "8088:8088"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/notes_service
+      - SPRING_DATASOURCE_USERNAME=notes_service
+      - SPRING_DATASOURCE_PASSWORD=notes_service
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - learner-network
+
+  # Recall Service
+  recall-service:
+    build: ./recall-service
+    container_name: recall-service
+    ports:
+      - "8091:8091"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/recall_service
+      - SPRING_DATASOURCE_USERNAME=recall_service
+      - SPRING_DATASOURCE_PASSWORD=recall_service
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - learner-network
+
+networks:
+  learner-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
