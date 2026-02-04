@@ -42,6 +42,7 @@ public class DefaultNotesService implements NotesService {
     private final NoteRepository noteRepository;
     private final NoteVersionRepository versionRepository;
     private final NoteTagRepository tagRepository;
+    private final GuidedReadingParser guidedReadingParser;
 
     @Override
     @Transactional
@@ -74,6 +75,7 @@ public class DefaultNotesService implements NotesService {
             version.setNoteId(noteId);
             version.setVersionNo(1);
             version.setContentMd(request.getContentMd());
+            version.setContentGuidedJson(guidedReadingParser.parse(request.getContentMd()));
             version.setChangeSummary(request.getChangeSummary());
             version.setCreatedBy(request.getCreatedBy());
             version.setCreatedAt(now);
@@ -198,12 +200,15 @@ public class DefaultNotesService implements NotesService {
         UUID versionId = UUID.randomUUID();
         Instant now = Instant.now();
 
+        String contentMd = request.getContentMd() != null ? request.getContentMd() : "";
+
         NoteVersion version = new NoteVersion();
         version.setId(versionId);
         version.setTenantId(tenantId);
         version.setNoteId(noteId);
         version.setVersionNo(newVersionNo);
-        version.setContentMd(request.getContentMd() != null ? request.getContentMd() : "");
+        version.setContentMd(contentMd);
+        version.setContentGuidedJson(guidedReadingParser.parse(contentMd));
         version.setContentHash(request.getContentHash());
         version.setChangeSummary(request.getChangeSummary());
         version.setCreatedBy(request.getCreatedBy());
@@ -274,6 +279,7 @@ public class DefaultNotesService implements NotesService {
             response.setVersionId(version.getId());
             response.setVersionNo(version.getVersionNo());
             response.setContentMd(version.getContentMd());
+            response.setContentGuidedJson(version.getContentGuidedJson());
         }
 
         return response;
@@ -505,6 +511,7 @@ public class DefaultNotesService implements NotesService {
         response.setVersionNo(version.getVersionNo());
         response.setContentMd(version.getContentMd());
         response.setContentHash(version.getContentHash());
+        response.setContentGuidedJson(version.getContentGuidedJson());
         response.setChangeSummary(version.getChangeSummary());
         response.setCreatedBy(version.getCreatedBy());
         response.setCreatedAt(version.getCreatedAt());

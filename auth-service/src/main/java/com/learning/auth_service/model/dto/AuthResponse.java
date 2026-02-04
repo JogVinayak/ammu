@@ -14,5 +14,6 @@ public class AuthResponse {
     private long expiresIn;
     private UUID userId;
     private UUID tenantId;
-
+    private String userType;      // STUDENT, TEACHER, ADMIN, PRINCIPAL, etc.
+    private String displayName;   // User's display name
 }

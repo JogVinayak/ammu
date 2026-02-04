@@ -16,6 +16,7 @@ public class NoteVersionResponse {
     private int versionNo;
     private String contentMd;
     private String contentHash;
+    private String contentGuidedJson;
     private String changeSummary;
     private UUID createdBy;
     private Instant createdAt;

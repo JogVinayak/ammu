@@ -83,6 +83,17 @@ public class DefaultMindMapService implements MindMapService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<MindMapResponse> list(String tenantId, int limit, int offset) {
+        int safeLimit = clampLimit(limit, 20);
+        int page = offset / Math.max(safeLimit, 1);
+        return mindMapRepository.findByTenantIdOrderByUpdatedAtDesc(tenantId, PageRequest.of(page, safeLimit))
+                .stream()
+                .map(this::toMindMapResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public MindMapResponse getById(String tenantId, UUID mindMapId) {
         MindMap mindMap = requireMindMap(tenantId, mindMapId);
         return toMindMapResponse(mindMap);

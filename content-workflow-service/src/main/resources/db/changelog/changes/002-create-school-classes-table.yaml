@@ -1,0 +1,76 @@
+databaseChangeLog:
+  - changeSet:
+      id: 004-create-school-classes
+      author: claude
+      changes:
+        - createTable:
+            tableName: school_classes
+            columns:
+              - column:
+                  name: class_id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: name
+                  type: varchar(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: subject
+                  type: varchar(100)
+              - column:
+                  name: grade
+                  type: varchar(50)
+              - column:
+                  name: description
+                  type: varchar(500)
+              - column:
+                  name: student_count
+                  type: integer
+                  defaultValue: 0
+              - column:
+                  name: created_by
+                  type: varchar(255)
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  defaultValueComputed: "CURRENT_TIMESTAMP"
+              - column:
+                  name: updated_by
+                  type: varchar(255)
+              - column:
+                  name: updated_at
+                  type: timestamp with time zone
+                  defaultValueComputed: "CURRENT_TIMESTAMP"
+              - column:
+                  name: lock_version
+                  type: bigint
+        - createIndex:
+            tableName: school_classes
+            indexName: idx_class_tenant
+            columns:
+              - column:
+                  name: tenant_id
+        - createIndex:
+            tableName: school_classes
+            indexName: idx_class_tenant_grade
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: grade
+        - createIndex:
+            tableName: school_classes
+            indexName: idx_class_tenant_subject
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: subject

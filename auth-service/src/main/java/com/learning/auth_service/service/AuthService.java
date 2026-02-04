@@ -16,10 +16,14 @@ import com.learning.auth_service.model.dto.ResetPasswordRequest;
 import com.learning.auth_service.model.dto.SignupRequest;
 import com.learning.auth_service.model.dto.TokenIntrospectRequest;
 import com.learning.auth_service.model.dto.TokenIntrospectResponse;
+import com.learning.auth_service.model.dto.ResolveRequest;
+import com.learning.auth_service.model.dto.ResolveResponse;
 import com.learning.auth_service.model.dto.VerifyOtpRequest;
 import java.util.UUID;
 
 public interface AuthService {
+    ResolveResponse resolve(ResolveRequest request);
+
     AuthResponse signup(SignupRequest request);
 
     AuthResponse login(LoginRequest request);

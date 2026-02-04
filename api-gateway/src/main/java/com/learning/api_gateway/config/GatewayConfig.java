@@ -29,6 +29,15 @@ public class GatewayConfig {
     @Value("${services.permission.url:http://localhost:8080}")
     private String permissionServiceUrl;
 
+    @Value("${services.notes.url:http://localhost:8088}")
+    private String notesServiceUrl;
+
+    @Value("${services.mindmap.url:http://localhost:8087}")
+    private String mindmapServiceUrl;
+
+    @Value("${services.workflow.url:http://localhost:8086}")
+    private String workflowServiceUrl;
+
     // Patterns for profile service routes (under /v1/tenants/{tenantId}/...)
     private static final Pattern PROFILE_PATTERN = Pattern.compile("^/v1/tenants/[^/]+/profiles(/.*)?$");
     private static final Pattern RELATIONSHIP_PATTERN = Pattern.compile("^/v1/tenants/[^/]+/relationships(/.*)?$");
@@ -115,6 +124,42 @@ public class GatewayConfig {
                 .POST("/**", req -> proxy(req, tenantServiceUrl, webClientBuilder))
                 .PUT("/**", req -> proxy(req, tenantServiceUrl, webClientBuilder))
                 .DELETE("/**", req -> proxy(req, tenantServiceUrl, webClientBuilder))
+            )
+
+            // Notes Service routes: /v1/notes/** -> /notes/**
+            .path("/v1/notes/**", builder -> builder
+                .GET("/**", req -> proxyWithRewrite(req, notesServiceUrl, "/v1", "", webClientBuilder))
+                .POST("/**", req -> proxyWithRewrite(req, notesServiceUrl, "/v1", "", webClientBuilder))
+                .PUT("/**", req -> proxyWithRewrite(req, notesServiceUrl, "/v1", "", webClientBuilder))
+                .PATCH("/**", req -> proxyWithRewrite(req, notesServiceUrl, "/v1", "", webClientBuilder))
+                .DELETE("/**", req -> proxyWithRewrite(req, notesServiceUrl, "/v1", "", webClientBuilder))
+            )
+
+            // Mindmap Service routes: /v1/mindmaps/** -> /mindmaps/**
+            .path("/v1/mindmaps/**", builder -> builder
+                .GET("/**", req -> proxyWithRewrite(req, mindmapServiceUrl, "/v1", "", webClientBuilder))
+                .POST("/**", req -> proxyWithRewrite(req, mindmapServiceUrl, "/v1", "", webClientBuilder))
+                .PUT("/**", req -> proxyWithRewrite(req, mindmapServiceUrl, "/v1", "", webClientBuilder))
+                .PATCH("/**", req -> proxyWithRewrite(req, mindmapServiceUrl, "/v1", "", webClientBuilder))
+                .DELETE("/**", req -> proxyWithRewrite(req, mindmapServiceUrl, "/v1", "", webClientBuilder))
+            )
+
+            // Workflow Service routes: /v1/workflow/** -> /workflow/**
+            .path("/v1/workflow/**", builder -> builder
+                .GET("/**", req -> proxyWithRewrite(req, workflowServiceUrl, "/v1", "", webClientBuilder))
+                .POST("/**", req -> proxyWithRewrite(req, workflowServiceUrl, "/v1", "", webClientBuilder))
+                .PUT("/**", req -> proxyWithRewrite(req, workflowServiceUrl, "/v1", "", webClientBuilder))
+                .PATCH("/**", req -> proxyWithRewrite(req, workflowServiceUrl, "/v1", "", webClientBuilder))
+                .DELETE("/**", req -> proxyWithRewrite(req, workflowServiceUrl, "/v1", "", webClientBuilder))
+            )
+
+            // Classes routes (in workflow service): /v1/classes/** -> /classes/**
+            .path("/v1/classes/**", builder -> builder
+                .GET("/**", req -> proxyWithRewrite(req, workflowServiceUrl, "/v1", "", webClientBuilder))
+                .POST("/**", req -> proxyWithRewrite(req, workflowServiceUrl, "/v1", "", webClientBuilder))
+                .PUT("/**", req -> proxyWithRewrite(req, workflowServiceUrl, "/v1", "", webClientBuilder))
+                .PATCH("/**", req -> proxyWithRewrite(req, workflowServiceUrl, "/v1", "", webClientBuilder))
+                .DELETE("/**", req -> proxyWithRewrite(req, workflowServiceUrl, "/v1", "", webClientBuilder))
             )
             .build();
     }

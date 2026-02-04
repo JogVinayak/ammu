@@ -1,0 +1,180 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-recall-schedule
+      author: codex
+      changes:
+        - createTable:
+            tableName: recall_schedule
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: topic_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: last_option
+                  type: varchar(16)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: interval_seconds
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: next_review_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+              - column:
+                  name: last_reviewed_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+              - column:
+                  name: last_notified_at
+                  type: timestamp with time zone
+              - column:
+                  name: reminder_count
+                  type: integer
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: streak
+                  type: integer
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: ease_factor
+                  type: numeric(6,3)
+                  defaultValueNumeric: 2.5
+                  constraints:
+                    nullable: false
+              - column:
+                  name: lapse_count
+                  type: integer
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  defaultValueComputed: "CURRENT_TIMESTAMP"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamp with time zone
+                  defaultValueComputed: "CURRENT_TIMESTAMP"
+                  constraints:
+                    nullable: false
+        - addUniqueConstraint:
+            tableName: recall_schedule
+            columnNames: tenant_id, user_id, topic_id
+            constraintName: uk_recall_schedule
+  - changeSet:
+      id: 002-create-recall-events
+      author: codex
+      changes:
+        - createTable:
+            tableName: recall_events
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: topic_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: option
+                  type: varchar(16)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: time_spent_seconds
+                  type: integer
+              - column:
+                  name: occurred_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+              - column:
+                  name: calculated_interval_seconds
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: next_review_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+              - column:
+                  name: meta
+                  type: text
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  defaultValueComputed: "CURRENT_TIMESTAMP"
+                  constraints:
+                    nullable: false
+  - changeSet:
+      id: 003-add-recall-indexes
+      author: codex
+      changes:
+        - createIndex:
+            tableName: recall_schedule
+            indexName: idx_recall_schedule_due
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: user_id
+              - column:
+                  name: next_review_at
+        - createIndex:
+            tableName: recall_schedule
+            indexName: idx_recall_schedule_next_review
+            columns:
+              - column:
+                  name: next_review_at
+        - createIndex:
+            tableName: recall_events
+            indexName: idx_recall_events_tenant_user
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: user_id

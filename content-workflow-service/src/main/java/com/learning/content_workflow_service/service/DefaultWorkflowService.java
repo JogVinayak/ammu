@@ -3,10 +3,14 @@ package com.learning.content_workflow_service.service;
 import com.learning.content_workflow_service.dto.CreateWorkflowRequest;
 import com.learning.content_workflow_service.dto.PublishTargets;
 import com.learning.content_workflow_service.dto.PublishWorkflowRequest;
+import com.learning.content_workflow_service.dto.ReleaseContentRequest;
+import com.learning.content_workflow_service.dto.ReleasedContentResponse;
 import com.learning.content_workflow_service.dto.ReviewActionRequest;
+import com.learning.content_workflow_service.dto.ReviewTaskDto;
 import com.learning.content_workflow_service.dto.SubmitForReviewRequest;
 import com.learning.content_workflow_service.dto.WorkflowListResponse;
 import com.learning.content_workflow_service.dto.WorkflowResponse;
+import com.learning.content_workflow_service.entity.ReleasedContent;
 import com.learning.content_workflow_service.entity.ReviewTask;
 import com.learning.content_workflow_service.entity.Workflow;
 import com.learning.content_workflow_service.enums.ReviewTaskStatus;
@@ -14,6 +18,7 @@ import com.learning.content_workflow_service.enums.WorkflowState;
 import com.learning.content_workflow_service.exception.BadRequestException;
 import com.learning.content_workflow_service.exception.ConflictException;
 import com.learning.content_workflow_service.exception.NotFoundException;
+import com.learning.content_workflow_service.repository.ReleasedContentRepository;
 import com.learning.content_workflow_service.repository.ReviewTaskRepository;
 import com.learning.content_workflow_service.repository.WorkflowRepository;
 import java.time.Instant;
@@ -40,6 +45,7 @@ public class DefaultWorkflowService implements WorkflowService {
 
     private final WorkflowRepository workflowRepository;
     private final ReviewTaskRepository reviewTaskRepository;
+    private final ReleasedContentRepository releasedContentRepository;
     private final ObjectMapper objectMapper;
 
     @Override
@@ -322,7 +328,27 @@ public class DefaultWorkflowService implements WorkflowService {
         response.setCurrentStep(workflow.getCurrentStep());
         response.setPublishTargets(deserializePublishTargets(workflow.getPublishTargetsJson()));
         response.setVersion(workflow.getVersion());
+
+        // Fetch and include review tasks
+        List<ReviewTask> reviewTasks = reviewTaskRepository.findByWorkflowId(workflow.getId());
+        List<ReviewTaskDto> reviewTaskDtos = reviewTasks.stream()
+                .map(this::toReviewTaskDto)
+                .collect(Collectors.toList());
+        response.setReviewTasks(reviewTaskDtos);
+
         return response;
+    }
+
+    private ReviewTaskDto toReviewTaskDto(ReviewTask task) {
+        ReviewTaskDto dto = new ReviewTaskDto();
+        dto.setId(task.getId());
+        dto.setWorkflowId(task.getWorkflowId());
+        dto.setAssigneeUserId(task.getAssigneeUserId());
+        dto.setStatus(task.getStatus());
+        dto.setComment(task.getComment());
+        dto.setCreatedAt(task.getCreatedAt());
+        dto.setUpdatedAt(task.getUpdatedAt());
+        return dto;
     }
 
     private String serializePublishTargets(PublishTargets targets) {
@@ -390,5 +416,79 @@ public class DefaultWorkflowService implements WorkflowService {
             return (root, query, cb) -> cb.conjunction();
         }
         return (root, query, cb) -> cb.equal(root.get(field), value);
+    }
+
+    @Override
+    @Transactional
+    public void releaseContent(String tenantId, String userId, ReleaseContentRequest request) {
+        Instant now = Instant.now();
+        UUID releasedBy = null;
+        if (userId != null && !userId.isBlank()) {
+            try {
+                releasedBy = UUID.fromString(userId.trim());
+            } catch (IllegalArgumentException e) {
+                // Keep as null if not a valid UUID
+            }
+        }
+
+        for (String contentIdStr : request.getContentIds()) {
+            UUID contentId;
+            try {
+                contentId = UUID.fromString(contentIdStr.trim());
+            } catch (IllegalArgumentException e) {
+                continue; // Skip invalid content IDs
+            }
+
+            for (String classIdStr : request.getClassIds()) {
+                UUID classId;
+                try {
+                    classId = UUID.fromString(classIdStr.trim());
+                } catch (IllegalArgumentException e) {
+                    continue; // Skip invalid class IDs
+                }
+
+                // Check if already released to this class
+                if (releasedContentRepository.existsByTenantIdAndContentIdAndClassId(tenantId, contentId, classId)) {
+                    continue; // Already released, skip
+                }
+
+                ReleasedContent released = new ReleasedContent();
+                released.setId(UUID.randomUUID());
+                released.setTenantId(tenantId);
+                released.setContentId(contentId);
+                released.setContentType(request.getContentType());
+                released.setClassId(classId);
+                released.setReleasedBy(releasedBy);
+                released.setReleasedAt(now);
+
+                releasedContentRepository.save(released);
+            }
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ReleasedContentResponse> getReleasedContent(String tenantId, UUID classId, String contentType) {
+        List<ReleasedContent> items;
+        if (contentType != null && !contentType.isBlank()) {
+            items = releasedContentRepository.findByTenantIdAndClassIdAndContentType(tenantId, classId, contentType.trim());
+        } else {
+            items = releasedContentRepository.findByTenantIdAndClassId(tenantId, classId);
+        }
+
+        return items.stream()
+                .map(this::toReleasedContentResponse)
+                .collect(Collectors.toList());
+    }
+
+    private ReleasedContentResponse toReleasedContentResponse(ReleasedContent entity) {
+        ReleasedContentResponse response = new ReleasedContentResponse();
+        response.setId(entity.getId());
+        response.setContentId(entity.getContentId());
+        response.setContentType(entity.getContentType());
+        response.setClassId(entity.getClassId());
+        response.setReleasedBy(entity.getReleasedBy());
+        response.setReleasedAt(entity.getReleasedAt());
+        return response;
     }
 }

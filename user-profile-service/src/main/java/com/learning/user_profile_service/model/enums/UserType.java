@@ -5,5 +5,6 @@ public enum UserType {
     TEACHER,
     MENTOR,
     PARENT,
-    ADMIN
+    ADMIN,
+    PRINCIPAL
 }

@@ -45,6 +45,9 @@ public class NoteVersion {
     @Column(name = "content_hash")
     private String contentHash;
 
+    @Column(name = "content_guided_json")
+    private String contentGuidedJson;
+
     @Column(name = "change_summary")
     private String changeSummary;
 

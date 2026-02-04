@@ -16,6 +16,8 @@ import java.util.List;
 import java.util.UUID;
 
 public interface MindMapService {
+    List<MindMapResponse> list(String tenantId, int limit, int offset);
+
     MindMapCreateResponse create(String tenantId, CreateMindMapRequest request);
 
     MindMapResponse getById(String tenantId, UUID mindMapId);

@@ -239,3 +239,14 @@ databaseChangeLog:
             columnDataType: uuid
         - sql:
             sql: UPDATE notes SET status = 'RELEASED' WHERE status = 'PUBLISHED'
+  - changeSet:
+      id: 006-add-guided-reading-column
+      author: codex
+      changes:
+        - addColumn:
+            tableName: note_versions
+            columns:
+              - column:
+                  name: content_guided_json
+                  type: text
+                  remarks: Pre-processed JSON for guided reading - contains paragraphs with words and metadata

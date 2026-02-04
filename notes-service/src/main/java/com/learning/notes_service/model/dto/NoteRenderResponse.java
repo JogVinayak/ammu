@@ -16,6 +16,7 @@ public class NoteRenderResponse {
     private int versionNo;
     private String title;
     private String contentMd;
+    private String contentGuidedJson;
     private Instant publishedAt;
     private NoteStatus status;
 }

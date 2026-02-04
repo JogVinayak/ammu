@@ -1,0 +1,30 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: recall-postgres
+    environment:
+      POSTGRES_DB: recall
+      POSTGRES_USER: recall_user
+      POSTGRES_PASSWORD: recall_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - recall_postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  recall-service:
+    build: .
+    container_name: recall-service
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/recall
+      SPRING_DATASOURCE_USERNAME: recall_user
+      SPRING_DATASOURCE_PASSWORD: recall_password
+      SPRING_LIQUIBASE_ENABLED: "true"
+    ports:
+      - "8091:8091"
+    depends_on:
+      - postgres
+    restart: unless-stopped
+
+volumes:
+  recall_postgres_data:

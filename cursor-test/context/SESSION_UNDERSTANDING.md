@@ -12,6 +12,8 @@
 |------|------|-----------------|---------------|
 | Amogh | Student | Euroschool | 4-C |
 | Priya | Teacher (Science) | Euroschool | 4-C |
+| Suresh | Content Creator | Euroschool | - |
+| Admin | Tenant Admin | Euroschool | - |
 | Daksh | Student | Ravishankar School | 4-C |
 | Ravi | Teacher (Science) | Ravishankar School | 4-C |
 
@@ -184,6 +186,68 @@ Implements full workflow:
 | Priya reads all notes | Can see all (including drafts) |
 | Amogh views published mind map | Can access graph |
 | Amogh views draft mind map | Cannot access |
+
+---
+
+## Content Creator Workflow
+
+### Flow Diagram
+
+```
+Content Creator (Suresh)
+    |
+    v
+Creates Note (DRAFT)
+    |
+    v
+Submits for Review -----> Admin (Reviewer)
+    |                          |
+    |                          v
+    |                     Reviews & Approves
+    |                          |
+    v                          v
+Note PUBLISHED to Repository <--
+    |
+    v
+Teacher (Priya) Searches Repository
+    |
+    v
+Copies Note (gets own copy)
+    |
+    v
+Links to Mind Map (#mindmap-{name} tag)
+```
+
+### Workflow States
+
+| State | Description |
+|-------|-------------|
+| DRAFT | Content Creator working on note |
+| IN_REVIEW | Submitted to Admin for approval |
+| APPROVED | Admin approved, ready to publish |
+| PUBLISHED | Available in repository |
+| ARCHIVED | Removed from active repository |
+
+### Roles Involved
+
+| Role | Permissions |
+|------|-------------|
+| CONTENT_CREATOR | Create notes, submit for review |
+| TENANT_ADMIN | Review and approve content |
+| SUBJECT_TEACHER | Search repository, copy notes |
+
+### Notebook Created: `content_creator_workflow_test.ipynb`
+
+Tests the full Content Creator workflow:
+1. Create tenant and roles (CONTENT_CREATOR, TENANT_ADMIN, SUBJECT_TEACHER)
+2. Create users (Suresh, Admin, Priya)
+3. Assign roles to users
+4. Suresh creates note with tags (#subject-science, #topic-photosynthesis, #repository)
+5. Suresh submits workflow for review
+6. Admin approves the review
+7. Workflow published to repository
+8. Priya searches repository
+9. Priya copies note (gets own copy with #mindmap-{name} tag)
 
 ---
 

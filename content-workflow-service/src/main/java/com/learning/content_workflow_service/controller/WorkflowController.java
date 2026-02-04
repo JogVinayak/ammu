@@ -2,6 +2,8 @@ package com.learning.content_workflow_service.controller;
 
 import com.learning.content_workflow_service.dto.CreateWorkflowRequest;
 import com.learning.content_workflow_service.dto.PublishWorkflowRequest;
+import com.learning.content_workflow_service.dto.ReleaseContentRequest;
+import com.learning.content_workflow_service.dto.ReleasedContentResponse;
 import com.learning.content_workflow_service.dto.ReviewActionRequest;
 import com.learning.content_workflow_service.dto.SubmitForReviewRequest;
 import com.learning.content_workflow_service.dto.WorkflowListResponse;
@@ -9,6 +11,7 @@ import com.learning.content_workflow_service.dto.WorkflowResponse;
 import com.learning.content_workflow_service.enums.WorkflowState;
 import com.learning.content_workflow_service.service.WorkflowService;
 import jakarta.validation.Valid;
+import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -99,5 +102,22 @@ public class WorkflowController {
             @RequestHeader(value = "X-User-Id", required = false) String userId,
             @PathVariable UUID workflowId) {
         return workflowService.archive(tenantId, workflowId, userId);
+    }
+
+    @PostMapping("/release")
+    public ResponseEntity<Void> releaseContent(
+            @RequestHeader("X-Tenant-Id") String tenantId,
+            @RequestHeader(value = "X-User-Id", required = false) String userId,
+            @Valid @RequestBody ReleaseContentRequest request) {
+        workflowService.releaseContent(tenantId, userId, request);
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/released")
+    public List<ReleasedContentResponse> getReleasedContent(
+            @RequestHeader("X-Tenant-Id") String tenantId,
+            @RequestParam UUID classId,
+            @RequestParam(required = false) String contentType) {
+        return workflowService.getReleasedContent(tenantId, classId, contentType);
     }
 }

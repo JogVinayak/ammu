@@ -36,6 +36,14 @@ import org.springframework.web.bind.annotation.RestController;
 public class MindMapController {
     private final MindMapService mindMapService;
 
+    @GetMapping
+    public List<MindMapResponse> list(
+            @RequestHeader("X-Tenant-Id") String tenantId,
+            @RequestParam(defaultValue = "20") int limit,
+            @RequestParam(defaultValue = "0") int offset) {
+        return mindMapService.list(tenantId, limit, offset);
+    }
+
     @PostMapping
     public ResponseEntity<MindMapCreateResponse> create(
             @RequestHeader("X-Tenant-Id") String tenantId,

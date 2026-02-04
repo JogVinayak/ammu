@@ -12,6 +12,8 @@ import com.learning.auth_service.model.dto.OtpSendResponse;
 import com.learning.auth_service.model.dto.PasswordChangeRequest;
 import com.learning.auth_service.model.dto.PasswordForgotRequest;
 import com.learning.auth_service.model.dto.RefreshRequest;
+import com.learning.auth_service.model.dto.ResolveRequest;
+import com.learning.auth_service.model.dto.ResolveResponse;
 import com.learning.auth_service.model.dto.ResetPasswordRequest;
 import com.learning.auth_service.model.dto.SignupRequest;
 import com.learning.auth_service.model.dto.TokenIntrospectRequest;
@@ -33,6 +35,11 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/auth")
 public class AuthController {
     private final AuthService authService;
+
+    @PostMapping("/resolve")
+    public ResolveResponse resolve(@RequestBody ResolveRequest request) {
+        return authService.resolve(request);
+    }
 
     @PostMapping("/signup")
     public AuthResponse signup(@RequestBody SignupRequest request) {

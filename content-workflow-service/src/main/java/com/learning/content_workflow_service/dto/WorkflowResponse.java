@@ -2,6 +2,7 @@ package com.learning.content_workflow_service.dto;
 
 import com.learning.content_workflow_service.enums.WorkflowState;
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -25,4 +26,5 @@ public class WorkflowResponse {
     private String currentStep;
     private PublishTargets publishTargets;
     private Long version;
+    private List<ReviewTaskDto> reviewTasks;
 }

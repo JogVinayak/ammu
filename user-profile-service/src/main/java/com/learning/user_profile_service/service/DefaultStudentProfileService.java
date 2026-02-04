@@ -1,21 +1,32 @@
 package com.learning.user_profile_service.service;
 
 import com.learning.user_profile_service.exception.ResourceNotFoundException;
+import com.learning.user_profile_service.model.dto.ClassStudentDto;
 import com.learning.user_profile_service.model.dto.StudentProfileRequest;
 import com.learning.user_profile_service.model.dto.StudentProfileResponse;
 import com.learning.user_profile_service.model.entity.StudentProfile;
+import com.learning.user_profile_service.model.entity.UserProfile;
 import com.learning.user_profile_service.repository.StudentProfileRepository;
+import com.learning.user_profile_service.repository.UserProfileRepository;
 import java.time.Instant;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class DefaultStudentProfileService implements StudentProfileService {
     private final StudentProfileRepository studentProfileRepository;
+    private final UserProfileRepository userProfileRepository;
 
-    public DefaultStudentProfileService(StudentProfileRepository studentProfileRepository) {
+    public DefaultStudentProfileService(StudentProfileRepository studentProfileRepository,
+            UserProfileRepository userProfileRepository) {
         this.studentProfileRepository = studentProfileRepository;
+        this.userProfileRepository = userProfileRepository;
     }
 
     @Override
@@ -73,5 +84,38 @@ public class DefaultStudentProfileService implements StudentProfileService {
         response.setCreatedAt(profile.getCreatedAt());
         response.setUpdatedAt(profile.getUpdatedAt());
         return response;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ClassStudentDto> getStudentsByClassId(UUID tenantId, UUID classId) {
+        List<StudentProfile> studentProfiles = studentProfileRepository.findByTenantIdAndClassId(tenantId, classId);
+
+        if (studentProfiles.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<UUID> userIds = studentProfiles.stream()
+                .map(StudentProfile::getUserId)
+                .toList();
+
+        Map<UUID, UserProfile> userProfileMap = userProfileRepository.findByTenantIdAndUserIdIn(tenantId, userIds)
+                .stream()
+                .collect(Collectors.toMap(UserProfile::getUserId, Function.identity()));
+
+        return studentProfiles.stream()
+                .map(sp -> {
+                    UserProfile up = userProfileMap.get(sp.getUserId());
+                    return ClassStudentDto.builder()
+                            .id(sp.getUserId())
+                            .name(up != null ? up.getDisplayName() : "Unknown")
+                            .email(up != null ? up.getEmail() : null)
+                            .avatar(up != null ? up.getAvatarUrl() : null)
+                            .grade(sp.getGrade())
+                            .section(sp.getSection())
+                            .rollNumber(sp.getRollNumber())
+                            .build();
+                })
+                .toList();
     }
 }
