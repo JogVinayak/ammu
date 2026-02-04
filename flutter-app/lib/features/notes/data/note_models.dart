@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 
-enum NoteStatus { draft, published, released }
+enum NoteStatus { draft, inReview, ready, released, archived }
 
 class Note extends Equatable {
   final String id;
@@ -57,18 +57,38 @@ class Note extends Equatable {
         'contentMd': contentMd,
         'contentGuidedJson': contentGuidedJson,
         'tags': tags,
-        'status': status.name.toUpperCase(),
+        'status': _statusToString(status),
         'tenantId': tenantId,
         'ownerId': ownerId,
         'scopeType': scopeType,
       };
 
+  static String _statusToString(NoteStatus status) {
+    switch (status) {
+      case NoteStatus.draft:
+        return 'DRAFT';
+      case NoteStatus.inReview:
+        return 'IN_REVIEW';
+      case NoteStatus.ready:
+        return 'READY';
+      case NoteStatus.released:
+        return 'RELEASED';
+      case NoteStatus.archived:
+        return 'ARCHIVED';
+    }
+  }
+
   static NoteStatus _parseStatus(String? status) {
+    print('DEBUG _parseStatus: parsing status=$status');
     switch (status?.toUpperCase()) {
-      case 'PUBLISHED':
-        return NoteStatus.published;
+      case 'IN_REVIEW':
+        return NoteStatus.inReview;
+      case 'READY':
+        return NoteStatus.ready;
       case 'RELEASED':
         return NoteStatus.released;
+      case 'ARCHIVED':
+        return NoteStatus.archived;
       default:
         return NoteStatus.draft;
     }

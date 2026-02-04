@@ -170,6 +170,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
         // Refresh the notes list
         ref.read(notesProvider.notifier).refresh();
 
+        // Invalidate the detail provider so viewer fetches fresh data
+        if (isEditing) {
+          ref.invalidate(noteDetailProvider(widget.noteId!));
+        }
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(isEditing ? 'Note updated' : 'Note created'),

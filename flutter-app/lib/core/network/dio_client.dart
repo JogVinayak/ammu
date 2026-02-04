@@ -59,16 +59,17 @@ class DioClient {
   }
 
   String get _baseUrl {
-    final serverIp = _prefs.getString(StorageKeys.serverIp) ?? 'localhost';
+    // Get server address - can be null or empty, ApiConstants handles default
+    final serverAddress = _prefs.getString(StorageKeys.serverIp);
     switch (serviceType) {
       case ServiceType.auth:
-        return ApiConstants.authBaseUrl(serverIp);
+        return ApiConstants.authBaseUrl(serverAddress);
       case ServiceType.notes:
-        return ApiConstants.notesBaseUrl(serverIp);
+        return ApiConstants.notesBaseUrl(serverAddress);
       case ServiceType.mindmap:
-        return ApiConstants.mindmapBaseUrl(serverIp);
+        return ApiConstants.mindmapBaseUrl(serverAddress);
       case ServiceType.workflow:
-        return ApiConstants.workflowBaseUrl(serverIp);
+        return ApiConstants.workflowBaseUrl(serverAddress);
     }
   }
 
@@ -83,6 +84,11 @@ class DioClient {
           final userId = _prefs.getString(StorageKeys.userId);
 
           options.headers['Content-Type'] = 'application/json';
+
+          // Skip ngrok browser warning page
+          if (options.baseUrl.contains('ngrok')) {
+            options.headers['ngrok-skip-browser-warning'] = 'true';
+          }
 
           if (accessToken != null && accessToken.isNotEmpty) {
             options.headers['Authorization'] = 'Bearer $accessToken';

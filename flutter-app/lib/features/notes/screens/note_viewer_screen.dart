@@ -4,16 +4,24 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/widgets.dart';
+import '../data/note_models.dart';
 import '../providers/notes_provider.dart';
 
-class NoteViewerScreen extends ConsumerWidget {
+class NoteViewerScreen extends ConsumerStatefulWidget {
   final String noteId;
 
   const NoteViewerScreen({super.key, required this.noteId});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final noteAsync = ref.watch(noteDetailProvider(noteId));
+  ConsumerState<NoteViewerScreen> createState() => _NoteViewerScreenState();
+}
+
+class _NoteViewerScreenState extends ConsumerState<NoteViewerScreen> {
+  bool _isPublishing = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final noteAsync = ref.watch(noteDetailProvider(widget.noteId));
 
     return Scaffold(
       appBar: AppBar(
@@ -25,7 +33,7 @@ class NoteViewerScreen extends ConsumerWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.edit),
-            onPressed: () => context.push('/notes/$noteId/edit'),
+            onPressed: () => context.push('/notes/${widget.noteId}/edit'),
           ),
         ],
       ),
@@ -140,13 +148,36 @@ class NoteViewerScreen extends ConsumerWidget {
         error: (error, _) => AppErrorWidget(message: error.toString()),
       ),
       floatingActionButton: noteAsync.maybeWhen(
-        data: (note) => note != null
-            ? FloatingActionButton.extended(
-                onPressed: () => _releaseToClass(context, ref),
-                icon: const Icon(Icons.publish),
-                label: const Text('Release to Class'),
-              )
-            : null,
+        data: (note) {
+          if (note == null) return null;
+
+          // Show different actions based on status
+          if (note.status == NoteStatus.draft) {
+            return FloatingActionButton.extended(
+              onPressed: _isPublishing ? null : () => _markReady(note),
+              icon: _isPublishing
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(Icons.check_circle),
+              label: Text(_isPublishing ? 'Marking Ready...' : 'Mark Ready'),
+              backgroundColor: AppColors.success,
+            );
+          } else if (note.status == NoteStatus.ready) {
+            return FloatingActionButton.extended(
+              onPressed: () => _releaseToClass(),
+              icon: const Icon(Icons.publish),
+              label: const Text('Release to Class'),
+            );
+          }
+          // Released/archived notes don't need action
+          return null;
+        },
         orElse: () => null,
       ),
     );
@@ -154,18 +185,55 @@ class NoteViewerScreen extends ConsumerWidget {
 
   Color _getStatusColor(dynamic status) {
     switch (status.toString()) {
-      case 'NoteStatus.published':
+      case 'NoteStatus.ready':
         return AppColors.success;
       case 'NoteStatus.draft':
         return AppColors.warning;
+      case 'NoteStatus.inReview':
+        return Colors.orange;
       case 'NoteStatus.released':
         return AppColors.primary;
+      case 'NoteStatus.archived':
+        return AppColors.textSecondary;
       default:
         return AppColors.textSecondary;
     }
   }
 
-  void _releaseToClass(BuildContext context, WidgetRef ref) {
-    context.push('/release?contentId=$noteId&contentType=note');
+  Future<void> _markReady(Note note) async {
+    setState(() => _isPublishing = true);
+
+    try {
+      await ref.read(notesProvider.notifier).markReady(note.id);
+
+      // Invalidate and refresh to show updated status
+      ref.invalidate(noteDetailProvider(widget.noteId));
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Note marked as ready'),
+            backgroundColor: AppColors.success,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to mark ready: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isPublishing = false);
+      }
+    }
+  }
+
+  void _releaseToClass() {
+    context.push('/release?contentId=${widget.noteId}&contentType=note');
   }
 }

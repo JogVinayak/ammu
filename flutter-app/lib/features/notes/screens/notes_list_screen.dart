@@ -43,7 +43,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
           status = NoteStatus.draft;
           break;
         case 2:
-          status = NoteStatus.published;
+          status = NoteStatus.ready;
           break;
         case 3:
           status = NoteStatus.released;
@@ -68,7 +68,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
           tabs: const [
             Tab(text: 'All'),
             Tab(text: 'Draft'),
-            Tab(text: 'Published'),
+            Tab(text: 'Ready'),
             Tab(text: 'Released'),
           ],
         ),
@@ -250,23 +250,31 @@ class _NoteCard extends StatelessWidget {
 
   Color _getStatusColor(NoteStatus status) {
     switch (status) {
-      case NoteStatus.published:
+      case NoteStatus.ready:
         return AppColors.success;
       case NoteStatus.draft:
         return AppColors.warning;
+      case NoteStatus.inReview:
+        return Colors.orange;
       case NoteStatus.released:
         return AppColors.primary;
+      case NoteStatus.archived:
+        return AppColors.textSecondary;
     }
   }
 
   String _getStatusText(NoteStatus status) {
     switch (status) {
-      case NoteStatus.published:
-        return 'PUBLISHED';
+      case NoteStatus.ready:
+        return 'READY';
       case NoteStatus.draft:
         return 'DRAFT';
+      case NoteStatus.inReview:
+        return 'IN REVIEW';
       case NoteStatus.released:
         return 'RELEASED';
+      case NoteStatus.archived:
+        return 'ARCHIVED';
     }
   }
 

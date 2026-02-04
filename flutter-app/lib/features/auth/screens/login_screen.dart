@@ -108,18 +108,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
                 const SizedBox(height: AppSpacing.xl * 2),
                 AppTextField(
-                  label: 'Server IP',
-                  hint: 'e.g., 192.168.1.100',
+                  label: 'Server Address (Optional)',
+                  hint: 'Leave empty to use default server',
                   controller: _serverIpController,
                   prefixIcon: Icons.dns_outlined,
-                  keyboardType: TextInputType.text,
+                  keyboardType: TextInputType.url,
                   textInputAction: TextInputAction.next,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter server IP address';
-                    }
-                    return null;
-                  },
+                  // No validator - field is optional, defaults to ngrok URL
                 ),
                 const SizedBox(height: AppSpacing.md),
                 AppTextField(

@@ -317,7 +317,8 @@ class _ReleaseContentScreenState extends ConsumerState<ReleaseContentScreen> {
     setState(() => _isReleasing = true);
 
     try {
-      final repository = ref.read(workflowRepositoryProvider);
+      final workflowRepository = ref.read(workflowRepositoryProvider);
+      final notesNotifier = ref.read(notesProvider.notifier);
 
       // Release notes
       final notesState = ref.read(notesProvider);
@@ -326,11 +327,22 @@ class _ReleaseContentScreenState extends ConsumerState<ReleaseContentScreen> {
           .toList();
 
       if (selectedNoteIds.isNotEmpty) {
-        await repository.releaseContent(ReleaseRequest(
+        // Create release record in workflow service
+        await workflowRepository.releaseContent(ReleaseRequest(
           contentIds: selectedNoteIds,
           classIds: _selectedClasses.toList(),
           contentType: 'note',
         ));
+
+        // Update note status in notes service
+        for (final noteId in selectedNoteIds) {
+          try {
+            await notesNotifier.releaseNote(noteId, classIds: _selectedClasses.toList());
+          } catch (e) {
+            print('DEBUG: Failed to update note $noteId status: $e');
+            // Continue with other notes even if one fails
+          }
+        }
       }
 
       // Release mindmaps
@@ -340,12 +352,16 @@ class _ReleaseContentScreenState extends ConsumerState<ReleaseContentScreen> {
           .toList();
 
       if (selectedMindmapIds.isNotEmpty) {
-        await repository.releaseContent(ReleaseRequest(
+        await workflowRepository.releaseContent(ReleaseRequest(
           contentIds: selectedMindmapIds,
           classIds: _selectedClasses.toList(),
           contentType: 'mindmap',
         ));
       }
+
+      // Refresh notes and mindmaps to ensure UI is in sync
+      await ref.read(notesProvider.notifier).refresh();
+      ref.read(mindmapsProvider.notifier).refresh();
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

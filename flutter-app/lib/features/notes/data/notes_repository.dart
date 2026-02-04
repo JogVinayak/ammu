@@ -36,13 +36,19 @@ class NotesRepository {
       );
 
       final data = response.data;
+      print('DEBUG getNotes: Raw response data type=${data.runtimeType}');
       if (data is Map && data['items'] != null) {
-        return (data['items'] as List)
-            .map((json) => Note.fromJson(json))
-            .toList();
+        final items = data['items'] as List;
+        print('DEBUG getNotes: Found ${items.length} items');
+        for (var item in items) {
+          print('DEBUG getNotes: Note id=${item['id']}, status=${item['status']}, title=${item['title']}');
+        }
+        return items.map((json) => Note.fromJson(json)).toList();
       } else if (data is List) {
+        print('DEBUG getNotes: Found ${data.length} items (list format)');
         return data.map((json) => Note.fromJson(json)).toList();
       }
+      print('DEBUG getNotes: No items found');
       return [];
     } on DioException catch (e) {
       throw _handleError(e);
@@ -52,11 +58,14 @@ class NotesRepository {
   Future<Note> getNoteById(String id) async {
     try {
       // Get note metadata
+      print('DEBUG getNoteById: Fetching note $id');
       final noteResponse = await _dioClient.get('${ApiConstants.notes}/$id');
       final noteData = Map<String, dynamic>.from(noteResponse.data);
 
       // Get the latest version to get the content
       final latestVersionId = noteData['latestVersionId'];
+      print('DEBUG getNoteById: latestVersionId=$latestVersionId');
+
       if (latestVersionId != null) {
         try {
           final versionResponse = await _dioClient.get(
@@ -64,16 +73,21 @@ class NotesRepository {
           );
           // Merge content from version into note data
           noteData['contentMd'] = versionResponse.data['contentMd'] ?? '';
-        } catch (_) {
+          noteData['contentGuidedJson'] = versionResponse.data['contentGuidedJson'];
+          print('DEBUG getNoteById: Loaded content length=${noteData['contentMd']?.length ?? 0}');
+        } catch (e) {
           // If version fetch fails, use empty content
+          print('DEBUG getNoteById: Failed to fetch version - $e');
           noteData['contentMd'] = '';
         }
       } else {
+        print('DEBUG getNoteById: No latestVersionId, using empty content');
         noteData['contentMd'] = '';
       }
 
       return Note.fromJson(noteData);
     } on DioException catch (e) {
+      print('DEBUG getNoteById: Error - ${e.response?.statusCode}: ${e.response?.data}');
       throw _handleError(e);
     }
   }
@@ -101,26 +115,33 @@ class NotesRepository {
       final contentMd = data.remove('contentMd');
       final userId = data['updatedBy'];
 
+      print('DEBUG updateNote: Updating note $id');
+
       // Update note metadata
-      final response = await _dioClient.patch(
+      await _dioClient.patch(
         '${ApiConstants.notes}/$id',
         data: data,
       );
 
       // If content was changed, create a new version
       if (contentMd != null && contentMd.toString().isNotEmpty) {
+        print('DEBUG updateNote: Creating new version');
         await createNoteVersion(id, contentMd, userId);
+        print('DEBUG updateNote: Version created successfully');
       }
 
-      return Note.fromJson(response.data);
+      // Re-fetch the note to get updated data including new latestVersionId
+      return await getNoteById(id);
     } on DioException catch (e) {
+      print('DEBUG updateNote: Error - ${e.response?.statusCode}: ${e.response?.data}');
       throw _handleError(e);
     }
   }
 
   Future<void> createNoteVersion(String noteId, String contentMd, String? createdBy) async {
     try {
-      await _dioClient.post(
+      print('DEBUG createNoteVersion: noteId=$noteId, createdBy=$createdBy, contentLength=${contentMd.length}');
+      final response = await _dioClient.post(
         '${ApiConstants.notes}/$noteId/versions',
         data: {
           'contentMd': contentMd,
@@ -128,7 +149,9 @@ class NotesRepository {
           'changeSummary': 'Updated content',
         },
       );
+      print('DEBUG createNoteVersion: Success - ${response.data}');
     } on DioException catch (e) {
+      print('DEBUG createNoteVersion: Error - ${e.response?.statusCode}: ${e.response?.data}');
       throw _handleError(e);
     }
   }
@@ -141,20 +164,25 @@ class NotesRepository {
     }
   }
 
-  Future<void> publishNote(String id) async {
+  Future<void> markReady(String id, String readyBy) async {
     try {
-      await _dioClient.patch(
-        '${ApiConstants.notes}/$id/publish',
+      await _dioClient.post(
+        '${ApiConstants.notes}/$id/mark-ready',
+        queryParameters: {'readyBy': readyBy},
       );
     } on DioException catch (e) {
       throw _handleError(e);
     }
   }
 
-  Future<void> releaseNote(String id) async {
+  Future<void> releaseNote(String id, {List<String>? classIds, String? releasedBy}) async {
     try {
-      await _dioClient.patch(
+      await _dioClient.post(
         '${ApiConstants.notes}/$id/release',
+        data: {
+          if (classIds != null) 'targetClassIds': classIds,
+          if (releasedBy != null) 'releasedBy': releasedBy,
+        },
       );
     } on DioException catch (e) {
       throw _handleError(e);

@@ -36,7 +36,11 @@ class NotesState {
   }
 
   List<Note> get filteredNotes {
-    return notes.where((note) {
+    print('DEBUG filteredNotes: filterStatus=$filterStatus, total notes=${notes.length}');
+    for (var note in notes) {
+      print('DEBUG filteredNotes: Note "${note.title}" has status=${note.status}');
+    }
+    final result = notes.where((note) {
       if (filterStatus != null && note.status != filterStatus) {
         return false;
       }
@@ -48,6 +52,8 @@ class NotesState {
       }
       return true;
     }).toList();
+    print('DEBUG filteredNotes: Returning ${result.length} notes');
+    return result;
   }
 }
 
@@ -111,25 +117,28 @@ class NotesNotifier extends StateNotifier<NotesState> {
     }
   }
 
-  Future<void> publishNote(String noteId) async {
+  Future<void> markReady(String noteId) async {
+    if (_userId == null) throw Exception('User not logged in');
     try {
-      await _repository.publishNote(noteId);
+      await _repository.markReady(noteId, _userId!);
       state = state.copyWith(
         notes: state.notes.map((n) {
           if (n.id == noteId) {
-            return n.copyWith(status: NoteStatus.published);
+            return n.copyWith(status: NoteStatus.ready);
           }
           return n;
         }).toList(),
       );
     } catch (e) {
       state = state.copyWith(error: e.toString());
+      rethrow;
     }
   }
 
-  Future<void> releaseNote(String noteId) async {
+  Future<void> releaseNote(String noteId, {List<String>? classIds}) async {
+    if (_userId == null) throw Exception('User not logged in');
     try {
-      await _repository.releaseNote(noteId);
+      await _repository.releaseNote(noteId, classIds: classIds, releasedBy: _userId);
       state = state.copyWith(
         notes: state.notes.map((n) {
           if (n.id == noteId) {
@@ -140,6 +149,7 @@ class NotesNotifier extends StateNotifier<NotesState> {
       );
     } catch (e) {
       state = state.copyWith(error: e.toString());
+      rethrow;
     }
   }
 
