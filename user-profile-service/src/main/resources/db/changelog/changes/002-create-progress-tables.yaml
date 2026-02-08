@@ -1,0 +1,317 @@
+databaseChangeLog:
+  - changeSet:
+      id: 5
+      author: user-profile-service
+      comment: Create user_progress table for aggregate progress tracking
+      changes:
+        - createTable:
+            tableName: user_progress
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: total_notes_viewed
+                  type: int
+                  defaultValueNumeric: 0
+              - column:
+                  name: total_notes_completed
+                  type: int
+                  defaultValueNumeric: 0
+              - column:
+                  name: total_mindmaps_viewed
+                  type: int
+                  defaultValueNumeric: 0
+              - column:
+                  name: total_mindmaps_completed
+                  type: int
+                  defaultValueNumeric: 0
+              - column:
+                  name: total_flashcards_reviewed
+                  type: int
+                  defaultValueNumeric: 0
+              - column:
+                  name: total_quizzes_attempted
+                  type: int
+                  defaultValueNumeric: 0
+              - column:
+                  name: average_quiz_score
+                  type: decimal(5,2)
+              - column:
+                  name: total_time_spent_seconds
+                  type: bigint
+                  defaultValueNumeric: 0
+              - column:
+                  name: knowledge_score
+                  type: decimal(5,2)
+              - column:
+                  name: streak_days
+                  type: int
+                  defaultValueNumeric: 0
+              - column:
+                  name: last_activity_at
+                  type: timestamp with time zone
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+              - column:
+                  name: updated_at
+                  type: timestamp with time zone
+        - addUniqueConstraint:
+            tableName: user_progress
+            columnNames: tenant_id, user_id
+            constraintName: uk_user_progress_tenant_user
+        - createIndex:
+            tableName: user_progress
+            indexName: idx_user_progress_tenant_user
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: user_id
+
+  - changeSet:
+      id: 6
+      author: user-profile-service
+      comment: Create content_progress table for per-content progress tracking
+      changes:
+        - createTable:
+            tableName: content_progress
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: content_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: content_type
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: varchar(50)
+                  defaultValue: NOT_STARTED
+              - column:
+                  name: progress_percent
+                  type: int
+                  defaultValueNumeric: 0
+              - column:
+                  name: score
+                  type: decimal(5,2)
+              - column:
+                  name: attempts
+                  type: int
+                  defaultValueNumeric: 0
+              - column:
+                  name: time_spent_seconds
+                  type: bigint
+                  defaultValueNumeric: 0
+              - column:
+                  name: last_position
+                  type: varchar(255)
+              - column:
+                  name: started_at
+                  type: timestamp with time zone
+              - column:
+                  name: completed_at
+                  type: timestamp with time zone
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+              - column:
+                  name: updated_at
+                  type: timestamp with time zone
+        - addUniqueConstraint:
+            tableName: content_progress
+            columnNames: tenant_id, user_id, content_id, content_type
+            constraintName: uk_content_progress_tenant_user_content
+        - createIndex:
+            tableName: content_progress
+            indexName: idx_content_progress_tenant_user
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: user_id
+        - createIndex:
+            tableName: content_progress
+            indexName: idx_content_progress_content
+            columns:
+              - column:
+                  name: content_id
+              - column:
+                  name: content_type
+
+  - changeSet:
+      id: 7
+      author: user-profile-service
+      comment: Create knowledge_coverage table for mindmap node coverage tracking
+      changes:
+        - createTable:
+            tableName: knowledge_coverage
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: mindmap_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: node_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: mastery_level
+                  type: varchar(50)
+                  defaultValue: NOT_STARTED
+              - column:
+                  name: confidence_score
+                  type: decimal(5,2)
+              - column:
+                  name: review_count
+                  type: int
+                  defaultValueNumeric: 0
+              - column:
+                  name: correct_count
+                  type: int
+                  defaultValueNumeric: 0
+              - column:
+                  name: last_reviewed_at
+                  type: timestamp with time zone
+              - column:
+                  name: next_review_at
+                  type: timestamp with time zone
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+              - column:
+                  name: updated_at
+                  type: timestamp with time zone
+        - addUniqueConstraint:
+            tableName: knowledge_coverage
+            columnNames: tenant_id, user_id, mindmap_id, node_id
+            constraintName: uk_knowledge_coverage_tenant_user_node
+        - createIndex:
+            tableName: knowledge_coverage
+            indexName: idx_knowledge_coverage_tenant_user
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: user_id
+        - createIndex:
+            tableName: knowledge_coverage
+            indexName: idx_knowledge_coverage_mindmap
+            columns:
+              - column:
+                  name: mindmap_id
+        - createIndex:
+            tableName: knowledge_coverage
+            indexName: idx_knowledge_coverage_next_review
+            columns:
+              - column:
+                  name: user_id
+              - column:
+                  name: next_review_at
+
+  - changeSet:
+      id: 8
+      author: user-profile-service
+      comment: Create progress_events table for milestone-based progress logging
+      changes:
+        - createTable:
+            tableName: progress_events
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: event_type
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: content_id
+                  type: uuid
+              - column:
+                  name: content_type
+                  type: varchar(50)
+              - column:
+                  name: event_data
+                  type: jsonb
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+        - createIndex:
+            tableName: progress_events
+            indexName: idx_progress_events_tenant_user
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: user_id
+        - createIndex:
+            tableName: progress_events
+            indexName: idx_progress_events_created_at
+            columns:
+              - column:
+                  name: created_at

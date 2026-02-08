@@ -2,12 +2,12 @@
   "info": {
     "name": "tenant-service",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "description": "Postman collection for tenant-service APIs"
+    "description": "Postman collection for tenant-service APIs.\n\n## Docker Deployment\n```bash\ndocker-compose up -d\n```\n\n## Service URLs\n- Service: http://localhost:8082\n- Health: http://localhost:8082/actuator/health"
   },
   "variable": [
     {
       "key": "baseUrl",
-      "value": "http://localhost:8080"
+      "value": "http://localhost:8082"
     },
     {
       "key": "tenantId",
@@ -31,6 +31,25 @@
     }
   ],
   "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/actuator/health"
+          }
+        },
+        {
+          "name": "Info",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/actuator/info"
+          }
+        }
+      ]
+    },
     {
       "name": "Tenants",
       "item": [

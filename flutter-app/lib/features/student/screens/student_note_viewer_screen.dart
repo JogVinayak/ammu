@@ -5,6 +5,8 @@ import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/widgets.dart';
 import '../data/student_repository.dart';
 import '../../notes/data/note_models.dart';
+import '../../notes/widgets/flashcard_viewer.dart';
+import '../../notes/widgets/mcq_viewer.dart';
 import '../widgets/guided_reading_view.dart';
 
 class StudentNoteViewerScreen extends ConsumerStatefulWidget {
@@ -60,6 +62,28 @@ class _StudentNoteViewerScreenState
     }
   }
 
+  void _showFlashcards() {
+    if (_note == null) return;
+    showDialog(
+      context: context,
+      builder: (context) => FlashcardViewerDialog(
+        noteId: _note!.id,
+        noteTitle: _note!.title,
+      ),
+    );
+  }
+
+  void _showMcqs() {
+    if (_note == null) return;
+    showDialog(
+      context: context,
+      builder: (context) => McqViewerDialog(
+        noteId: _note!.id,
+        noteTitle: _note!.title,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -67,6 +91,21 @@ class _StudentNoteViewerScreenState
         title: Text(_note?.title ?? 'Note'),
         centerTitle: true,
         actions: [
+          // Flashcard button
+          if (_note != null)
+            IconButton(
+              icon: const Icon(Icons.style),
+              tooltip: 'Revise Flashcards',
+              onPressed: () => _showFlashcards(),
+            ),
+          // MCQ/Quiz button
+          if (_note != null)
+            IconButton(
+              icon: const Icon(Icons.quiz),
+              tooltip: 'Take Quiz',
+              onPressed: () => _showMcqs(),
+            ),
+          // Guided reading button
           if (_note != null && _note!.contentMd != null && _note!.contentMd!.isNotEmpty)
             IconButton(
               onPressed: () {

@@ -251,4 +251,43 @@ System roles that can be seeded per tenant:
 
 Each gets a curated set of grants; avoid tenant admins editing system role grants initially.
 
+---
+
+## 13) Docker Deployment
+
+### Docker Compose
+The service includes `docker-compose.yml` with PostgreSQL database:
+- **Service Port**: 8080
+- **PostgreSQL Port**: 5433 (host) → 5432 (container)
+- **Network**: `learner-network` (bridge)
+- **Health checks**: PostgreSQL readiness + service actuator
+
+**Quick start:**
+```bash
+docker-compose up -d
+```
+
+### Gradle Docker Tasks
+Build and deploy using Gradle:
+
+| Task | Description |
+|------|-------------|
+| `./gradlew dockerBuild` | Build Docker image |
+| `./gradlew dockerStop` | Stop and remove container |
+| `./gradlew dockerRun` | Build and run container (requires PostgreSQL) |
+| `./gradlew dockerDeploy` | Full build + deploy with status |
+| `./gradlew dockerLogs` | View container logs |
+| `./gradlew dockerStatus` | Check container status |
+
+### Environment Variables
+```yaml
+SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/role_permission
+SPRING_DATASOURCE_USERNAME=role_permission_user
+SPRING_DATASOURCE_PASSWORD=role_permission_password
+```
+
+### Service URLs
+- Health: http://localhost:8080/actuator/health
+- Swagger UI: http://localhost:8080/swagger-ui
+
 END

@@ -6,5 +6,6 @@ public enum UserType {
     MENTOR,
     PARENT,
     ADMIN,
-    PRINCIPAL
+    PRINCIPAL,
+    SUPER_ADMIN
 }

@@ -24,39 +24,94 @@ class MindmapsListScreen extends ConsumerWidget {
                   message: state.error!,
                   onRetry: () => ref.read(mindmapsProvider.notifier).refresh(),
                 )
-              : state.mindmaps.isEmpty
-                  ? EmptyState(
-                      icon: Icons.account_tree_outlined,
-                      title: 'No mindmaps yet',
-                      subtitle: 'Create your first mindmap to visualize concepts',
-                      actionText: 'Create Mindmap',
-                      onAction: () => context.push('/mindmaps/create'),
-                    )
-                  : RefreshIndicator(
-                      onRefresh: () =>
-                          ref.read(mindmapsProvider.notifier).refresh(),
-                      child: GridView.builder(
-                        padding: const EdgeInsets.all(AppSpacing.md),
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          crossAxisSpacing: AppSpacing.md,
-                          mainAxisSpacing: AppSpacing.md,
-                          childAspectRatio: 0.85,
+              : RefreshIndicator(
+                  onRefresh: () =>
+                      ref.read(mindmapsProvider.notifier).refresh(),
+                  child: CustomScrollView(
+                    slivers: [
+                      // FAANG Roadmap featured card
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.all(AppSpacing.md),
+                          child: _FaangRoadmapCard(
+                            onTap: () => context.push('/faang-roadmap'),
+                          ),
                         ),
-                        itemCount: state.mindmaps.length,
-                        itemBuilder: (context, index) {
-                          final mindmap = state.mindmaps[index];
-                          return _MindmapCard(
-                            mindmap: mindmap,
-                            onTap: () =>
-                                context.push('/mindmaps/${mindmap.id}'),
-                            onDelete: () =>
-                                _deleteMindmap(context, ref, mindmap),
-                          );
-                        },
                       ),
-                    ),
+                      // My Mindmaps section header
+                      if (state.mindmaps.isNotEmpty)
+                        SliverToBoxAdapter(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppSpacing.md,
+                            ),
+                            child: Text(
+                              'My Mindmaps',
+                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                      // Mindmaps grid
+                      if (state.mindmaps.isEmpty)
+                        SliverFillRemaining(
+                          hasScrollBody: false,
+                          child: Padding(
+                            padding: const EdgeInsets.all(AppSpacing.lg),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.account_tree_outlined,
+                                  size: 64,
+                                  color: AppColors.textSecondary.withOpacity(0.5),
+                                ),
+                                const SizedBox(height: AppSpacing.md),
+                                Text(
+                                  'No custom mindmaps yet',
+                                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ),
+                                const SizedBox(height: AppSpacing.xs),
+                                Text(
+                                  'Create your own mindmap to visualize concepts',
+                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: AppColors.textSecondary,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                      else
+                        SliverPadding(
+                          padding: const EdgeInsets.all(AppSpacing.md),
+                          sliver: SliverGrid(
+                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              crossAxisSpacing: AppSpacing.md,
+                              mainAxisSpacing: AppSpacing.md,
+                              childAspectRatio: 0.85,
+                            ),
+                            delegate: SliverChildBuilderDelegate(
+                              (context, index) {
+                                final mindmap = state.mindmaps[index];
+                                return _MindmapCard(
+                                  mindmap: mindmap,
+                                  onTap: () => context.push('/mindmaps/${mindmap.id}'),
+                                  onDelete: () => _deleteMindmap(context, ref, mindmap),
+                                );
+                              },
+                              childCount: state.mindmaps.length,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => context.push('/mindmaps/create'),
         child: const Icon(Icons.add),
@@ -92,6 +147,120 @@ class MindmapsListScreen extends ConsumerWidget {
             child: const Text('Delete'),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _FaangRoadmapCard extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _FaangRoadmapCard({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.purple.shade600,
+            Colors.blue.shade600,
+          ],
+        ),
+        borderRadius: BorderRadius.circular(AppRadius.card),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.purple.withOpacity(0.3),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(AppRadius.card),
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.rocket_launch,
+                    color: Colors.white,
+                    size: 28,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'FAANG Interview Roadmap',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.3,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Interactive mind map for tech interview preparation',
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.85),
+                          fontSize: 13,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          _buildTag('DSA'),
+                          const SizedBox(width: 6),
+                          _buildTag('System Design'),
+                          const SizedBox(width: 6),
+                          _buildTag('Behavioral'),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.arrow_forward_ios,
+                  color: Colors.white.withOpacity(0.8),
+                  size: 18,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTag(String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 10,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }

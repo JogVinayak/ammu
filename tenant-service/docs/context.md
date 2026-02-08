@@ -322,4 +322,42 @@ Default policy for newly created tenant:
 - auth-service reads tenant policy for signup/login mode and approval flow
 - audit-log-service records all admin mutations (recommended)
 
+---
+
+## 13) Docker Deployment
+
+### Docker Compose
+The service includes `docker-compose.yml` with PostgreSQL database:
+- **Service Port**: 8082
+- **PostgreSQL Port**: 5434 (host) → 5432 (container)
+- **Network**: `learner-network` (bridge)
+- **Health checks**: PostgreSQL readiness + service actuator
+
+**Quick start:**
+```bash
+docker-compose up -d
+```
+
+### Gradle Docker Tasks
+Build and deploy using Gradle:
+
+| Task | Description |
+|------|-------------|
+| `./gradlew dockerBuild` | Build Docker image |
+| `./gradlew dockerStop` | Stop and remove container |
+| `./gradlew dockerRun` | Build and run container (requires PostgreSQL) |
+| `./gradlew dockerDeploy` | Full build + deploy with status |
+| `./gradlew dockerLogs` | View container logs |
+| `./gradlew dockerStatus` | Check container status |
+
+### Environment Variables
+```yaml
+SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/tenant
+SPRING_DATASOURCE_USERNAME=tenant_user
+SPRING_DATASOURCE_PASSWORD=tenant_password
+```
+
+### Service URLs
+- Health: http://localhost:8082/actuator/health
+
 END

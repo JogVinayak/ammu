@@ -1,30 +1,35 @@
+version: '3.8'
+
 services:
-  postgres:
-    image: postgres:16-alpine
-    container_name: auth-postgres
-    environment:
-      POSTGRES_DB: auth
-      POSTGRES_USER: auth_user
-      POSTGRES_PASSWORD: auth_password
-    ports:
-      - "5432:5432"
-    volumes:
-      - auth_postgres_data:/var/lib/postgresql/data
-    restart: unless-stopped
-
   auth-service:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: auth-service
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/auth
-      SPRING_DATASOURCE_USERNAME: auth_user
-      SPRING_DATASOURCE_PASSWORD: auth_password
-      SPRING_LIQUIBASE_ENABLED: "true"
     ports:
-      - "8080:8080"
-    depends_on:
-      - postgres
+      - "8081:8081"
+    environment:
+      - SPRING_APPLICATION_NAME=auth-service
+      - SERVER_PORT=8081
+      # Use shared postgres container from role-permission-service
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://role-permission-postgres:5432/auth
+      - SPRING_DATASOURCE_USERNAME=auth_user
+      - SPRING_DATASOURCE_PASSWORD=auth_password
+      - SPRING_LIQUIBASE_ENABLED=true
+      # Service URLs for Docker network
+      - SERVICES_PROFILE_URL=${SERVICES_PROFILE_URL:-http://host.docker.internal:8083}
+      - SERVICES_TENANT_URL=${SERVICES_TENANT_URL:-http://host.docker.internal:8082}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - learner-network
     restart: unless-stopped
 
-volumes:
-  auth_postgres_data:
+networks:
+  learner-network:
+    name: learner-network
+    driver: bridge

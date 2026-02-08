@@ -22,6 +22,7 @@ import com.learning.auth_service.model.dto.TokenIntrospectResponse;
 import com.learning.auth_service.model.dto.VerifyOtpRequest;
 import com.learning.auth_service.model.entity.TenantMembership;
 import com.learning.auth_service.model.entity.UserIdentity;
+import com.learning.auth_service.model.enums.AccountStatus;
 import com.learning.auth_service.model.enums.AuthLevel;
 import com.learning.auth_service.model.enums.TenantMembershipStatus;
 import com.learning.auth_service.repository.TenantMembershipRepository;
@@ -141,8 +142,42 @@ public class DefaultAuthService implements AuthService {
 
     @Override
     public AuthResponse signup(SignupRequest request) {
+        // Check if user already exists
+        Optional<UserIdentity> existingUser = userIdentityRepository.findByPrimaryEmailOrPrimaryPhone(
+                request.getEmail(), request.getPhone());
+
+        if (existingUser.isPresent()) {
+            // User exists, return existing user ID
+            UserIdentity user = existingUser.get();
+            return buildAuthResponse(user.getId(), request.getTenantId(), user.getPrimaryEmail(), null);
+        }
+
+        // Create new user
         UUID userId = UUID.randomUUID();
-        return buildAuthResponse(userId, request.getTenantId());
+        UserIdentity user = new UserIdentity();
+        user.setId(userId);
+        user.setPrimaryEmail(request.getEmail());
+        user.setPrimaryPhone(request.getPhone());
+        user.setPasswordHash(request.getPassword()); // In production, this should be hashed
+        user.setStatus(AccountStatus.ACTIVE);
+        user.setEmailVerified(false);
+        user.setPhoneVerified(false);
+        user.setFailedLoginCount(0);
+
+        userIdentityRepository.save(user);
+
+        // Create tenant membership
+        if (request.getTenantId() != null) {
+            TenantMembership membership = new TenantMembership();
+            membership.setId(UUID.randomUUID());
+            membership.setUserId(userId);
+            membership.setTenantId(request.getTenantId());
+            membership.setStatus(TenantMembershipStatus.ACTIVE);
+            membership.setJoinMethod(request.getJoinMethod());
+            tenantMembershipRepository.save(membership);
+        }
+
+        return buildAuthResponse(userId, request.getTenantId(), request.getEmail(), null);
     }
 
     @Override

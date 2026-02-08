@@ -36,3 +36,43 @@ dependencies {
 tasks.named('test') {
 	useJUnitPlatform()
 }
+
+// Docker configuration
+def dockerImageName = 'graph-relations-service'
+def dockerImageTag = version
+def containerName = 'graph-relations-service'
+def containerPort = 8089
+
+tasks.register('dockerBuild', Exec) {
+	group = 'docker'
+	description = 'Build Docker image'
+	dependsOn bootJar
+	commandLine 'docker', 'build', '-t', "${dockerImageName}:${dockerImageTag}", '-t', "${dockerImageName}:latest", '.'
+}
+
+tasks.register('dockerStop', Exec) {
+	group = 'docker'
+	description = 'Stop and remove container'
+	commandLine 'sh', '-c', "docker stop ${containerName} 2>/dev/null || true && docker rm ${containerName} 2>/dev/null || true"
+}
+
+tasks.register('dockerRun', Exec) {
+	group = 'docker'
+	description = 'Run container'
+	dependsOn dockerBuild, dockerStop
+	commandLine 'docker', 'run', '-d', '--name', containerName, '-p', "${containerPort}:${containerPort}", '--network', 'learner-network',
+		'-e', 'SERVER_PORT=8089',
+		'-e', 'SPRING_DATASOURCE_URL=jdbc:postgresql://graph-relations-postgres:5432/graph_relations',
+		'-e', 'SPRING_DATASOURCE_USERNAME=graph_relations_user', '-e', 'SPRING_DATASOURCE_PASSWORD=graph_relations_password',
+		"${dockerImageName}:latest"
+}
+
+tasks.register('dockerDeploy') {
+	group = 'docker'
+	description = 'Build and deploy to Docker'
+	dependsOn dockerRun
+	doLast { println "${containerName} deployed on port ${containerPort}" }
+}
+
+tasks.register('dockerLogs', Exec) { group = 'docker'; commandLine 'docker', 'logs', '-f', containerName }
+tasks.register('dockerStatus', Exec) { group = 'docker'; commandLine 'docker', 'ps', '-a', '--filter', "name=${containerName}" }

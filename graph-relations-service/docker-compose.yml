@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  graph-relations-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: graph-relations-service
+    ports:
+      - "8089:8089"
+    environment:
+      - SPRING_APPLICATION_NAME=graph-relations-service
+      - SERVER_PORT=8089
+      # Use shared postgres container from role-permission-service
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://role-permission-postgres:5432/graph_relations
+      - SPRING_DATASOURCE_USERNAME=graph_relations_user
+      - SPRING_DATASOURCE_PASSWORD=graph_relations_password
+      - SPRING_LIQUIBASE_ENABLED=true
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8089/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - learner-network
+    restart: unless-stopped
+
+networks:
+  learner-network:
+    name: learner-network
+    driver: bridge

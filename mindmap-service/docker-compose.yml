@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  mindmap-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mindmap-service
+    ports:
+      - "8087:8087"
+    environment:
+      - SPRING_APPLICATION_NAME=mindmap-service
+      - SERVER_PORT=8087
+      # Use shared postgres container from role-permission-service
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://role-permission-postgres:5432/mindmap
+      - SPRING_DATASOURCE_USERNAME=mindmap_user
+      - SPRING_DATASOURCE_PASSWORD=mindmap_password
+      - SPRING_LIQUIBASE_ENABLED=true
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8087/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - learner-network
+    restart: unless-stopped
+
+networks:
+  learner-network:
+    name: learner-network
+    driver: bridge

@@ -5,9 +5,15 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/widgets.dart';
 import '../../auth/providers/auth_provider.dart';
+import '../data/flashcard_models.dart';
+import '../data/mcq_models.dart';
 import '../data/note_models.dart';
 import '../data/notes_repository.dart';
+import '../providers/flashcard_provider.dart';
+import '../providers/mcq_provider.dart';
 import '../providers/notes_provider.dart';
+import '../widgets/flashcard_editor_tab.dart';
+import '../widgets/mcq_editor_tab.dart';
 
 class NoteEditorScreen extends ConsumerStatefulWidget {
   final String? noteId;
@@ -18,7 +24,8 @@ class NoteEditorScreen extends ConsumerStatefulWidget {
   ConsumerState<NoteEditorScreen> createState() => _NoteEditorScreenState();
 }
 
-class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
+class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
+    with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _summaryController = TextEditingController();
@@ -31,11 +38,18 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
   NoteStatus? _noteStatus;
   String? _noteScopeType;
 
+  late TabController _tabController;
+  List<FlashcardItem> _pendingFlashcards = [];
+  bool _flashcardsModified = false;
+  List<McqItem> _pendingMcqs = [];
+  bool _mcqsModified = false;
+
   bool get isEditing => widget.noteId != null;
 
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 3, vsync: this);
     if (isEditing) {
       _loadNote();
     }
@@ -75,6 +89,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
 
   @override
   void dispose() {
+    _tabController.dispose();
     _titleController.dispose();
     _summaryController.dispose();
     _contentController.dispose();
@@ -117,6 +132,16 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     );
   }
 
+  void _onFlashcardsChanged(List<FlashcardItem> flashcards) {
+    _pendingFlashcards = flashcards;
+    _flashcardsModified = true;
+  }
+
+  void _onMcqsChanged(List<McqItem> mcqs) {
+    _pendingMcqs = mcqs;
+    _mcqsModified = true;
+  }
+
   Future<void> _saveNote() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
@@ -129,15 +154,14 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
       final userId = user?.id ?? '';
       final tenantId = user?.tenantId ?? '';
 
-      print('DEBUG: Creating note with userId: $userId');
-      print('DEBUG: User object: $user');
-
       if (userId.isEmpty) {
         throw Exception('User not logged in. Please login again.');
       }
       if (tenantId.isEmpty) {
         throw Exception('Tenant not resolved. Please login again.');
       }
+
+      String savedNoteId;
 
       if (isEditing) {
         // Update existing note
@@ -153,9 +177,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
         };
 
         await repository.updateNote(widget.noteId!, updatePayload);
+        savedNoteId = widget.noteId!;
       } else {
         // Create new note
-        await repository.createNote(CreateNoteRequest(
+        final note = await repository.createNote(CreateNoteRequest(
           title: _titleController.text,
           summary: _summaryController.text.isNotEmpty ? _summaryController.text : null,
           contentMd: _contentController.text,
@@ -164,6 +189,23 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
           tenantId: tenantId,
           changeSummary: 'Initial draft',
         ));
+        savedNoteId = note.id;
+      }
+
+      // Save flashcards if modified
+      if (_flashcardsModified && _pendingFlashcards.isNotEmpty) {
+        final flashcardsNotifier = ref.read(
+          flashcardsNotifierProvider(savedNoteId).notifier,
+        );
+        await flashcardsNotifier.batchSave(_pendingFlashcards, replaceAll: true);
+      }
+
+      // Save MCQs if modified
+      if (_mcqsModified && _pendingMcqs.isNotEmpty) {
+        final mcqsNotifier = ref.read(
+          mcqsNotifierProvider(savedNoteId).notifier,
+        );
+        await mcqsNotifier.batchSave(_pendingMcqs, replaceAll: true);
       }
 
       if (mounted) {
@@ -209,11 +251,13 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
           onPressed: () => context.pop(),
         ),
         actions: [
-          IconButton(
-            icon: Icon(_isPreview ? Icons.edit : Icons.preview),
-            onPressed: () => setState(() => _isPreview = !_isPreview),
-            tooltip: _isPreview ? 'Edit' : 'Preview',
-          ),
+          // Preview toggle only shown for Content tab
+          if (_tabController.index == 0)
+            IconButton(
+              icon: Icon(_isPreview ? Icons.edit : Icons.preview),
+              onPressed: () => setState(() => _isPreview = !_isPreview),
+              tooltip: _isPreview ? 'Edit' : 'Preview',
+            ),
           TextButton(
             onPressed: _isSaving ? null : _saveNote,
             child: _isSaving
@@ -225,24 +269,58 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
                 : const Text('Save'),
           ),
         ],
+        bottom: TabBar(
+          controller: _tabController,
+          onTap: (_) => setState(() {}), // Rebuild to update preview button visibility
+          tabs: const [
+            Tab(
+              icon: Icon(Icons.description_outlined),
+              text: 'Content',
+            ),
+            Tab(
+              icon: Icon(Icons.style_outlined),
+              text: 'Flashcards',
+            ),
+            Tab(
+              icon: Icon(Icons.quiz_outlined),
+              text: 'Quiz',
+            ),
+          ],
+        ),
       ),
       body: _isLoading
           ? const LoadingIndicator(message: 'Loading note...')
           : Form(
               key: _formKey,
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 200),
-                switchInCurve: Curves.easeOut,
-                switchOutCurve: Curves.easeIn,
-                child: _isPreview
-                    ? KeyedSubtree(
-                        key: const ValueKey('preview'),
-                        child: _buildPreview(),
-                      )
-                    : KeyedSubtree(
-                        key: const ValueKey('editor'),
-                        child: _buildEditor(),
-                      ),
+              child: TabBarView(
+                controller: _tabController,
+                children: [
+                  // Content Tab
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 200),
+                    switchInCurve: Curves.easeOut,
+                    switchOutCurve: Curves.easeIn,
+                    child: _isPreview
+                        ? KeyedSubtree(
+                            key: const ValueKey('preview'),
+                            child: _buildPreview(),
+                          )
+                        : KeyedSubtree(
+                            key: const ValueKey('editor'),
+                            child: _buildEditor(),
+                          ),
+                  ),
+                  // Flashcards Tab
+                  FlashcardEditorTab(
+                    noteId: widget.noteId,
+                    onFlashcardsChanged: _onFlashcardsChanged,
+                  ),
+                  // MCQ Tab
+                  McqEditorTab(
+                    noteId: widget.noteId,
+                    onMcqsChanged: _onMcqsChanged,
+                  ),
+                ],
               ),
             ),
     );

@@ -1,0 +1,18 @@
+# Docker profile - uses container service names instead of localhost
+services:
+  auth:
+    url: http://auth-service:8081
+  tenant:
+    url: http://tenant-service:8082
+  profile:
+    url: http://user-profile-service:8083
+  permission:
+    url: http://role-permission-service:8080
+  notes:
+    url: http://notes-service:8088
+  mindmap:
+    url: http://mindmap-service:8087
+  workflow:
+    url: http://content-workflow-service:8086
+  recall:
+    url: http://recall-service:8091

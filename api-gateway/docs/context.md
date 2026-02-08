@@ -111,17 +111,25 @@ Implementation options:
 
 ---
 
-## 7) Routing Map (MVP)
-Example routing prefixes (versioned):
-- `/v1/auth/**` -> `auth-service`
-- `/v1/tenants/**` + `/v1/resolve` -> `tenant-service`
-- `/v1/permissions/**` + `/v1/authorize/**` -> `role-permission-service`
-- `/v1/profiles/**` -> `user-profile-service`
-- Later:
-  - `/v1/content/**` -> content-service
-  - `/v1/maps/**` -> mindmap-service
-  - `/v1/revision/**` -> revision-scheduler-service
-  - `/v1/notify/**` -> notification-service
+## 7) Routing Map (Implemented)
+Current routing configuration (all versioned under `/v1`):
+
+| Route Pattern | Service | Port | Rewrite |
+|---------------|---------|------|---------|
+| `/v1/auth/**` | auth-service | 8081 | `/v1/auth` → `/auth` |
+| `/v1/tenants/**`, `/v1/resolve` | tenant-service | 8082 | None |
+| `/v1/permissions/**`, `/v1/permission-scopes/**`, `/v1/authorize/**` | role-permission-service | 8080 | `/v1` → `` |
+| `/v1/tenants/{id}/roles/**`, `/v1/tenants/{id}/policies/**` | role-permission-service | 8080 | `/v1` → `` |
+| `/v1/tenants/{id}/profiles/**`, `/v1/tenants/{id}/relationships/**` | profile-service | 8083 | None |
+| `/v1/tenants/{id}/users/{id}/student-profile` | profile-service | 8083 | None |
+| `/v1/notes/**` | notes-service | 8088 | `/v1` → `` |
+| `/v1/mindmaps/**` | mindmap-service | 8087 | `/v1` → `` |
+| `/v1/workflow/**`, `/v1/classes/**` | workflow-service | 8086 | `/v1` → `` |
+
+Future routes:
+- `/v1/content/**` → content-service
+- `/v1/revision/**` → revision-scheduler-service
+- `/v1/notify/**` → notification-service
 
 Preferred approach: keep service paths stable; gateway owns public API layout.
 
@@ -144,3 +152,67 @@ Return consistent JSON errors:
   "error": "UNAUTHORIZED",
   "message": "Missing or invalid token"
 }
+```
+
+---
+
+## 9) Docker Deployment
+
+### Docker Compose
+The gateway includes `docker-compose.yml` for containerized deployment:
+- **Port**: 8084
+- **Network**: `learner-network` (bridge)
+- **Health check**: `/actuator/health` every 30s
+
+Service URLs are configurable via environment variables:
+```yaml
+SERVICES_AUTH_URL=http://host.docker.internal:8081
+SERVICES_TENANT_URL=http://host.docker.internal:8082
+SERVICES_PROFILE_URL=http://host.docker.internal:8083
+SERVICES_PERMISSION_URL=http://host.docker.internal:8080
+SERVICES_NOTES_URL=http://host.docker.internal:8088
+SERVICES_MINDMAP_URL=http://host.docker.internal:8087
+SERVICES_WORKFLOW_URL=http://host.docker.internal:8086
+```
+
+### Gradle Docker Tasks
+Build and deploy using Gradle:
+
+| Task | Description |
+|------|-------------|
+| `./gradlew dockerBuild` | Build Docker image |
+| `./gradlew dockerStop` | Stop and remove container |
+| `./gradlew dockerRun` | Build and run container |
+| `./gradlew dockerDeploy` | Full build + deploy with status |
+| `./gradlew dockerLogs` | View container logs |
+| `./gradlew dockerStatus` | Check container status |
+
+**Quick start:**
+```bash
+./gradlew dockerDeploy
+```
+
+---
+
+## 10) Implementation Status
+
+### Completed
+- [x] Basic request routing to all 7 downstream services
+- [x] Path rewriting (prefix stripping/adding)
+- [x] HTTP method support (GET, POST, PUT, DELETE, PATCH)
+- [x] Header forwarding (with hop-by-hop filter)
+- [x] Query parameter preservation
+- [x] Docker containerization (Dockerfile, docker-compose.yml)
+- [x] Gradle Docker tasks
+- [x] Actuator health endpoints
+
+### Not Yet Implemented
+- [ ] JWT authentication/validation
+- [ ] Tenant resolution and header injection
+- [ ] Rate limiting
+- [ ] CORS configuration
+- [ ] Global error handling with standard format
+- [ ] Request correlation IDs (X-Request-Id)
+- [ ] Security headers
+- [ ] Circuit breaker / resilience patterns
+- [ ] Comprehensive tests

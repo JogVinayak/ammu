@@ -13,6 +13,7 @@ import '../features/notes/screens/note_viewer_screen.dart';
 import '../features/mindmaps/screens/mindmaps_list_screen.dart';
 import '../features/mindmaps/screens/mindmap_editor_screen.dart';
 import '../features/mindmaps/screens/mindmap_viewer_screen.dart';
+import '../features/mindmap/screens/mind_map_screen.dart';
 import '../features/classes/screens/classes_list_screen.dart';
 import '../features/classes/screens/class_detail_screen.dart';
 import '../features/release/screens/release_content_screen.dart';
@@ -20,12 +21,15 @@ import '../features/release/screens/release_history_screen.dart';
 import '../features/profile/screens/profile_screen.dart';
 import '../features/profile/screens/settings_screen.dart';
 import '../features/student/screens/screens.dart';
+import '../features/super_admin/screens/screens.dart';
 import 'main_shell.dart';
 import 'student_shell.dart';
+import 'super_admin_shell.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 final _shellNavigatorKey = GlobalKey<NavigatorState>();
 final _studentShellNavigatorKey = GlobalKey<NavigatorState>();
+final _superAdminShellNavigatorKey = GlobalKey<NavigatorState>();
 
 final routerProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authProvider);
@@ -39,9 +43,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       final isLoggingIn = state.matchedLocation == '/login' ||
           state.matchedLocation == '/forgot-password';
       final isStudentRoute = state.matchedLocation.startsWith('/student');
+      final isSuperAdminRoute = state.matchedLocation.startsWith('/super-admin');
+      // Routes accessible to all authenticated users
+      final isSharedRoute = state.matchedLocation == '/settings' ||
+          state.matchedLocation == '/faang-roadmap';
       final isTeacherRoute = !isStudentRoute &&
+          !isSuperAdminRoute &&
           !isLoggingIn &&
-          state.matchedLocation != '/settings';
+          !isSharedRoute;
 
       if (!isLoggedIn && !isLoggingIn) {
         return '/login';
@@ -49,10 +58,27 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       if (isLoggedIn && isLoggingIn) {
         // Redirect based on user type
+        if (user?.isSuperAdmin == true) {
+          return '/super-admin/dashboard';
+        }
         if (user?.isStudent == true) {
           return '/student/home';
         }
         return '/dashboard';
+      }
+
+      // Super admin access control
+      if (isLoggedIn && user?.isSuperAdmin != true && isSuperAdminRoute) {
+        // Non-super-admins cannot access super admin routes
+        if (user?.isStudent == true) {
+          return '/student/home';
+        }
+        return '/dashboard';
+      }
+
+      // If super admin tries to access teacher/student routes, redirect to super admin dashboard
+      if (isLoggedIn && user?.isSuperAdmin == true && !isSuperAdminRoute && !isSharedRoute) {
+        return '/super-admin/dashboard';
       }
 
       // If student tries to access teacher routes, redirect to student home
@@ -142,6 +168,46 @@ final routerProvider = Provider<GoRouter>((ref) {
         ],
       ),
 
+      // Super Admin shell with bottom navigation
+      ShellRoute(
+        navigatorKey: _superAdminShellNavigatorKey,
+        builder: (context, state, child) => SuperAdminShell(child: child),
+        routes: [
+          GoRoute(
+            path: '/super-admin/dashboard',
+            builder: (context, state) => const SuperAdminDashboardScreen(),
+          ),
+          GoRoute(
+            path: '/super-admin/schools',
+            builder: (context, state) => const SchoolsManagementScreen(),
+          ),
+          GoRoute(
+            path: '/super-admin/approvals',
+            builder: (context, state) => const ContentApprovalScreen(),
+          ),
+          GoRoute(
+            path: '/super-admin/profile',
+            builder: (context, state) => const SuperAdminProfileScreen(),
+          ),
+        ],
+      ),
+
+      // Super Admin full-screen routes (outside shell)
+      GoRoute(
+        path: '/super-admin/schools/create',
+        builder: (context, state) => const CreateSchoolScreen(),
+      ),
+      GoRoute(
+        path: '/super-admin/schools/:id',
+        builder: (context, state) => SchoolDetailScreen(
+          schoolId: state.pathParameters['id']!,
+        ),
+      ),
+      GoRoute(
+        path: '/super-admin/users',
+        builder: (context, state) => const UsersManagementScreen(),
+      ),
+
       // Student full-screen routes (outside shell)
       GoRoute(
         path: '/student/notes/:id',
@@ -210,6 +276,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/settings',
         builder: (context, state) => const SettingsScreen(),
+      ),
+      // FAANG Interview Roadmap Mind Map
+      GoRoute(
+        path: '/faang-roadmap',
+        builder: (context, state) => const MindMapScreen(),
       ),
     ],
   );

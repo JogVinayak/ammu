@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  api-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: api-gateway
+    ports:
+      - "8084:8084"
+    environment:
+      - SPRING_APPLICATION_NAME=api-gateway
+      - SERVER_PORT=8084
+      # Service URLs - use Docker container names
+      - SERVICES_AUTH_URL=http://auth-service:8081
+      - SERVICES_TENANT_URL=http://tenant-service:8082
+      - SERVICES_PROFILE_URL=http://user-profile-service:8083
+      - SERVICES_PERMISSION_URL=http://role-permission-service:8080
+      - SERVICES_NOTES_URL=http://notes-service:8088
+      - SERVICES_MINDMAP_URL=http://mindmap-service:8087
+      - SERVICES_WORKFLOW_URL=http://content-workflow-service:8086
+      - SERVICES_RECALL_URL=http://recall-service:8091
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8084/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - learner-network
+    restart: unless-stopped
+
+networks:
+  learner-network:
+    name: learner-network
+    driver: bridge

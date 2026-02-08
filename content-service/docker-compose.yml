@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  content-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: content-service
+    ports:
+      - "8085:8085"
+    environment:
+      - SPRING_APPLICATION_NAME=content-service
+      - SERVER_PORT=8085
+      # Use shared postgres container from role-permission-service
+      - CONTENT_DB_URL=jdbc:postgresql://role-permission-postgres:5432/content_service
+      - CONTENT_DB_USER=content_service
+      - CONTENT_DB_PASSWORD=content_service
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://role-permission-postgres:5432/content_service
+      - SPRING_DATASOURCE_USERNAME=content_service
+      - SPRING_DATASOURCE_PASSWORD=content_service
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8085/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - learner-network
+    restart: unless-stopped
+
+networks:
+  learner-network:
+    name: learner-network
+    driver: bridge

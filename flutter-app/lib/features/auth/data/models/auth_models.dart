@@ -87,6 +87,7 @@ class User extends Equatable {
   bool get isTeacher => userType == 'TEACHER' || userType == 'PRINCIPAL' || userType == 'ADMIN';
   bool get isStudent => userType == 'STUDENT';
   bool get isAdmin => userType == 'ADMIN' || userType == 'PRINCIPAL';
+  bool get isSuperAdmin => userType == 'SUPER_ADMIN';
 
   @override
   List<Object?> get props => [id, name, email, tenantId, avatar, userType];

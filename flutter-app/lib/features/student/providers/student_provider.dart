@@ -58,6 +58,10 @@ final studentProfileProvider =
     StateNotifierProvider<StudentProfileNotifier, StudentProfileState>((ref) {
   final repository = ref.watch(studentRepositoryProvider);
   final user = ref.watch(currentUserProvider);
+  // Only load student profile for student users
+  if (user?.isStudent != true) {
+    return StudentProfileNotifier(repository, null, null);
+  }
   return StudentProfileNotifier(repository, user?.tenantId, user?.id);
 });
 

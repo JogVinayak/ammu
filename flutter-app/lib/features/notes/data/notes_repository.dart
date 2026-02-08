@@ -2,6 +2,8 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/api_constants.dart';
 import '../../../core/network/dio_client.dart';
+import 'flashcard_models.dart';
+import 'mcq_models.dart';
 import 'note_models.dart';
 
 class NotesRepository {
@@ -184,6 +186,168 @@ class NotesRepository {
           if (releasedBy != null) 'releasedBy': releasedBy,
         },
       );
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  // ========== FLASHCARD METHODS ==========
+
+  Future<List<Flashcard>> getFlashcards(String noteId, {String? difficulty}) async {
+    try {
+      final queryParams = <String, dynamic>{};
+      if (difficulty != null) {
+        queryParams['difficulty'] = difficulty;
+      }
+      final response = await _dioClient.get(
+        '${ApiConstants.notes}/$noteId/flashcards',
+        queryParameters: queryParams.isNotEmpty ? queryParams : null,
+      );
+      final data = response.data;
+      if (data is Map && data['items'] != null) {
+        final items = data['items'] as List;
+        return items.map((json) => Flashcard.fromJson(json)).toList();
+      }
+      return [];
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  Future<Flashcard> createFlashcard(String noteId, CreateFlashcardRequest request) async {
+    try {
+      final response = await _dioClient.post(
+        '${ApiConstants.notes}/$noteId/flashcards',
+        data: request.toJson(),
+      );
+      return Flashcard.fromJson(response.data);
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  Future<Flashcard> updateFlashcard(
+    String noteId,
+    String flashcardId,
+    UpdateFlashcardRequest request,
+  ) async {
+    try {
+      final response = await _dioClient.patch(
+        '${ApiConstants.notes}/$noteId/flashcards/$flashcardId',
+        data: request.toJson(),
+      );
+      return Flashcard.fromJson(response.data);
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  Future<void> deleteFlashcard(String noteId, String flashcardId) async {
+    try {
+      await _dioClient.delete(
+        '${ApiConstants.notes}/$noteId/flashcards/$flashcardId',
+      );
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  Future<List<Flashcard>> batchUpsertFlashcards(
+    String noteId,
+    BatchFlashcardsRequest request,
+  ) async {
+    try {
+      final response = await _dioClient.post(
+        '${ApiConstants.notes}/$noteId/flashcards/batch',
+        data: request.toJson(),
+      );
+      final data = response.data;
+      if (data is Map && data['items'] != null) {
+        final items = data['items'] as List;
+        return items.map((json) => Flashcard.fromJson(json)).toList();
+      }
+      return [];
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  // ========== MCQ METHODS ==========
+
+  Future<List<Mcq>> getMcqs(String noteId, {String? difficulty}) async {
+    try {
+      final queryParams = <String, dynamic>{};
+      if (difficulty != null) {
+        queryParams['difficulty'] = difficulty;
+      }
+      final response = await _dioClient.get(
+        '${ApiConstants.notes}/$noteId/mcqs',
+        queryParameters: queryParams.isNotEmpty ? queryParams : null,
+      );
+      final data = response.data;
+      if (data is Map && data['items'] != null) {
+        final items = data['items'] as List;
+        return items.map((json) => Mcq.fromJson(json)).toList();
+      }
+      return [];
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  Future<Mcq> createMcq(String noteId, CreateMcqRequest request) async {
+    try {
+      final response = await _dioClient.post(
+        '${ApiConstants.notes}/$noteId/mcqs',
+        data: request.toJson(),
+      );
+      return Mcq.fromJson(response.data);
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  Future<Mcq> updateMcq(
+    String noteId,
+    String mcqId,
+    UpdateMcqRequest request,
+  ) async {
+    try {
+      final response = await _dioClient.patch(
+        '${ApiConstants.notes}/$noteId/mcqs/$mcqId',
+        data: request.toJson(),
+      );
+      return Mcq.fromJson(response.data);
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  Future<void> deleteMcq(String noteId, String mcqId) async {
+    try {
+      await _dioClient.delete(
+        '${ApiConstants.notes}/$noteId/mcqs/$mcqId',
+      );
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  Future<List<Mcq>> batchUpsertMcqs(
+    String noteId,
+    BatchMcqsRequest request,
+  ) async {
+    try {
+      final response = await _dioClient.post(
+        '${ApiConstants.notes}/$noteId/mcqs/batch',
+        data: request.toJson(),
+      );
+      final data = response.data;
+      if (data is Map && data['items'] != null) {
+        final items = data['items'] as List;
+        return items.map((json) => Mcq.fromJson(json)).toList();
+      }
+      return [];
     } on DioException catch (e) {
       throw _handleError(e);
     }

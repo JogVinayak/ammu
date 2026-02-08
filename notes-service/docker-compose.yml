@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  notes-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: notes-service
+    ports:
+      - "8088:8088"
+    environment:
+      - SPRING_APPLICATION_NAME=notes-service
+      - SERVER_PORT=8088
+      # Use shared postgres container from role-permission-service
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://role-permission-postgres:5432/notes
+      - SPRING_DATASOURCE_USERNAME=notes_user
+      - SPRING_DATASOURCE_PASSWORD=notes_password
+      - SPRING_LIQUIBASE_ENABLED=true
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8088/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - learner-network
+    restart: unless-stopped
+
+networks:
+  learner-network:
+    name: learner-network
+    driver: bridge

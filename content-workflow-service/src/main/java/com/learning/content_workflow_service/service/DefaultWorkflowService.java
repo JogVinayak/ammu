@@ -1,5 +1,7 @@
 package com.learning.content_workflow_service.service;
 
+import com.learning.content_workflow_service.client.NotificationClient;
+import com.learning.content_workflow_service.client.UserProfileClient;
 import com.learning.content_workflow_service.dto.CreateWorkflowRequest;
 import com.learning.content_workflow_service.dto.PublishTargets;
 import com.learning.content_workflow_service.dto.PublishWorkflowRequest;
@@ -22,12 +24,14 @@ import com.learning.content_workflow_service.repository.ReleasedContentRepositor
 import com.learning.content_workflow_service.repository.ReviewTaskRepository;
 import com.learning.content_workflow_service.repository.WorkflowRepository;
 import java.time.Instant;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -39,6 +43,7 @@ import tools.jackson.databind.ObjectMapper;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class DefaultWorkflowService implements WorkflowService {
     private static final int DEFAULT_PAGE_SIZE = 20;
     private static final int MAX_PAGE_SIZE = 100;
@@ -47,6 +52,8 @@ public class DefaultWorkflowService implements WorkflowService {
     private final ReviewTaskRepository reviewTaskRepository;
     private final ReleasedContentRepository releasedContentRepository;
     private final ObjectMapper objectMapper;
+    private final UserProfileClient userProfileClient;
+    private final NotificationClient notificationClient;
 
     @Override
     @Transactional
@@ -431,6 +438,10 @@ public class DefaultWorkflowService implements WorkflowService {
             }
         }
 
+        // Track students to notify (deduplicate across classes)
+        Set<UUID> studentsToNotify = new HashSet<>();
+        Set<UUID> classesWithNewRelease = new HashSet<>();
+
         for (String contentIdStr : request.getContentIds()) {
             UUID contentId;
             try {
@@ -462,7 +473,62 @@ public class DefaultWorkflowService implements WorkflowService {
                 released.setReleasedAt(now);
 
                 releasedContentRepository.save(released);
+                classesWithNewRelease.add(classId);
             }
+        }
+
+        // Send notifications to students in classes with new releases
+        if (!classesWithNewRelease.isEmpty()) {
+            sendReleaseNotifications(tenantId, classesWithNewRelease, request);
+        }
+    }
+
+    private void sendReleaseNotifications(String tenantId, Set<UUID> classIds, ReleaseContentRequest request) {
+        try {
+            // Collect all student IDs from affected classes
+            Set<UUID> studentIds = new HashSet<>();
+            for (UUID classId : classIds) {
+                List<UserProfileClient.StudentInfo> students = userProfileClient.getStudentsByClassId(tenantId, classId);
+                for (UserProfileClient.StudentInfo student : students) {
+                    if (student.getId() != null) {
+                        try {
+                            studentIds.add(UUID.fromString(student.getId()));
+                        } catch (IllegalArgumentException e) {
+                            // Skip invalid student IDs
+                        }
+                    }
+                }
+            }
+
+            if (studentIds.isEmpty()) {
+                log.info("No students found for notification in tenant {} for classes {}", tenantId, classIds);
+                return;
+            }
+
+            // Get content title from request or use a default
+            String contentTitle = request.getContentTitle() != null ? request.getContentTitle() : "New content";
+            String contentType = request.getContentType() != null ? request.getContentType() : "note";
+            UUID contentId = null;
+            if (!request.getContentIds().isEmpty()) {
+                try {
+                    contentId = UUID.fromString(request.getContentIds().get(0));
+                } catch (IllegalArgumentException e) {
+                    // Keep as null
+                }
+            }
+
+            // Send notifications
+            int sent = notificationClient.sendContentReleasedNotification(
+                    tenantId,
+                    studentIds.stream().toList(),
+                    contentTitle,
+                    contentId,
+                    contentType);
+
+            log.info("Sent {} notifications to students for content release in tenant {}", sent, tenantId);
+        } catch (Exception e) {
+            log.warn("Failed to send release notifications: {}", e.getMessage());
+            // Don't fail the release operation if notifications fail
         }
     }
 

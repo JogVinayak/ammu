@@ -262,4 +262,43 @@ All PII fields should be encrypted at rest when possible (or at least protected 
 - role-permission-service: roles assigned after identity exists (or via orchestration)
 - api-gateway: validates access tokens, enforces rate limits, forwards user context
 
+---
+
+## 12) Docker Deployment
+
+### Docker Compose
+The service includes `docker-compose.yml` with PostgreSQL database:
+- **Service Port**: 8081
+- **PostgreSQL Port**: 5432
+- **Network**: `learner-network` (bridge)
+- **Health checks**: PostgreSQL readiness + service actuator
+
+**Quick start:**
+```bash
+docker-compose up -d
+```
+
+### Gradle Docker Tasks
+Build and deploy using Gradle:
+
+| Task | Description |
+|------|-------------|
+| `./gradlew dockerBuild` | Build Docker image |
+| `./gradlew dockerStop` | Stop and remove container |
+| `./gradlew dockerRun` | Build and run container (requires PostgreSQL) |
+| `./gradlew dockerDeploy` | Full build + deploy with status |
+| `./gradlew dockerLogs` | View container logs |
+| `./gradlew dockerStatus` | Check container status |
+
+**Note:** `dockerRun` assumes PostgreSQL is running (via docker-compose or separately).
+
+### Environment Variables
+```yaml
+SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/auth
+SPRING_DATASOURCE_USERNAME=auth_user
+SPRING_DATASOURCE_PASSWORD=auth_password
+SERVICES_PROFILE_URL=http://host.docker.internal:8083
+SERVICES_TENANT_URL=http://host.docker.internal:8082
+```
+
 END

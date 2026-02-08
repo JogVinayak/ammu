@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CBSE Class 4 Science — Mind Map</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Figtree:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #1a1a2e;
+    --bg-subtle: #16213e;
+    --surface: #0f3460;
+    --border: #2a4a7f;
+    --text: #e8e8e8;
+    --text-dim: #8892b0;
+    --accent-green: #64ffda;
+    --accent-purple: #c792ea;
+    --accent-orange: #ffcb6b;
+    --accent-blue: #82aaff;
+    --accent-pink: #f78c6c;
+    --accent-cyan: #89ddff;
+    --accent-red: #ff5370;
+    --accent-lime: #c3e88d;
+    --line: #2a4a7f88;
+    --node-radius: 10px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Figtree', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  .header {
+    text-align: center;
+    padding: 40px 20px 10px;
+    position: relative;
+  }
+
+  .header h1 {
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    background: linear-gradient(135deg, var(--accent-green), var(--accent-blue));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .header .subtitle {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    margin-top: 6px;
+    letter-spacing: 1px;
+  }
+
+  .legend {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    margin: 16px 0 10px;
+    flex-wrap: wrap;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.7rem;
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--text-dim);
+  }
+
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+
+  .canvas-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: auto;
+    padding: 20px;
+    cursor: grab;
+  }
+
+  .canvas-wrapper:active { cursor: grabbing; }
+
+  .canvas {
+    position: relative;
+    min-width: 1500px;
+    min-height: 2600px;
+    margin: 0 auto;
+  }
+
+  svg.connections {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  svg.connections path {
+    fill: none;
+    stroke: var(--line);
+    stroke-width: 2;
+    stroke-dasharray: 6 4;
+    opacity: 0;
+    animation: dashDraw 0.6s ease forwards;
+  }
+
+  @keyframes dashDraw {
+    to { opacity: 1; }
+  }
+
+  .node {
+    position: absolute;
+    padding: 10px 18px;
+    border-radius: var(--node-radius);
+    border: 1.5px solid var(--border);
+    background: var(--bg-subtle);
+    font-size: 0.82rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 2;
+    white-space: nowrap;
+    user-select: none;
+    opacity: 0;
+    transform: translateY(12px);
+    animation: nodeIn 0.4s ease forwards;
+  }
+
+  .node:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+    z-index: 10;
+  }
+
+  .node.expanded {
+    background: var(--surface);
+    border-color: var(--accent-blue);
+    box-shadow: 0 0 20px rgba(130, 170, 255, 0.15);
+  }
+
+  @keyframes nodeIn {
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .node.root {
+    background: linear-gradient(135deg, #0f3460, #1a1a4e);
+    border: 2px solid var(--accent-green);
+    font-size: 1rem;
+    font-weight: 700;
+    padding: 14px 28px;
+    box-shadow: 0 0 40px rgba(100, 255, 218, 0.1);
+  }
+
+  .node.chapter {
+    font-weight: 600;
+    font-size: 0.88rem;
+    padding: 12px 20px;
+  }
+
+  .node .icon { margin-right: 6px; }
+
+  .node-tag {
+    display: inline-block;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.55rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-left: 8px;
+    vertical-align: middle;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+  }
+
+  .tooltip {
+    display: none;
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: #0d1b2a;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    white-space: normal;
+    width: 220px;
+    z-index: 100;
+    line-height: 1.5;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  .node:hover .tooltip { display: block; }
+
+  .zoom-controls {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    z-index: 999;
+  }
+
+  .zoom-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg-subtle);
+    color: var(--text);
+    font-size: 1.1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: 0.2s;
+  }
+
+  .zoom-btn:hover {
+    background: var(--surface);
+    border-color: var(--accent-blue);
+  }
+
+  /* Color coding per chapter */
+  .c-plants { border-left: 3px solid var(--accent-green); }
+  .c-animals { border-left: 3px solid var(--accent-orange); }
+  .c-food { border-left: 3px solid var(--accent-pink); }
+  .c-body { border-left: 3px solid var(--accent-red); }
+  .c-air-water { border-left: 3px solid var(--accent-cyan); }
+  .c-matter { border-left: 3px solid var(--accent-purple); }
+  .c-force { border-left: 3px solid var(--accent-blue); }
+  .c-earth { border-left: 3px solid var(--accent-lime); }
+
+  .ch-plants { border-color: var(--accent-green); color: var(--accent-green); }
+  .ch-animals { border-color: var(--accent-orange); color: var(--accent-orange); }
+  .ch-food { border-color: var(--accent-pink); color: var(--accent-pink); }
+  .ch-body { border-color: var(--accent-red); color: var(--accent-red); }
+  .ch-air-water { border-color: var(--accent-cyan); color: var(--accent-cyan); }
+  .ch-matter { border-color: var(--accent-purple); color: var(--accent-purple); }
+  .ch-force { border-color: var(--accent-blue); color: var(--accent-blue); }
+  .ch-earth { border-color: var(--accent-lime); color: var(--accent-lime); }
+
+  .tag-green { background: rgba(100,255,218,0.12); color: var(--accent-green); }
+  .tag-orange { background: rgba(255,203,107,0.12); color: var(--accent-orange); }
+  .tag-pink { background: rgba(247,140,108,0.12); color: var(--accent-pink); }
+  .tag-red { background: rgba(255,83,112,0.12); color: var(--accent-red); }
+  .tag-cyan { background: rgba(137,221,255,0.12); color: var(--accent-cyan); }
+  .tag-purple { background: rgba(199,146,234,0.12); color: var(--accent-purple); }
+  .tag-blue { background: rgba(130,170,255,0.12); color: var(--accent-blue); }
+  .tag-lime { background: rgba(195,232,141,0.12); color: var(--accent-lime); }
+
+  .cross-link {
+    stroke: var(--accent-purple) !important;
+    stroke-dasharray: 3 6 !important;
+    opacity: 0.35 !important;
+    stroke-width: 1.5 !important;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🔬 CBSE Class 4 — Science</h1>
+  <div class="subtitle">INTERACTIVE CONCEPT MIND MAP &bull; CLICK NODES TO EXPLORE</div>
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:var(--accent-green)"></div>Plants</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--accent-orange)"></div>Animals</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--accent-pink)"></div>Food</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--accent-red)"></div>Human Body</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--accent-cyan)"></div>Air &amp; Water</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--accent-purple)"></div>Matter</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--accent-blue)"></div>Force &amp; Energy</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--accent-lime)"></div>Earth &amp; Space</div>
+  </div>
+</div>
+
+<div class="canvas-wrapper" id="wrapper">
+  <div class="canvas" id="canvas">
+    <svg class="connections" id="svg"></svg>
+  </div>
+</div>
+
+<div class="zoom-controls">
+  <button class="zoom-btn" onclick="zoom(0.1)">+</button>
+  <button class="zoom-btn" onclick="zoom(-0.1)">−</button>
+  <button class="zoom-btn" onclick="resetZoom()" style="font-size:0.7rem">⟲</button>
+</div>
+
+<script>
+const canvas = document.getElementById('canvas');
+const svg = document.getElementById('svg');
+let scale = 1;
+
+// === DATA ===
+const nodes = [
+  // ROOT
+  { id: 'root', label: '🧪 Class 4 Science', x: 680, y: 40, type: 'root' },
+
+  // ── CHAPTER NODES ──
+  { id: 'ch-plants', label: '🌱 Plants', x: 100, y: 170, type: 'chapter', cls: 'ch-plants' },
+  { id: 'ch-animals', label: '🐾 Animals', x: 370, y: 170, type: 'chapter', cls: 'ch-animals' },
+  { id: 'ch-food', label: '🍎 Food & Nutrition', x: 630, y: 170, type: 'chapter', cls: 'ch-food' },
+  { id: 'ch-body', label: '🫀 Human Body', x: 890, y: 170, type: 'chapter', cls: 'ch-body' },
+  { id: 'ch-air', label: '💧 Air & Water', x: 1120, y: 170, type: 'chapter', cls: 'ch-air-water' },
+  { id: 'ch-matter', label: '🧊 Matter & Materials', x: 100, y: 900, type: 'chapter', cls: 'ch-matter' },
+  { id: 'ch-force', label: '⚡ Force & Energy', x: 570, y: 900, type: 'chapter', cls: 'ch-force' },
+  { id: 'ch-earth', label: '🌍 Earth & Space', x: 1050, y: 900, type: 'chapter', cls: 'ch-earth' },
+
+  // ── PLANTS subtree ──
+  { id: 'p-parts', label: 'Parts of a Plant', x: 20, y: 300, cls: 'c-plants', tip: 'Root, Stem, Leaf, Flower, Fruit, Seed — each has a specific role in the plant\'s life.' },
+  { id: 'p-root', label: 'Roots', x: 20, y: 400, cls: 'c-plants', tip: 'Anchor the plant & absorb water/minerals. Tap root vs Fibrous root.' },
+  { id: 'p-stem', label: 'Stem & Transport', x: 170, y: 400, cls: 'c-plants', tip: 'Carries water & food between roots and leaves through xylem & phloem.' },
+  { id: 'p-leaf', label: 'Leaves & Photosynthesis', x: 20, y: 490, cls: 'c-plants', tip: 'Leaves make food using sunlight + CO₂ + water → glucose + O₂.' },
+  { id: 'p-flower', label: 'Flower & Reproduction', x: 200, y: 490, cls: 'c-plants', tip: 'Pollination → Fertilization → Seed → New plant. Parts: petal, stamen, pistil.' },
+  { id: 'p-types', label: 'Types of Plants', x: 200, y: 300, cls: 'c-plants', tip: 'Herbs, Shrubs, Trees, Climbers, Creepers — classified by size and stem type.' },
+  { id: 'p-adapt', label: 'Plant Adaptations', x: 110, y: 580, cls: 'c-plants', tip: 'Desert → thick stem, no leaves. Aquatic → floating leaves. Hill → needle leaves.' },
+
+  // ── ANIMALS subtree ──
+  { id: 'a-habitat', label: 'Habitats', x: 340, y: 300, cls: 'c-animals', tip: 'Land, Water, Trees — the place where an animal naturally lives and finds food.' },
+  { id: 'a-land', label: 'Land Animals', x: 290, y: 400, cls: 'c-animals', tip: 'Lion, Elephant, Deer — legs for running, fur/skin for protection.' },
+  { id: 'a-water', label: 'Water Animals', x: 430, y: 400, cls: 'c-animals', tip: 'Fish, Whale, Octopus — fins, gills, streamlined body.' },
+  { id: 'a-air', label: 'Aerial Animals', x: 360, y: 490, cls: 'c-animals', tip: 'Birds, Bats — wings, hollow bones, feathers for flight.' },
+  { id: 'a-food-habit', label: 'Food Habits', x: 500, y: 300, cls: 'c-animals', tip: 'Herbivore, Carnivore, Omnivore — classified by what they eat.' },
+  { id: 'a-teeth', label: 'Teeth & Diet Link', x: 510, y: 400, cls: 'c-animals', tip: 'Sharp canines → carnivore. Flat molars → herbivore. Both → omnivore.' },
+  { id: 'a-adapt', label: 'Animal Adaptations', x: 430, y: 580, cls: 'c-animals', tip: 'Camouflage, hibernation, migration — survival strategies.' },
+
+  // ── FOOD subtree ──
+  { id: 'f-sources', label: 'Sources of Food', x: 590, y: 300, cls: 'c-food', tip: 'Plants (fruits, veggies, grains) and Animals (milk, eggs, meat).' },
+  { id: 'f-nutrients', label: 'Nutrients', x: 740, y: 300, cls: 'c-food', tip: 'Carbs, Proteins, Fats, Vitamins, Minerals, Water — 6 essential nutrients.' },
+  { id: 'f-carbs', label: 'Carbohydrates', x: 600, y: 400, cls: 'c-food', tip: 'Energy-giving food: rice, bread, potato, sugar.' },
+  { id: 'f-protein', label: 'Proteins', x: 730, y: 400, cls: 'c-food', tip: 'Body-building food: dal, eggs, fish, milk, paneer.' },
+  { id: 'f-fats', label: 'Fats & Vitamins', x: 665, y: 490, cls: 'c-food', tip: 'Fats → stored energy (ghee, oil). Vitamins → protect from disease (fruits, veggies).' },
+  { id: 'f-balanced', label: 'Balanced Diet', x: 665, y: 580, cls: 'c-food', tip: 'A meal with the right amount of all nutrients. Includes all food groups.' },
+  { id: 'f-preserve', label: 'Food Preservation', x: 665, y: 670, cls: 'c-food', tip: 'Refrigeration, drying, pickling, canning — methods to keep food from spoiling.' },
+
+  // ── HUMAN BODY subtree ──
+  { id: 'b-digest', label: 'Digestive System', x: 860, y: 300, cls: 'c-body', tip: 'Mouth → Food pipe → Stomach → Small intestine → Large intestine.' },
+  { id: 'b-teeth', label: 'Types of Teeth', x: 1010, y: 300, cls: 'c-body', tip: 'Incisors (cut), Canines (tear), Premolars & Molars (grind). 2 sets: milk & permanent.' },
+  { id: 'b-stomach', label: 'Stomach & Intestines', x: 860, y: 400, cls: 'c-body', tip: 'Stomach churns food with acids. Small intestine absorbs nutrients. Large intestine absorbs water.' },
+  { id: 'b-skeleton', label: 'Bones & Skeleton', x: 1010, y: 400, cls: 'c-body', tip: '206 bones in adults. Provides shape, support, and protection to organs.' },
+  { id: 'b-muscle', label: 'Muscles & Movement', x: 860, y: 490, cls: 'c-body', tip: 'Muscles pull on bones to create movement. Voluntary vs Involuntary muscles.' },
+  { id: 'b-organ', label: 'Major Organs', x: 1010, y: 490, cls: 'c-body', tip: 'Heart (pumps blood), Lungs (breathing), Brain (control center), Kidneys (filter waste).' },
+  { id: 'b-hygiene', label: 'Health & Hygiene', x: 935, y: 580, cls: 'c-body', tip: 'Brushing teeth, bathing, clean food/water, exercise — staying disease-free.' },
+
+  // ── AIR & WATER subtree ──
+  { id: 'w-air-prop', label: 'Properties of Air', x: 1090, y: 300, cls: 'c-air-water', tip: 'Air has weight, takes up space, is everywhere. Composition: N₂, O₂, CO₂, etc.' },
+  { id: 'w-water-prop', label: 'Properties of Water', x: 1240, y: 300, cls: 'c-air-water', tip: 'Colorless, odorless, tasteless. Dissolves many substances (universal solvent).' },
+  { id: 'w-cycle', label: 'Water Cycle', x: 1090, y: 400, cls: 'c-air-water', tip: 'Evaporation → Condensation → Precipitation → Collection. Continuous loop!' },
+  { id: 'w-states', label: 'States of Water', x: 1240, y: 400, cls: 'c-air-water', tip: 'Solid (ice), Liquid (water), Gas (steam). Changes with temperature.' },
+  { id: 'w-pollution', label: 'Air & Water Pollution', x: 1090, y: 490, cls: 'c-air-water', tip: 'Factories, vehicles, sewage pollute air & water. Harmful to health & nature.' },
+  { id: 'w-conserve', label: 'Conservation', x: 1240, y: 490, cls: 'c-air-water', tip: 'Save water: fix leaks, rainwater harvesting. Clean air: plant trees, reduce emissions.' },
+  { id: 'w-weather', label: 'Weather & Climate', x: 1165, y: 580, cls: 'c-air-water', tip: 'Weather = daily (sunny, rainy). Climate = long-term pattern. Linked to air & water.' },
+
+  // ── MATTER subtree ──
+  { id: 'm-states', label: 'States of Matter', x: 50, y: 1030, cls: 'c-matter', tip: 'Solid (fixed shape), Liquid (takes container shape), Gas (fills all space).' },
+  { id: 'm-solid', label: 'Solids', x: 20, y: 1130, cls: 'c-matter', tip: 'Definite shape & volume. Particles tightly packed. E.g. wood, stone, ice.' },
+  { id: 'm-liquid', label: 'Liquids', x: 140, y: 1130, cls: 'c-matter', tip: 'Definite volume, no fixed shape. Flows and takes shape of container.' },
+  { id: 'm-gas', label: 'Gases', x: 260, y: 1130, cls: 'c-matter', tip: 'No fixed shape or volume. Particles move freely. E.g. oxygen, steam.' },
+  { id: 'm-change', label: 'Changes in Matter', x: 230, y: 1030, cls: 'c-matter', tip: 'Reversible (melting ice) vs Irreversible (burning paper). Physical vs Chemical.' },
+  { id: 'm-dissolve', label: 'Dissolving & Mixing', x: 80, y: 1220, cls: 'c-matter', tip: 'Soluble (sugar in water) vs Insoluble (sand in water). Mixtures can be separated.' },
+  { id: 'm-material', label: 'Natural vs Man-made', x: 250, y: 1220, cls: 'c-matter', tip: 'Natural: wood, cotton, silk. Man-made: plastic, nylon, glass.' },
+
+  // ── FORCE & ENERGY subtree ──
+  { id: 'fe-force', label: 'What is Force?', x: 500, y: 1030, cls: 'c-force', tip: 'A push or pull that can change speed, direction, or shape of an object.' },
+  { id: 'fe-types', label: 'Types of Force', x: 660, y: 1030, cls: 'c-force', tip: 'Muscular, Gravitational, Frictional, Magnetic — different ways force acts.' },
+  { id: 'fe-gravity', label: 'Gravity', x: 490, y: 1130, cls: 'c-force', tip: 'Earth pulls everything toward its center. Why things fall down!' },
+  { id: 'fe-friction', label: 'Friction', x: 620, y: 1130, cls: 'c-force', tip: 'Force between surfaces that slows things down. Rough = more friction.' },
+  { id: 'fe-magnet', label: 'Magnets', x: 750, y: 1130, cls: 'c-force', tip: 'Attracts iron/steel. Has North & South poles. Like poles repel, unlike attract.' },
+  { id: 'fe-energy', label: 'Forms of Energy', x: 580, y: 1220, cls: 'c-force', tip: 'Light, Heat, Sound, Electrical, Mechanical — energy can change form.' },
+  { id: 'fe-light', label: 'Light & Shadow', x: 490, y: 1310, cls: 'c-force', tip: 'Light travels in straight lines. Opaque → shadow. Transparent → passes through.' },
+  { id: 'fe-sound', label: 'Sound & Vibration', x: 670, y: 1310, cls: 'c-force', tip: 'Sound is caused by vibrations. Travels through solids, liquids, gases.' },
+
+  // ── EARTH & SPACE subtree ──
+  { id: 'e-solar', label: 'Solar System', x: 1010, y: 1030, cls: 'c-earth', tip: 'Sun + 8 planets + moons + asteroids. Earth is the 3rd planet from the Sun.' },
+  { id: 'e-earth', label: 'Our Earth', x: 1160, y: 1030, cls: 'c-earth', tip: 'Shape: geoid (slightly flattened sphere). Tilted axis causes seasons.' },
+  { id: 'e-daynight', label: 'Day & Night', x: 980, y: 1130, cls: 'c-earth', tip: 'Earth rotates on its axis every 24 hours. Side facing Sun = day.' },
+  { id: 'e-seasons', label: 'Seasons', x: 1110, y: 1130, cls: 'c-earth', tip: 'Earth\'s tilted axis + revolution around Sun → Summer, Winter, Spring, Autumn.' },
+  { id: 'e-moon', label: 'Moon & Phases', x: 1240, y: 1130, cls: 'c-earth', tip: 'Moon orbits Earth in ~28 days. Phases: New Moon → Full Moon → and back.' },
+  { id: 'e-rock', label: 'Rocks & Soil', x: 1050, y: 1220, cls: 'c-earth', tip: 'Igneous, Sedimentary, Metamorphic rocks. Soil = broken rocks + humus.' },
+  { id: 'e-resources', label: 'Natural Resources', x: 1220, y: 1220, cls: 'c-earth', tip: 'Water, air, minerals, forests, sunlight — must be conserved for the future.' },
+];
+
+// === CONNECTIONS (parent → child) ===
+const edges = [
+  // Root to chapters
+  ['root', 'ch-plants'], ['root', 'ch-animals'], ['root', 'ch-food'], ['root', 'ch-body'],
+  ['root', 'ch-air'], ['root', 'ch-matter'], ['root', 'ch-force'], ['root', 'ch-earth'],
+
+  // Plants
+  ['ch-plants', 'p-parts'], ['ch-plants', 'p-types'],
+  ['p-parts', 'p-root'], ['p-parts', 'p-stem'],
+  ['p-root', 'p-leaf'], ['p-stem', 'p-flower'],
+  ['p-leaf', 'p-adapt'], ['p-flower', 'p-adapt'],
+
+  // Animals
+  ['ch-animals', 'a-habitat'], ['ch-animals', 'a-food-habit'],
+  ['a-habitat', 'a-land'], ['a-habitat', 'a-water'],
+  ['a-land', 'a-air'], ['a-water', 'a-air'],
+  ['a-food-habit', 'a-teeth'],
+  ['a-air', 'a-adapt'], ['a-teeth', 'a-adapt'],
+
+  // Food
+  ['ch-food', 'f-sources'], ['ch-food', 'f-nutrients'],
+  ['f-nutrients', 'f-carbs'], ['f-nutrients', 'f-protein'],
+  ['f-carbs', 'f-fats'], ['f-protein', 'f-fats'],
+  ['f-fats', 'f-balanced'],
+  ['f-balanced', 'f-preserve'],
+
+  // Body
+  ['ch-body', 'b-digest'], ['ch-body', 'b-teeth'],
+  ['b-digest', 'b-stomach'], ['b-teeth', 'b-skeleton'],
+  ['b-stomach', 'b-muscle'], ['b-skeleton', 'b-organ'],
+  ['b-muscle', 'b-hygiene'], ['b-organ', 'b-hygiene'],
+
+  // Air & Water
+  ['ch-air', 'w-air-prop'], ['ch-air', 'w-water-prop'],
+  ['w-air-prop', 'w-cycle'], ['w-water-prop', 'w-states'],
+  ['w-cycle', 'w-pollution'], ['w-states', 'w-conserve'],
+  ['w-pollution', 'w-weather'], ['w-conserve', 'w-weather'],
+
+  // Matter
+  ['ch-matter', 'm-states'], ['ch-matter', 'm-change'],
+  ['m-states', 'm-solid'], ['m-states', 'm-liquid'], ['m-states', 'm-gas'],
+  ['m-solid', 'm-dissolve'], ['m-liquid', 'm-dissolve'],
+  ['m-change', 'm-material'], ['m-gas', 'm-material'],
+
+  // Force & Energy
+  ['ch-force', 'fe-force'], ['ch-force', 'fe-types'],
+  ['fe-force', 'fe-gravity'], ['fe-types', 'fe-friction'], ['fe-types', 'fe-magnet'],
+  ['fe-gravity', 'fe-energy'], ['fe-friction', 'fe-energy'],
+  ['fe-energy', 'fe-light'], ['fe-energy', 'fe-sound'],
+
+  // Earth
+  ['ch-earth', 'e-solar'], ['ch-earth', 'e-earth'],
+  ['e-solar', 'e-daynight'], ['e-earth', 'e-seasons'], ['e-earth', 'e-moon'],
+  ['e-daynight', 'e-rock'], ['e-seasons', 'e-rock'],
+  ['e-moon', 'e-resources'], ['e-rock', 'e-resources'],
+];
+
+// === CROSS-LINKS (conceptual connections across chapters) ===
+const crossLinks = [
+  ['p-leaf', 'w-air-prop'],         // Photosynthesis needs air (CO₂, O₂)
+  ['p-adapt', 'a-adapt'],           // Both adapt to environment
+  ['a-food-habit', 'f-sources'],    // Animals & food chain
+  ['b-teeth', 'a-teeth'],           // Teeth in humans & animals
+  ['f-balanced', 'b-hygiene'],      // Balanced diet → health
+  ['w-states', 'm-states'],         // States of water ↔ states of matter
+  ['w-pollution', 'e-resources'],   // Pollution affects natural resources
+  ['fe-gravity', 'e-earth'],        // Gravity ↔ Earth
+  ['fe-light', 'e-daynight'],       // Light → Day & Night
+  ['p-root', 'w-cycle'],            // Roots absorb water from water cycle
+];
+
+// === RENDER NODES ===
+const nodeMap = {};
+nodes.forEach((n, i) => {
+  const div = document.createElement('div');
+  div.className = `node ${n.type || ''} ${n.cls || ''}`;
+  div.id = n.id;
+  div.style.left = n.x + 'px';
+  div.style.top = n.y + 'px';
+  div.style.animationDelay = (i * 30) + 'ms';
+  div.innerHTML = n.label;
+
+  if (n.tip) {
+    div.innerHTML += `<div class="tooltip">${n.tip}</div>`;
+  }
+
+  canvas.appendChild(div);
+  nodeMap[n.id] = div;
+});
+
+// === DRAW CONNECTIONS ===
+function getCenter(id) {
+  const el = nodeMap[id];
+  if (!el) return { x: 0, y: 0 };
+  const x = el.offsetLeft + el.offsetWidth / 2;
+  const y = el.offsetTop + el.offsetHeight / 2;
+  return { x, y };
+}
+
+function drawEdges() {
+  svg.innerHTML = '';
+  svg.setAttribute('width', canvas.scrollWidth);
+  svg.setAttribute('height', canvas.scrollHeight);
+
+  edges.forEach(([from, to], i) => {
+    const a = getCenter(from);
+    const b = getCenter(to);
+    const midY = (a.y + b.y) / 2;
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', `M${a.x},${a.y} C${a.x},${midY} ${b.x},${midY} ${b.x},${b.y}`);
+    path.style.animationDelay = (i * 20) + 'ms';
+    svg.appendChild(path);
+  });
+
+  crossLinks.forEach(([from, to], i) => {
+    const a = getCenter(from);
+    const b = getCenter(to);
+    const midX = (a.x + b.x) / 2;
+    const midY = (a.y + b.y) / 2 - 30;
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', `M${a.x},${a.y} Q${midX},${midY} ${b.x},${b.y}`);
+    path.classList.add('cross-link');
+    path.style.animationDelay = (edges.length * 20 + i * 40) + 'ms';
+    svg.appendChild(path);
+  });
+}
+
+setTimeout(drawEdges, 100);
+window.addEventListener('resize', drawEdges);
+
+// === ZOOM ===
+function zoom(delta) {
+  scale = Math.max(0.3, Math.min(2, scale + delta));
+  canvas.style.transform = `scale(${scale})`;
+  canvas.style.transformOrigin = 'top left';
+}
+
+function resetZoom() {
+  scale = 1;
+  canvas.style.transform = `scale(1)`;
+}
+
+// === PAN ===
+const wrapper = document.getElementById('wrapper');
+let isPanning = false, startX, startY, scrollL, scrollT;
+
+wrapper.addEventListener('mousedown', e => {
+  if (e.target.closest('.node')) return;
+  isPanning = true;
+  startX = e.pageX - wrapper.offsetLeft;
+  startY = e.pageY - wrapper.offsetTop;
+  scrollL = wrapper.scrollLeft;
+  scrollT = wrapper.scrollTop;
+});
+
+wrapper.addEventListener('mousemove', e => {
+  if (!isPanning) return;
+  e.preventDefault();
+  const x = e.pageX - wrapper.offsetLeft;
+  const y = e.pageY - wrapper.offsetTop;
+  wrapper.scrollLeft = scrollL - (x - startX);
+  wrapper.scrollTop = scrollT - (y - startY);
+});
+
+document.addEventListener('mouseup', () => isPanning = false);
+</script>
+</body>
+</html>

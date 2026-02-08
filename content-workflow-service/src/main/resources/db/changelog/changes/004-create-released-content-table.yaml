@@ -1,0 +1,56 @@
+databaseChangeLog:
+  - changeSet:
+      id: 004-create-released-content-table
+      author: system
+      changes:
+        - createTable:
+            tableName: released_content
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: content_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: content_type
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: class_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: released_by
+                  type: uuid
+              - column:
+                  name: released_at
+                  type: timestamp
+        - createIndex:
+            tableName: released_content
+            indexName: idx_released_content_tenant_class
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: class_id
+        - createIndex:
+            tableName: released_content
+            indexName: idx_released_content_content
+            columns:
+              - column:
+                  name: content_id
+              - column:
+                  name: content_type

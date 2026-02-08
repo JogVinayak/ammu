@@ -49,6 +49,11 @@ class ApiConstants {
 
   // Classes endpoints (gateway routes /v1/classes/** -> workflow-service /classes/**)
   static const String classes = '/v1/classes';
+
+  // Notification endpoints (gateway routes /v1/notifications/** -> recall-service /v1/notifications/**)
+  static const String notifications = '/v1/notifications';
+  static const String notificationsUnread = '/v1/notifications/unread';
+  static const String notificationsUnreadCount = '/v1/notifications/unread/count';
 }
 
 class StorageKeys {

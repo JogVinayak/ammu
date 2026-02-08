@@ -36,3 +36,57 @@ dependencies {
 tasks.named('test') {
 	useJUnitPlatform()
 }
+
+// Docker configuration
+def dockerImageName = 'api-gateway'
+def dockerImageTag = version
+def containerName = 'api-gateway'
+def containerPort = 8084
+
+tasks.register('dockerBuild', Exec) {
+	group = 'docker'
+	description = 'Build Docker image for api-gateway'
+	dependsOn bootJar
+	commandLine 'docker', 'build', '-t', "${dockerImageName}:${dockerImageTag}", '-t', "${dockerImageName}:latest", '.'
+}
+
+tasks.register('dockerStop', Exec) {
+	group = 'docker'
+	description = 'Stop and remove api-gateway container'
+	commandLine 'sh', '-c', "docker stop ${containerName} 2>/dev/null || true && docker rm ${containerName} 2>/dev/null || true"
+}
+
+tasks.register('dockerRun', Exec) {
+	group = 'docker'
+	description = 'Run api-gateway container'
+	dependsOn dockerBuild, dockerStop
+	commandLine 'docker', 'run', '-d',
+		'--name', containerName,
+		'-p', "${containerPort}:${containerPort}",
+		'--network', 'learner-network',
+		"${dockerImageName}:latest"
+}
+
+tasks.register('dockerDeploy') {
+	group = 'docker'
+	description = 'Build and deploy api-gateway to Docker'
+	dependsOn dockerRun
+	doLast {
+		println "api-gateway deployed successfully!"
+		println "Container: ${containerName}"
+		println "Port: ${containerPort}"
+		println "Health check: http://localhost:${containerPort}/actuator/health"
+	}
+}
+
+tasks.register('dockerLogs', Exec) {
+	group = 'docker'
+	description = 'Show api-gateway container logs'
+	commandLine 'docker', 'logs', '-f', containerName
+}
+
+tasks.register('dockerStatus', Exec) {
+	group = 'docker'
+	description = 'Show api-gateway container status'
+	commandLine 'docker', 'ps', '-a', '--filter', "name=${containerName}"
+}

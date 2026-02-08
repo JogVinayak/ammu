@@ -2,7 +2,7 @@
   "info": {
     "name": "api-gateway",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "description": "Postman collection for api-gateway auth endpoints"
+    "description": "Postman collection for api-gateway endpoints.\n\n## Docker Deployment\n```bash\n./gradlew dockerDeploy\n```\n\n## Service URLs\n- Gateway: http://localhost:8084\n- Health: http://localhost:8084/actuator/health"
   },
   "variable": [
     {
@@ -27,6 +27,25 @@
     }
   ],
   "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/actuator/health"
+          }
+        },
+        {
+          "name": "Info",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/actuator/info"
+          }
+        }
+      ]
+    },
     {
       "name": "Auth",
       "item": [

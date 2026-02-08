@@ -38,6 +38,9 @@ public class GatewayConfig {
     @Value("${services.workflow.url:http://localhost:8086}")
     private String workflowServiceUrl;
 
+    @Value("${services.recall.url:http://localhost:8091}")
+    private String recallServiceUrl;
+
     // Patterns for profile service routes (under /v1/tenants/{tenantId}/...)
     private static final Pattern PROFILE_PATTERN = Pattern.compile("^/v1/tenants/[^/]+/profiles(/.*)?$");
     private static final Pattern RELATIONSHIP_PATTERN = Pattern.compile("^/v1/tenants/[^/]+/relationships(/.*)?$");
@@ -161,6 +164,22 @@ public class GatewayConfig {
                 .PATCH("/**", req -> proxyWithRewrite(req, workflowServiceUrl, "/v1", "", webClientBuilder))
                 .DELETE("/**", req -> proxyWithRewrite(req, workflowServiceUrl, "/v1", "", webClientBuilder))
             )
+
+            // Notifications routes (in recall service): /v1/notifications/** -> /v1/notifications/**
+            .path("/v1/notifications/**", builder -> builder
+                .GET("/**", req -> proxy(req, recallServiceUrl, webClientBuilder))
+                .POST("/**", req -> proxy(req, recallServiceUrl, webClientBuilder))
+                .PUT("/**", req -> proxy(req, recallServiceUrl, webClientBuilder))
+                .DELETE("/**", req -> proxy(req, recallServiceUrl, webClientBuilder))
+            )
+
+            // Recall routes (for spaced repetition): /v1/recall/** -> /recall/**
+            .path("/v1/recall/**", builder -> builder
+                .GET("/**", req -> proxyWithRewrite(req, recallServiceUrl, "/v1", "", webClientBuilder))
+                .POST("/**", req -> proxyWithRewrite(req, recallServiceUrl, "/v1", "", webClientBuilder))
+                .PUT("/**", req -> proxyWithRewrite(req, recallServiceUrl, "/v1", "", webClientBuilder))
+                .DELETE("/**", req -> proxyWithRewrite(req, recallServiceUrl, "/v1", "", webClientBuilder))
+            )
             .build();
     }
 
@@ -170,7 +189,8 @@ public class GatewayConfig {
 
     private Mono<ServerResponse> proxyWithRewrite(ServerRequest request, String targetBaseUrl,
             String stripPrefix, String addPrefix, WebClient.Builder webClientBuilder) {
-        WebClient webClient = webClientBuilder.baseUrl(targetBaseUrl).build();
+        // Clone the builder to avoid race conditions with shared state
+        WebClient webClient = webClientBuilder.clone().baseUrl(targetBaseUrl).build();
 
         String path = request.path();
 

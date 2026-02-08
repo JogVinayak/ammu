@@ -1,30 +1,57 @@
+version: '3.8'
+
 services:
   postgres:
     image: postgres:16-alpine
     container_name: role-permission-postgres
     environment:
-      POSTGRES_DB: role_permission
-      POSTGRES_USER: role_permission_user
-      POSTGRES_PASSWORD: role_permission_password
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - role_permission_postgres_data:/var/lib/postgresql/data
+      - ../init-databases.sql:/docker-entrypoint-initdb.d/init-databases.sql
+    networks:
+      - learner-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     restart: unless-stopped
 
   role-permission-service:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: role-permission-service
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/role_permission
-      SPRING_DATASOURCE_USERNAME: role_permission_user
-      SPRING_DATASOURCE_PASSWORD: role_permission_password
-      SPRING_LIQUIBASE_ENABLED: "true"
     ports:
       - "8080:8080"
+    environment:
+      - SPRING_APPLICATION_NAME=role-permission-service
+      - SERVER_PORT=8080
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/role_permission
+      - SPRING_DATASOURCE_USERNAME=role_permission_user
+      - SPRING_DATASOURCE_PASSWORD=role_permission_password
+      - SPRING_LIQUIBASE_ENABLED=true
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - learner-network
     restart: unless-stopped
 
+networks:
+  learner-network:
+    name: learner-network
+    driver: bridge
+
 volumes:
-  postgres_data:
+  role_permission_postgres_data:

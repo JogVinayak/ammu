@@ -3,3 +3,7 @@ databaseChangeLog:
       file: db/changelog/changes/001-create-workflow-tables.yaml
   - include:
       file: db/changelog/changes/002-create-school-classes-table.yaml
+  - include:
+      file: db/changelog/changes/003-create-teacher-class-assignments.yaml
+  - include:
+      file: db/changelog/changes/004-create-released-content-table.yaml

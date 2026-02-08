@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  content-workflow-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: content-workflow-service
+    ports:
+      - "8086:8086"
+    environment:
+      - SPRING_APPLICATION_NAME=content-workflow-service
+      - SERVER_PORT=8086
+      # Use shared postgres container
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://role-permission-postgres:5432/content_workflow_service
+      - SPRING_DATASOURCE_USERNAME=content_workflow_service
+      - SPRING_DATASOURCE_PASSWORD=content_workflow_service
+      - SPRING_LIQUIBASE_ENABLED=true
+      # Service URLs for inter-service communication
+      - SERVICES_USER_PROFILE_URL=http://user-profile-service:8083
+      - SERVICES_RECALL_URL=http://recall-service:8091
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8086/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - learner-network
+    restart: unless-stopped
+
+networks:
+  learner-network:
+    name: learner-network
+    driver: bridge

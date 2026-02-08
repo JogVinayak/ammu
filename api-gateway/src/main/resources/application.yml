@@ -1,6 +1,8 @@
 spring:
   application:
     name: api-gateway
+  codec:
+    max-in-memory-size: 10MB
 
 server:
   port: 8084
@@ -21,6 +23,8 @@ services:
     url: http://localhost:8087
   workflow:
     url: http://localhost:8086
+  recall:
+    url: http://localhost:8091
 
 # Actuator endpoints
 management:

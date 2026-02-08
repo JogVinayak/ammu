@@ -250,3 +250,192 @@ databaseChangeLog:
                   name: content_guided_json
                   type: text
                   remarks: Pre-processed JSON for guided reading - contains paragraphs with words and metadata
+  - changeSet:
+      id: 007-create-flashcards
+      author: codex
+      changes:
+        - createTable:
+            tableName: flashcards
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: note_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: front_text
+                  type: text
+                  constraints:
+                    nullable: false
+              - column:
+                  name: back_text
+                  type: text
+                  constraints:
+                    nullable: false
+              - column:
+                  name: position
+                  type: integer
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_by
+                  type: uuid
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  defaultValueComputed: "CURRENT_TIMESTAMP"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamp with time zone
+                  defaultValueComputed: "CURRENT_TIMESTAMP"
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            baseTableName: flashcards
+            baseColumnNames: note_id
+            constraintName: fk_flashcards_note_id
+            referencedTableName: notes
+            referencedColumnNames: id
+            onDelete: CASCADE
+        - createIndex:
+            tableName: flashcards
+            indexName: idx_flashcards_tenant_note
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: note_id
+        - addUniqueConstraint:
+            tableName: flashcards
+            columnNames: tenant_id, note_id, position
+            constraintName: uk_flashcard_position
+  - changeSet:
+      id: 008-create-mcqs
+      author: codex
+      changes:
+        - createTable:
+            tableName: mcqs
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: note_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: question_text
+                  type: text
+                  constraints:
+                    nullable: false
+              - column:
+                  name: options_json
+                  type: text
+                  constraints:
+                    nullable: false
+                  remarks: JSON array of options with text and isCorrect fields
+              - column:
+                  name: difficulty
+                  type: varchar(16)
+                  constraints:
+                    nullable: false
+                  remarks: LOW, MEDIUM, or HIGH
+              - column:
+                  name: explanation
+                  type: text
+                  remarks: Explanation for the correct answer
+              - column:
+                  name: position
+                  type: integer
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_by
+                  type: uuid
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  defaultValueComputed: "CURRENT_TIMESTAMP"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamp with time zone
+                  defaultValueComputed: "CURRENT_TIMESTAMP"
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            baseTableName: mcqs
+            baseColumnNames: note_id
+            constraintName: fk_mcqs_note_id
+            referencedTableName: notes
+            referencedColumnNames: id
+            onDelete: CASCADE
+        - createIndex:
+            tableName: mcqs
+            indexName: idx_mcqs_tenant_note
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: note_id
+        - createIndex:
+            tableName: mcqs
+            indexName: idx_mcqs_difficulty
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: note_id
+              - column:
+                  name: difficulty
+        - addUniqueConstraint:
+            tableName: mcqs
+            columnNames: tenant_id, note_id, position
+            constraintName: uk_mcq_position
+  - changeSet:
+      id: 009-add-flashcard-difficulty
+      author: codex
+      changes:
+        - addColumn:
+            tableName: flashcards
+            columns:
+              - column:
+                  name: difficulty
+                  type: varchar(16)
+                  defaultValue: "MEDIUM"
+                  constraints:
+                    nullable: false
+                  remarks: LOW, MEDIUM, or HIGH
+        - createIndex:
+            tableName: flashcards
+            indexName: idx_flashcards_difficulty
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: note_id
+              - column:
+                  name: difficulty

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/widgets.dart';
 import '../../auth/providers/auth_provider.dart';
+import '../../notifications/widgets/notification_badge.dart';
 import '../providers/student_provider.dart';
 
 class StudentDashboardScreen extends ConsumerWidget {
@@ -22,6 +23,15 @@ class StudentDashboardScreen extends ConsumerWidget {
     final error = profileState.error ?? notesState.error;
 
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('Dashboard'),
+        centerTitle: true,
+        automaticallyImplyLeading: false,
+        actions: const [
+          NotificationBadge(),
+          SizedBox(width: AppSpacing.xs),
+        ],
+      ),
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: () async {

@@ -6,6 +6,8 @@ import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/widgets.dart';
 import '../data/note_models.dart';
 import '../providers/notes_provider.dart';
+import '../widgets/flashcard_viewer.dart';
+import '../widgets/mcq_viewer.dart';
 
 class NoteViewerScreen extends ConsumerStatefulWidget {
   final String noteId;
@@ -31,6 +33,26 @@ class _NoteViewerScreenState extends ConsumerState<NoteViewerScreen> {
           onPressed: () => context.pop(),
         ),
         actions: [
+          noteAsync.maybeWhen(
+            data: (note) => note != null
+                ? IconButton(
+                    icon: const Icon(Icons.style),
+                    tooltip: 'Revise Flashcards',
+                    onPressed: () => _showFlashcards(note),
+                  )
+                : const SizedBox.shrink(),
+            orElse: () => const SizedBox.shrink(),
+          ),
+          noteAsync.maybeWhen(
+            data: (note) => note != null
+                ? IconButton(
+                    icon: const Icon(Icons.quiz),
+                    tooltip: 'Take Quiz',
+                    onPressed: () => _showMcqs(note),
+                  )
+                : const SizedBox.shrink(),
+            orElse: () => const SizedBox.shrink(),
+          ),
           IconButton(
             icon: const Icon(Icons.edit),
             onPressed: () => context.push('/notes/${widget.noteId}/edit'),
@@ -235,5 +257,25 @@ class _NoteViewerScreenState extends ConsumerState<NoteViewerScreen> {
 
   void _releaseToClass() {
     context.push('/release?contentId=${widget.noteId}&contentType=note');
+  }
+
+  void _showFlashcards(Note note) {
+    showDialog(
+      context: context,
+      builder: (context) => FlashcardViewerDialog(
+        noteId: note.id,
+        noteTitle: note.title,
+      ),
+    );
+  }
+
+  void _showMcqs(Note note) {
+    showDialog(
+      context: context,
+      builder: (context) => McqViewerDialog(
+        noteId: note.id,
+        noteTitle: note.title,
+      ),
+    );
   }
 }

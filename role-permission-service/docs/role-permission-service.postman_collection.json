@@ -2,7 +2,7 @@
   "info": {
     "name": "role-permission-service",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "description": "Postman collection for role-permission-service APIs"
+    "description": "Postman collection for role-permission-service APIs.\n\n## Docker Deployment\n```bash\ndocker-compose up -d\n```\n\n## Service URLs\n- Service: http://localhost:8080\n- Health: http://localhost:8080/actuator/health\n- Swagger UI: http://localhost:8080/swagger-ui"
   },
   "variable": [
     {
@@ -51,6 +51,25 @@
     }
   ],
   "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/actuator/health"
+          }
+        },
+        {
+          "name": "Info",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/actuator/info"
+          }
+        }
+      ]
+    },
     {
       "name": "Roles",
       "item": [

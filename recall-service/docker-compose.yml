@@ -1,30 +1,36 @@
-services:
-  postgres:
-    image: postgres:16-alpine
-    container_name: recall-postgres
-    environment:
-      POSTGRES_DB: recall
-      POSTGRES_USER: recall_user
-      POSTGRES_PASSWORD: recall_password
-    ports:
-      - "5432:5432"
-    volumes:
-      - recall_postgres_data:/var/lib/postgresql/data
-    restart: unless-stopped
+version: '3.8'
 
+services:
   recall-service:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: recall-service
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/recall
-      SPRING_DATASOURCE_USERNAME: recall_user
-      SPRING_DATASOURCE_PASSWORD: recall_password
-      SPRING_LIQUIBASE_ENABLED: "true"
     ports:
       - "8091:8091"
-    depends_on:
-      - postgres
+    environment:
+      - SPRING_APPLICATION_NAME=recall-service
+      - SERVER_PORT=8091
+      # Use shared postgres container
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://role-permission-postgres:5432/recall_service
+      - SPRING_DATASOURCE_USERNAME=recall_service
+      - SPRING_DATASOURCE_PASSWORD=recall_service
+      - SPRING_LIQUIBASE_ENABLED=true
+      # Test notifications
+      - TEST_NOTIFICATIONS_ENABLED=true
+      - TEST_NOTIFICATIONS_TENANT_ID=fa000000-0000-0000-0000-000000000001
+      - TEST_NOTIFICATIONS_USER_IDS=fa300000-0000-0000-0000-000000000001
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8091/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - learner-network
     restart: unless-stopped
 
-volumes:
-  recall_postgres_data:
+networks:
+  learner-network:
+    name: learner-network
+    driver: bridge

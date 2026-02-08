@@ -15,4 +15,6 @@ public class ReleaseContentRequest {
 
     @NotNull(message = "Content type is required")
     private String contentType; // "note" or "mindmap"
+
+    private String contentTitle; // Optional: for notification message
 }
