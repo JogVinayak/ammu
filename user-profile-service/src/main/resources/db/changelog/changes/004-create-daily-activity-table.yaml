@@ -1,0 +1,98 @@
+databaseChangeLog:
+  - changeSet:
+      id: 10
+      author: user-profile-service
+      comment: Create daily_activity table for Activity Rings tracking
+      changes:
+        - createTable:
+            tableName: daily_activity
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: activity_date
+                  type: date
+                  constraints:
+                    nullable: false
+              - column:
+                  name: reading_count
+                  type: int
+                  defaultValueNumeric: 0
+              - column:
+                  name: flashcard_count
+                  type: int
+                  defaultValueNumeric: 0
+              - column:
+                  name: exam_count
+                  type: int
+                  defaultValueNumeric: 0
+              - column:
+                  name: reading_ring_closed
+                  type: boolean
+                  defaultValueBoolean: false
+              - column:
+                  name: flashcard_ring_closed
+                  type: boolean
+                  defaultValueBoolean: false
+              - column:
+                  name: exam_ring_closed
+                  type: boolean
+                  defaultValueBoolean: false
+              - column:
+                  name: all_rings_closed
+                  type: boolean
+                  defaultValueBoolean: false
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+              - column:
+                  name: updated_at
+                  type: timestamp with time zone
+        - addUniqueConstraint:
+            tableName: daily_activity
+            columnNames: tenant_id, user_id, activity_date
+            constraintName: uk_daily_activity_tenant_user_date
+        - createIndex:
+            tableName: daily_activity
+            indexName: idx_daily_activity_tenant_user
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: user_id
+        - createIndex:
+            tableName: daily_activity
+            indexName: idx_daily_activity_tenant_user_date
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: user_id
+              - column:
+                  name: activity_date
+        - createIndex:
+            tableName: daily_activity
+            indexName: idx_daily_activity_all_rings_closed
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: user_id
+              - column:
+                  name: all_rings_closed
+              - column:
+                  name: activity_date

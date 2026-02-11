@@ -1,56 +1,252 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/widgets.dart';
+import '../data/super_admin_models.dart';
+import '../providers/super_admin_provider.dart';
 
-class SchoolDetailScreen extends ConsumerWidget {
+class SchoolDetailScreen extends ConsumerStatefulWidget {
   final String schoolId;
 
   const SchoolDetailScreen({super.key, required this.schoolId});
 
-  static const _accentColor = Color(0xFFDC2626);
+  @override
+  ConsumerState<SchoolDetailScreen> createState() =>
+      _SchoolDetailScreenState();
+}
+
+class _SchoolDetailScreenState extends ConsumerState<SchoolDetailScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Ensure schools are loaded (they might already be from the list screen)
+    final state = ref.read(schoolsProvider);
+    if (state.schools.isEmpty) {
+      Future.microtask(
+        () => ref.read(schoolsProvider.notifier).loadSchools(),
+      );
+    }
+  }
+
+  School? _findSchool(SchoolsState state) {
+    try {
+      return state.schools.firstWhere((s) => s.id == widget.schoolId);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  void _handleMenuAction(String action, School school) {
+    switch (action) {
+      case 'suspend':
+        _showSuspendConfirmation(school);
+        break;
+      case 'activate':
+        _showActivateConfirmation(school);
+        break;
+      case 'delete':
+        _showDeleteConfirmation(school);
+        break;
+    }
+  }
+
+  void _showSuspendConfirmation(School school) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Suspend School'),
+        content: Text(
+          'Are you sure you want to suspend "${school.name}"? Users will not be able to access this school.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              final success = await ref
+                  .read(schoolsProvider.notifier)
+                  .suspendSchool(school.id);
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      success
+                          ? '${school.name} suspended'
+                          : 'Failed to suspend school',
+                    ),
+                    backgroundColor:
+                        success ? AppColors.success : AppColors.error,
+                  ),
+                );
+              }
+            },
+            style: TextButton.styleFrom(foregroundColor: AppColors.warning),
+            child: const Text('Suspend'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showActivateConfirmation(School school) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Activate School'),
+        content: Text(
+          'Are you sure you want to activate "${school.name}"?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              final success = await ref
+                  .read(schoolsProvider.notifier)
+                  .activateSchool(school.id);
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      success
+                          ? '${school.name} activated'
+                          : 'Failed to activate school',
+                    ),
+                    backgroundColor:
+                        success ? AppColors.success : AppColors.error,
+                  ),
+                );
+              }
+            },
+            style: TextButton.styleFrom(foregroundColor: AppColors.success),
+            child: const Text('Activate'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDeleteConfirmation(School school) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete School'),
+        content: Text(
+          'Are you sure you want to delete "${school.name}"? This action cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              final success = await ref
+                  .read(schoolsProvider.notifier)
+                  .deleteSchool(school.id);
+              if (mounted) {
+                if (success) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('${school.name} deleted'),
+                      backgroundColor: AppColors.success,
+                    ),
+                  );
+                  context.pop();
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Failed to delete school'),
+                      backgroundColor: AppColors.error,
+                    ),
+                  );
+                }
+              }
+            },
+            style: TextButton.styleFrom(foregroundColor: AppColors.error),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    // TODO: Fetch school details from API
-    final school = <String, dynamic>{
-      'name': 'Sample School',
-      'code': 'SAMPLE001',
-      'status': 'ACTIVE',
-      'teacherCount': 0,
-      'studentCount': 0,
-    };
+  Widget build(BuildContext context) {
+    final state = ref.watch(schoolsProvider);
+    final school = _findSchool(state);
+
+    if (state.isLoading && school == null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('School Details'), centerTitle: true),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (school == null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('School Details'), centerTitle: true),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.error_outline,
+                  size: 64, color: AppColors.error.withValues(alpha: 0.7)),
+              const SizedBox(height: AppSpacing.lg),
+              const Text('School not found'),
+              const SizedBox(height: AppSpacing.md),
+              ElevatedButton(
+                onPressed: () => context.pop(),
+                child: const Text('Go Back'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final isSuspended = school.status.toUpperCase() == 'SUSPENDED';
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(school['name'] ?? 'School Details'),
+        title: Text(school.name),
         centerTitle: true,
         actions: [
           PopupMenuButton<String>(
-            onSelected: (value) {
-              // TODO: Handle menu actions
-            },
+            onSelected: (value) => _handleMenuAction(value, school),
             itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 'edit',
-                child: Row(
-                  children: [
-                    Icon(Icons.edit),
-                    SizedBox(width: 8),
-                    Text('Edit School'),
-                  ],
+              if (isSuspended)
+                const PopupMenuItem(
+                  value: 'activate',
+                  child: Row(
+                    children: [
+                      Icon(Icons.play_circle_outline,
+                          color: AppColors.success),
+                      SizedBox(width: 8),
+                      Text('Activate School'),
+                    ],
+                  ),
+                )
+              else
+                const PopupMenuItem(
+                  value: 'suspend',
+                  child: Row(
+                    children: [
+                      Icon(Icons.pause_circle_outline,
+                          color: AppColors.warning),
+                      SizedBox(width: 8),
+                      Text('Suspend School'),
+                    ],
+                  ),
                 ),
-              ),
-              const PopupMenuItem(
-                value: 'suspend',
-                child: Row(
-                  children: [
-                    Icon(Icons.pause_circle_outline, color: AppColors.warning),
-                    SizedBox(width: 8),
-                    Text('Suspend School'),
-                  ],
-                ),
-              ),
               const PopupMenuItem(
                 value: 'delete',
                 child: Row(
@@ -72,34 +268,16 @@ class SchoolDetailScreen extends ConsumerWidget {
           children: [
             _buildSchoolHeader(context, school),
             const SizedBox(height: AppSpacing.lg),
-            _buildStatsRow(context, school),
-            const SizedBox(height: AppSpacing.lg),
-            _buildSectionHeader(context, 'Teachers', () {
-              // TODO: Navigate to teachers list
-            }),
-            const SizedBox(height: AppSpacing.md),
-            _buildEmptySection(context, 'No teachers yet', Icons.person_outline),
-            const SizedBox(height: AppSpacing.lg),
-            _buildSectionHeader(context, 'Students', () {
-              // TODO: Navigate to students list
-            }),
-            const SizedBox(height: AppSpacing.md),
-            _buildEmptySection(context, 'No students yet', Icons.people_outline),
+            _buildInfoSection(context, school),
           ],
         ),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          // TODO: Show add user dialog
-        },
-        backgroundColor: _accentColor,
-        icon: const Icon(Icons.person_add),
-        label: const Text('Add User'),
       ),
     );
   }
 
-  Widget _buildSchoolHeader(BuildContext context, Map<String, dynamic> school) {
+  Widget _buildSchoolHeader(BuildContext context, School school) {
+    final statusColor = _getStatusColor(school.status);
+
     return AppCard(
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),
@@ -124,14 +302,14 @@ class SchoolDetailScreen extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    school['name'] ?? '',
+                    school.name,
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.w600,
                         ),
                   ),
                   const SizedBox(height: AppSpacing.xs),
                   Text(
-                    school['code'] ?? '',
+                    school.tenantKey,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: AppColors.textSecondary,
                         ),
@@ -143,15 +321,15 @@ class SchoolDetailScreen extends ConsumerWidget {
                       vertical: 2,
                     ),
                     decoration: BoxDecoration(
-                      color: AppColors.success.withValues(alpha: 0.1),
+                      color: statusColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(AppRadius.chip),
                     ),
                     child: Text(
-                      school['status'] ?? 'ACTIVE',
-                      style: const TextStyle(
+                      school.status,
+                      style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.success,
+                        color: statusColor,
                       ),
                     ),
                   ),
@@ -164,120 +342,92 @@ class SchoolDetailScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildStatsRow(BuildContext context, Map<String, dynamic> school) {
-    return Row(
-      children: [
-        Expanded(
-          child: _StatBox(
-            icon: Icons.person,
-            label: 'Teachers',
-            value: '${school['teacherCount'] ?? 0}',
-            color: const Color(0xFF10B981),
-          ),
-        ),
-        const SizedBox(width: AppSpacing.md),
-        Expanded(
-          child: _StatBox(
-            icon: Icons.people,
-            label: 'Students',
-            value: '${school['studentCount'] ?? 0}',
-            color: const Color(0xFF8B5CF6),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSectionHeader(BuildContext context, String title, VoidCallback onSeeAll) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          title,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
-        ),
-        TextButton(
-          onPressed: onSeeAll,
-          child: const Text('See All'),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildEmptySection(BuildContext context, String message, IconData icon) {
+  Widget _buildInfoSection(BuildContext context, School school) {
     return AppCard(
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Center(
-          child: Column(
-            children: [
-              Icon(
-                icon,
-                size: 40,
-                color: AppColors.textSecondary.withValues(alpha: 0.5),
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              Text(
-                message,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Details',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            _InfoRow(label: 'School ID', value: school.id),
+            const Divider(height: AppSpacing.lg),
+            _InfoRow(label: 'Tenant Key', value: school.tenantKey),
+            const Divider(height: AppSpacing.lg),
+            _InfoRow(label: 'Status', value: school.status),
+            if (school.createdAt != null) ...[
+              const Divider(height: AppSpacing.lg),
+              _InfoRow(
+                label: 'Created',
+                value: _formatDate(school.createdAt!),
               ),
             ],
-          ),
+            if (school.updatedAt != null) ...[
+              const Divider(height: AppSpacing.lg),
+              _InfoRow(
+                label: 'Last Updated',
+                value: _formatDate(school.updatedAt!),
+              ),
+            ],
+          ],
         ),
       ),
     );
   }
+
+  Color _getStatusColor(String status) {
+    switch (status.toUpperCase()) {
+      case 'ACTIVE':
+        return AppColors.success;
+      case 'SUSPENDED':
+        return AppColors.warning;
+      case 'DELETED':
+        return AppColors.error;
+      default:
+        return AppColors.textSecondary;
+    }
+  }
+
+  String _formatDate(DateTime date) {
+    return '${date.day}/${date.month}/${date.year}';
+  }
 }
 
-class _StatBox extends StatelessWidget {
-  final IconData icon;
+class _InfoRow extends StatelessWidget {
   final String label;
   final String value;
-  final Color color;
 
-  const _StatBox({
-    required this.icon,
-    required this.label,
-    required this.value,
-    required this.color,
-  });
+  const _InfoRow({required this.label, required this.value});
 
   @override
   Widget build(BuildContext context) {
-    return AppCard(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(AppSpacing.sm),
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(AppRadius.button),
-              ),
-              child: Icon(icon, color: color, size: 24),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              value,
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: color,
-                  ),
-            ),
-            Text(
-              label,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
-            ),
-          ],
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 120,
+          child: Text(
+            label,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+          ),
         ),
-      ),
+        Expanded(
+          child: Text(
+            value,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w500,
+                ),
+          ),
+        ),
+      ],
     );
   }
 }

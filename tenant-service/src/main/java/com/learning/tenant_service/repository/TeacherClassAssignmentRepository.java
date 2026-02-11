@@ -1,0 +1,15 @@
+package com.learning.tenant_service.repository;
+
+import com.learning.tenant_service.model.entity.TeacherClassAssignment;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface TeacherClassAssignmentRepository extends JpaRepository<TeacherClassAssignment, UUID> {
+    List<TeacherClassAssignment> findByTenantIdAndClassId(UUID tenantId, UUID classId);
+
+    boolean existsByTenantIdAndClassIdAndTeacherIdAndRole(UUID tenantId, UUID classId, UUID teacherId, String role);
+
+    Optional<TeacherClassAssignment> findByIdAndTenantId(UUID id, UUID tenantId);
+}

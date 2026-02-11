@@ -1,18 +1,18 @@
 version: '3.8'
 
 services:
-  # PostgreSQL Database
-  postgres:
+  # Brain PostgreSQL Database (port 5433)
+  brain-postgres:
     image: postgres:16-alpine
-    container_name: learner-postgres
+    container_name: brain-postgres
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./init-databases.sql:/docker-entrypoint-initdb.d/init-databases.sql
+      - brain_data:/var/lib/postgresql/data
+      - ./init-brain-databases.sql:/docker-entrypoint-initdb.d/init-databases.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
@@ -35,6 +35,7 @@ services:
       - SERVICES_NOTES_URL=http://notes-service:8088
       - SERVICES_MINDMAP_URL=http://mindmap-service:8087
       - SERVICES_WORKFLOW_URL=http://content-workflow-service:8086
+      - SERVICES_RECALL_URL=http://recall-service:8091
     depends_on:
       - auth-service
       - tenant-service
@@ -43,6 +44,7 @@ services:
       - notes-service
       - mindmap-service
       - content-workflow-service
+      - recall-service
     networks:
       - learner-network
 
@@ -53,11 +55,14 @@ services:
     ports:
       - "8081:8081"
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/auth_service
-      - SPRING_DATASOURCE_USERNAME=auth_service
-      - SPRING_DATASOURCE_PASSWORD=auth_service
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://brain-postgres:5432/brain_auth
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+      - SERVICES_PROFILE_URL=http://user-profile-service:8083
+      - SERVICES_TENANT_URL=http://tenant-service:8082
+      - SERVICES_PERMISSION_URL=http://role-permission-service:8080
     depends_on:
-      postgres:
+      brain-postgres:
         condition: service_healthy
     networks:
       - learner-network
@@ -69,11 +74,11 @@ services:
     ports:
       - "8082:8082"
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/tenant_service
-      - SPRING_DATASOURCE_USERNAME=tenant_service
-      - SPRING_DATASOURCE_PASSWORD=tenant_service
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://brain-postgres:5432/brain_tenant
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
     depends_on:
-      postgres:
+      brain-postgres:
         condition: service_healthy
     networks:
       - learner-network
@@ -85,11 +90,11 @@ services:
     ports:
       - "8083:8083"
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/user_profile
-      - SPRING_DATASOURCE_USERNAME=user_profile_user
-      - SPRING_DATASOURCE_PASSWORD=user_profile_password
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://brain-postgres:5432/brain_profile
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
     depends_on:
-      postgres:
+      brain-postgres:
         condition: service_healthy
     networks:
       - learner-network
@@ -101,11 +106,11 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/role_permission_service
-      - SPRING_DATASOURCE_USERNAME=role_permission_service
-      - SPRING_DATASOURCE_PASSWORD=role_permission_service
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://brain-postgres:5432/brain_permission
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
     depends_on:
-      postgres:
+      brain-postgres:
         condition: service_healthy
     networks:
       - learner-network
@@ -117,11 +122,11 @@ services:
     ports:
       - "8085:8085"
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/content_service
-      - SPRING_DATASOURCE_USERNAME=content_service
-      - SPRING_DATASOURCE_PASSWORD=content_service
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://brain-postgres:5432/brain_content
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
     depends_on:
-      postgres:
+      brain-postgres:
         condition: service_healthy
     networks:
       - learner-network
@@ -133,14 +138,17 @@ services:
     ports:
       - "8086:8086"
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/content_workflow_service
-      - SPRING_DATASOURCE_USERNAME=content_workflow_service
-      - SPRING_DATASOURCE_PASSWORD=content_workflow_service
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://brain-postgres:5432/brain_workflow
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
       - SERVICES_USER-PROFILE_URL=http://user-profile-service:8083
+      - SERVICES_RECALL_URL=http://recall-service:8091
     depends_on:
-      postgres:
+      brain-postgres:
         condition: service_healthy
       user-profile-service:
+        condition: service_started
+      recall-service:
         condition: service_started
     networks:
       - learner-network
@@ -152,11 +160,11 @@ services:
     ports:
       - "8089:8087"
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/graph_relations_service
-      - SPRING_DATASOURCE_USERNAME=graph_relations_service
-      - SPRING_DATASOURCE_PASSWORD=graph_relations_service
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://brain-postgres:5432/brain_graph
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
     depends_on:
-      postgres:
+      brain-postgres:
         condition: service_healthy
     networks:
       - learner-network
@@ -168,11 +176,11 @@ services:
     ports:
       - "8087:8087"
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/mindmap_service
-      - SPRING_DATASOURCE_USERNAME=mindmap_service
-      - SPRING_DATASOURCE_PASSWORD=mindmap_service
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://brain-postgres:5432/brain_mindmap
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
     depends_on:
-      postgres:
+      brain-postgres:
         condition: service_healthy
     networks:
       - learner-network
@@ -184,11 +192,11 @@ services:
     ports:
       - "8088:8088"
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/notes_service
-      - SPRING_DATASOURCE_USERNAME=notes_service
-      - SPRING_DATASOURCE_PASSWORD=notes_service
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://brain-postgres:5432/brain_notes
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
     depends_on:
-      postgres:
+      brain-postgres:
         condition: service_healthy
     networks:
       - learner-network
@@ -200,11 +208,11 @@ services:
     ports:
       - "8091:8091"
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/recall_service
-      - SPRING_DATASOURCE_USERNAME=recall_service
-      - SPRING_DATASOURCE_PASSWORD=recall_service
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://brain-postgres:5432/brain_recall
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
     depends_on:
-      postgres:
+      brain-postgres:
         condition: service_healthy
     networks:
       - learner-network
@@ -214,4 +222,4 @@ networks:
     driver: bridge
 
 volumes:
-  postgres_data:
+  brain_data:

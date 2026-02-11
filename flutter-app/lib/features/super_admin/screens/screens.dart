@@ -5,3 +5,5 @@ export 'school_detail_screen.dart';
 export 'users_management_screen.dart';
 export 'content_approval_screen.dart';
 export 'super_admin_profile_screen.dart';
+export 'permissions_management_screen.dart';
+export 'roles_management_screen.dart';

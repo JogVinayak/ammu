@@ -16,5 +16,6 @@ public class SignupRequest {
     private String password;
     private String name;
     private JoinMethod joinMethod;
+    private String userType;
 
 }

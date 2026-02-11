@@ -7,3 +7,5 @@ databaseChangeLog:
       file: db/changelog/changes/003-create-teacher-class-assignments.yaml
   - include:
       file: db/changelog/changes/004-create-released-content-table.yaml
+  - include:
+      file: db/changelog/changes/005-create-assignment-tables.yaml

@@ -24,6 +24,7 @@ import com.learning.auth_service.model.entity.TenantMembership;
 import com.learning.auth_service.model.entity.UserIdentity;
 import com.learning.auth_service.model.enums.AccountStatus;
 import com.learning.auth_service.model.enums.AuthLevel;
+import com.learning.auth_service.model.enums.JoinMethod;
 import com.learning.auth_service.model.enums.TenantMembershipStatus;
 import com.learning.auth_service.repository.TenantMembershipRepository;
 import com.learning.auth_service.repository.UserIdentityRepository;
@@ -55,6 +56,9 @@ public class DefaultAuthService implements AuthService {
 
     @Value("${services.tenant.url:http://localhost:8082}")
     private String tenantServiceUrl;
+
+    @Value("${services.permission.url:http://localhost:8080}")
+    private String permissionServiceUrl;
 
     @Override
     public ResolveResponse resolve(ResolveRequest request) {
@@ -123,7 +127,9 @@ public class DefaultAuthService implements AuthService {
         return null;
     }
 
-    private String fetchUserType(UUID tenantId, UUID userId) {
+    private Map<String, String> fetchUserProfile(UUID tenantId, UUID userId) {
+        Map<String, String> profile = new java.util.HashMap<>();
+        profile.put("userType", "UNKNOWN");
         try {
             WebClient client = webClientBuilder.baseUrl(profileServiceUrl).build();
             Map<?, ?> result = client.get()
@@ -131,20 +137,34 @@ public class DefaultAuthService implements AuthService {
                     .retrieve()
                     .bodyToMono(Map.class)
                     .block();
-            if (result != null && result.get("userType") != null) {
-                return result.get("userType").toString();
+            if (result != null) {
+                if (result.get("userType") != null) {
+                    profile.put("userType", result.get("userType").toString());
+                }
+                if (result.get("displayName") != null) {
+                    profile.put("displayName", result.get("displayName").toString());
+                }
             }
         } catch (Exception e) {
-            // Ignore, return default
+            // Ignore, return defaults
         }
-        return "UNKNOWN";
+        return profile;
+    }
+
+    private String fetchUserType(UUID tenantId, UUID userId) {
+        return fetchUserProfile(tenantId, userId).get("userType");
     }
 
     @Override
     public AuthResponse signup(SignupRequest request) {
-        // Check if user already exists
-        Optional<UserIdentity> existingUser = userIdentityRepository.findByPrimaryEmailOrPrimaryPhone(
-                request.getEmail(), request.getPhone());
+        // Check if user already exists by email
+        Optional<UserIdentity> existingUser = Optional.empty();
+        if (request.getEmail() != null) {
+            existingUser = userIdentityRepository.findByPrimaryEmail(request.getEmail());
+        }
+        if (existingUser.isEmpty() && request.getPhone() != null) {
+            existingUser = userIdentityRepository.findByPrimaryPhone(request.getPhone());
+        }
 
         if (existingUser.isPresent()) {
             // User exists, return existing user ID
@@ -154,6 +174,7 @@ public class DefaultAuthService implements AuthService {
 
         // Create new user
         UUID userId = UUID.randomUUID();
+        Instant now = Instant.now();
         UserIdentity user = new UserIdentity();
         user.setId(userId);
         user.setPrimaryEmail(request.getEmail());
@@ -163,21 +184,31 @@ public class DefaultAuthService implements AuthService {
         user.setEmailVerified(false);
         user.setPhoneVerified(false);
         user.setFailedLoginCount(0);
+        user.setCreatedAt(now);
+        user.setUpdatedAt(now);
 
         userIdentityRepository.save(user);
 
         // Create tenant membership
+        String userType = request.getUserType() != null ? request.getUserType() : "STUDENT";
         if (request.getTenantId() != null) {
             TenantMembership membership = new TenantMembership();
             membership.setId(UUID.randomUUID());
             membership.setUserId(userId);
             membership.setTenantId(request.getTenantId());
             membership.setStatus(TenantMembershipStatus.ACTIVE);
-            membership.setJoinMethod(request.getJoinMethod());
+            membership.setJoinMethod(request.getJoinMethod() != null ? request.getJoinMethod() : JoinMethod.ADMIN_CREATE);
+            membership.setCreatedAt(now);
             tenantMembershipRepository.save(membership);
+
+            // Sync: create profile in user-profile-service
+            createProfile(request.getTenantId(), userId, request.getEmail(), request.getPhone(), request.getName(), userType);
+
+            // Sync: assign default role in role-permission-service
+            assignDefaultRole(request.getTenantId(), userId, userType);
         }
 
-        return buildAuthResponse(userId, request.getTenantId(), request.getEmail(), null);
+        return buildAuthResponse(userId, request.getTenantId(), request.getEmail(), userType);
     }
 
     @Override
@@ -205,9 +236,13 @@ public class DefaultAuthService implements AuthService {
                 }
             }
 
-            // Fetch userType from profile service
+            // Fetch userType and displayName from profile service
             if (tenantId != null) {
-                userType = fetchUserType(tenantId, userId);
+                Map<String, String> profile = fetchUserProfile(tenantId, userId);
+                userType = profile.get("userType");
+                if (profile.get("displayName") != null) {
+                    displayName = profile.get("displayName");
+                }
             }
         } else {
             // User not found, generate random (mock behavior for backward compatibility)
@@ -301,6 +336,75 @@ public class DefaultAuthService implements AuthService {
     public void deleteUser(UUID userId) {
         // In a real implementation, this would delete the user and related data
         userIdentityRepository.deleteById(userId);
+    }
+
+    private void createProfile(UUID tenantId, UUID userId, String email, String phone, String name, String userType) {
+        try {
+            String displayName = name != null ? name : email;
+            Map<String, Object> body = Map.of(
+                    "userId", userId.toString(),
+                    "displayName", displayName,
+                    "email", email != null ? email : "",
+                    "phone", phone != null ? phone : "",
+                    "userType", userType
+            );
+            webClientBuilder.baseUrl(profileServiceUrl).build()
+                    .post()
+                    .uri("/v1/tenants/{tenantId}/profiles", tenantId)
+                    .header("Content-Type", "application/json")
+                    .bodyValue(body)
+                    .retrieve()
+                    .bodyToMono(Map.class)
+                    .block();
+        } catch (Exception e) {
+            // Log but don't fail signup if profile creation fails
+            System.err.println("Failed to create profile in user-profile-service: " + e.getMessage());
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private void assignDefaultRole(UUID tenantId, UUID userId, String userType) {
+        try {
+            // Look up roles for this tenant
+            WebClient client = webClientBuilder.baseUrl(permissionServiceUrl).build();
+            List<Map<String, Object>> roles = client.get()
+                    .uri("/tenants/{tenantId}/roles", tenantId)
+                    .retrieve()
+                    .bodyToMono(List.class)
+                    .block();
+
+            if (roles == null || roles.isEmpty()) {
+                return;
+            }
+
+            // Find role matching userType (case-insensitive)
+            String targetRoleName = userType.toLowerCase();
+            Long roleId = null;
+            for (Map<String, Object> role : roles) {
+                String roleName = role.get("name").toString().toLowerCase();
+                if (roleName.equals(targetRoleName) || roleName.contains(targetRoleName)) {
+                    roleId = ((Number) role.get("id")).longValue();
+                    break;
+                }
+            }
+
+            if (roleId == null) {
+                return;
+            }
+
+            // Assign the role
+            Map<String, Object> body = Map.of("roleId", roleId);
+            client.post()
+                    .uri("/tenants/{tenantId}/users/{userId}/roles", tenantId, userId)
+                    .header("Content-Type", "application/json")
+                    .bodyValue(body)
+                    .retrieve()
+                    .bodyToMono(Map.class)
+                    .block();
+        } catch (Exception e) {
+            // Log but don't fail signup if role assignment fails
+            System.err.println("Failed to assign default role: " + e.getMessage());
+        }
     }
 
     private AuthResponse buildAuthResponse(UUID userId, UUID tenantId) {

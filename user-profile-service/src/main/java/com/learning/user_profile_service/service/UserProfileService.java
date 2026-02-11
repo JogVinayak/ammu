@@ -16,4 +16,6 @@ public interface UserProfileService {
     List<UserProfileResponse> listProfiles(UUID tenantId);
 
     UserProfileResponse updateProfile(UUID tenantId, UUID profileId, UpdateUserProfileRequest request, String actorId);
+
+    void deleteProfile(UUID tenantId, UUID profileId);
 }

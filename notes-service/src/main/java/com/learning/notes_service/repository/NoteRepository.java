@@ -21,6 +21,9 @@ public interface NoteRepository extends JpaRepository<Note, UUID>, JpaSpecificat
 
     Page<Note> findByTenantIdAndCreatedByAndDeletedFalse(UUID tenantId, UUID createdBy, Pageable pageable);
 
+    Page<Note> findByTenantIdAndCreatedByAndStatusAndDeletedFalse(
+            UUID tenantId, UUID createdBy, NoteStatus status, Pageable pageable);
+
     Page<Note> findByTenantIdAndScopeTypeAndDeletedFalse(UUID tenantId, NoteScopeType scopeType, Pageable pageable);
 
     Page<Note> findByTenantIdAndScopeTypeAndScopeIdAndDeletedFalse(

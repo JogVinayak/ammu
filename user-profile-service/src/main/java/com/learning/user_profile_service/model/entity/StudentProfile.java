@@ -37,6 +37,9 @@ public class StudentProfile {
     @Column(name = "class_id")
     private UUID classId;
 
+    @Column(name = "division_id")
+    private UUID divisionId;
+
     @Column(name = "board")
     private String board;
 

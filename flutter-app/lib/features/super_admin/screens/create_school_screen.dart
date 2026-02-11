@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/widgets.dart';
+import '../providers/super_admin_provider.dart';
 
 class CreateSchoolScreen extends ConsumerStatefulWidget {
   const CreateSchoolScreen({super.key});
@@ -37,17 +38,51 @@ class _CreateSchoolScreenState extends ConsumerState<CreateSchoolScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // TODO: Call API to create school
-      await Future.delayed(const Duration(seconds: 1));
+      final code = _codeController.text.trim().toLowerCase();
+      final success = await ref.read(schoolsProvider.notifier).createSchool(
+            _nameController.text.trim(),
+            code,
+          );
 
-      if (mounted) {
+      if (!mounted) return;
+
+      if (success) {
+        // If admin user creation is requested, create the admin user too
+        if (_createAdminUser && _adminEmailController.text.isNotEmpty) {
+          final schoolsState = ref.read(schoolsProvider);
+          // Find the newly created school by tenantKey
+          final newSchool = schoolsState.schools
+              .where((s) => s.tenantKey == code)
+              .firstOrNull;
+
+          if (newSchool != null) {
+            await ref.read(usersProvider.notifier).createUser(
+                  tenantId: newSchool.id,
+                  email: _adminEmailController.text.trim(),
+                  password: 'Admin@123',
+                  displayName: _adminNameController.text.trim(),
+                  userType: 'ADMIN',
+                );
+          }
+        }
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('School created successfully'),
+              backgroundColor: AppColors.success,
+            ),
+          );
+          context.pop();
+        }
+      } else {
+        final error = ref.read(schoolsProvider).error;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('School created successfully'),
-            backgroundColor: AppColors.success,
+          SnackBar(
+            content: Text('Failed to create school: ${error ?? "Unknown error"}'),
+            backgroundColor: AppColors.error,
           ),
         );
-        context.pop();
       }
     } catch (e) {
       if (mounted) {
@@ -110,16 +145,21 @@ class _CreateSchoolScreenState extends ConsumerState<CreateSchoolScreen> {
                         controller: _codeController,
                         decoration: const InputDecoration(
                           labelText: 'School Code',
-                          hintText: 'e.g., SCHOOL001',
+                          hintText: 'e.g., school001',
                           prefixIcon: Icon(Icons.tag),
+                          helperText: 'Lowercase letters, numbers, and hyphens only',
                         ),
-                        textCapitalization: TextCapitalization.characters,
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'Please enter school code';
                           }
-                          if (value.length < 3) {
+                          final code = value.trim().toLowerCase();
+                          if (code.length < 3) {
                             return 'Code must be at least 3 characters';
+                          }
+                          if (!RegExp(r'^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$')
+                              .hasMatch(code)) {
+                            return 'Only lowercase letters, numbers, and hyphens allowed';
                           }
                           return null;
                         },
@@ -140,7 +180,8 @@ class _CreateSchoolScreenState extends ConsumerState<CreateSchoolScreen> {
                   const Spacer(),
                   Switch(
                     value: _createAdminUser,
-                    onChanged: (value) => setState(() => _createAdminUser = value),
+                    onChanged: (value) =>
+                        setState(() => _createAdminUser = value),
                     activeColor: _accentColor,
                   ),
                 ],
@@ -191,10 +232,11 @@ class _CreateSchoolScreenState extends ConsumerState<CreateSchoolScreen> {
                         ),
                         const SizedBox(height: AppSpacing.sm),
                         Text(
-                          'A temporary password will be sent to this email',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: AppColors.textSecondary,
-                              ),
+                          'Default password: Admin@123',
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: AppColors.textSecondary,
+                                  ),
                         ),
                       ],
                     ),
@@ -207,7 +249,8 @@ class _CreateSchoolScreenState extends ConsumerState<CreateSchoolScreen> {
                   onPressed: _isLoading ? null : _createSchool,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: _accentColor,
-                    padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+                    padding:
+                        const EdgeInsets.symmetric(vertical: AppSpacing.md),
                   ),
                   child: _isLoading
                       ? const SizedBox(

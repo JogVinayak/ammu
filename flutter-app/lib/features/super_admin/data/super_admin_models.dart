@@ -161,6 +161,111 @@ class CreateUserProfileRequest {
       };
 }
 
+/// Role model (tenant-scoped)
+class Role extends Equatable {
+  final int id;
+  final String name;
+  final String? description;
+  final bool active;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
+
+  const Role({
+    required this.id,
+    required this.name,
+    this.description,
+    this.active = true,
+    this.createdAt,
+    this.updatedAt,
+  });
+
+  factory Role.fromJson(Map<String, dynamic> json) => Role(
+        id: (json['id'] as num).toInt(),
+        name: json['name'] ?? '',
+        description: json['description'],
+        active: json['active'] ?? true,
+        createdAt: json['createdAt'] != null
+            ? DateTime.tryParse(json['createdAt'])
+            : null,
+        updatedAt: json['updatedAt'] != null
+            ? DateTime.tryParse(json['updatedAt'])
+            : null,
+      );
+
+  @override
+  List<Object?> get props => [id, name, active];
+}
+
+/// Permission model (global)
+class Permission extends Equatable {
+  final int id;
+  final String code;
+  final String? resource;
+  final String? action;
+  final String? description;
+  final bool active;
+  final DateTime? createdAt;
+
+  const Permission({
+    required this.id,
+    required this.code,
+    this.resource,
+    this.action,
+    this.description,
+    this.active = true,
+    this.createdAt,
+  });
+
+  factory Permission.fromJson(Map<String, dynamic> json) => Permission(
+        id: (json['id'] as num).toInt(),
+        code: json['code'] ?? json['name'] ?? '',
+        resource: json['resource'],
+        action: json['action'],
+        description: json['description'],
+        active: json['active'] ?? true,
+        createdAt: json['createdAt'] != null
+            ? DateTime.tryParse(json['createdAt'])
+            : null,
+      );
+
+  String get displayLabel =>
+      resource != null && action != null ? '$resource:$action' : code;
+
+  @override
+  List<Object?> get props => [id, code, active];
+}
+
+/// Role-permission grant (links a permission to a role)
+class RolePermissionGrant extends Equatable {
+  final int id;
+  final int roleId;
+  final String permissionCode;
+  final String? scopeCode;
+  final DateTime? createdAt;
+
+  const RolePermissionGrant({
+    required this.id,
+    required this.roleId,
+    required this.permissionCode,
+    this.scopeCode,
+    this.createdAt,
+  });
+
+  factory RolePermissionGrant.fromJson(Map<String, dynamic> json) =>
+      RolePermissionGrant(
+        id: (json['id'] as num).toInt(),
+        roleId: (json['roleId'] as num).toInt(),
+        permissionCode: json['permissionCode'] ?? '',
+        scopeCode: json['scopeCode'],
+        createdAt: json['createdAt'] != null
+            ? DateTime.tryParse(json['createdAt'])
+            : null,
+      );
+
+  @override
+  List<Object?> get props => [id, roleId, permissionCode];
+}
+
 /// Create user identity request (for auth service)
 class CreateUserIdentityRequest {
   final String email;

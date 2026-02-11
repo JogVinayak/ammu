@@ -1,11 +1,14 @@
 package com.learning.notes_service.service;
 
+import com.learning.notes_service.exception.BadRequestException;
+import com.learning.notes_service.exception.NotFoundException;
 import com.learning.notes_service.model.dto.BatchMcqsRequest;
 import com.learning.notes_service.model.dto.CreateMcqRequest;
 import com.learning.notes_service.model.dto.McqListResponse;
 import com.learning.notes_service.model.dto.McqResponse;
 import com.learning.notes_service.model.dto.UpdateMcqRequest;
 import com.learning.notes_service.model.entity.Mcq;
+import com.learning.notes_service.repository.DeckRepository;
 import com.learning.notes_service.repository.McqRepository;
 import com.learning.notes_service.repository.NoteRepository;
 import java.time.Instant;
@@ -22,13 +25,15 @@ public class DefaultMcqService implements McqService {
 
     private final McqRepository mcqRepository;
     private final NoteRepository noteRepository;
+    private final DeckRepository deckRepository;
+    private final DeckService deckService;
 
     @Override
     @Transactional
     public McqResponse create(UUID tenantId, UUID noteId, CreateMcqRequest request) {
         // Verify note exists
         noteRepository.findByIdAndTenantIdAndDeletedFalse(noteId, tenantId)
-                .orElseThrow(() -> new RuntimeException("Note not found"));
+                .orElseThrow(() -> new NotFoundException("Note not found"));
 
         Instant now = Instant.now();
         Integer position = request.getPosition();
@@ -50,6 +55,7 @@ public class DefaultMcqService implements McqService {
         mcq.setUpdatedAt(now);
 
         mcqRepository.save(mcq);
+        refreshDeckIfExists(tenantId, noteId);
         return toResponse(mcq);
     }
 
@@ -58,7 +64,7 @@ public class DefaultMcqService implements McqService {
     public McqListResponse listByNote(UUID tenantId, UUID noteId) {
         // Verify note exists
         noteRepository.findByIdAndTenantIdAndDeletedFalse(noteId, tenantId)
-                .orElseThrow(() -> new RuntimeException("Note not found"));
+                .orElseThrow(() -> new NotFoundException("Note not found"));
 
         List<Mcq> mcqs = mcqRepository
                 .findByTenantIdAndNoteIdOrderByPositionAsc(tenantId, noteId);
@@ -75,7 +81,7 @@ public class DefaultMcqService implements McqService {
     public McqListResponse listByNoteAndDifficulty(UUID tenantId, UUID noteId, String difficulty) {
         // Verify note exists
         noteRepository.findByIdAndTenantIdAndDeletedFalse(noteId, tenantId)
-                .orElseThrow(() -> new RuntimeException("Note not found"));
+                .orElseThrow(() -> new NotFoundException("Note not found"));
 
         List<Mcq> mcqs = mcqRepository
                 .findByTenantIdAndNoteIdAndDifficultyOrderByPositionAsc(tenantId, noteId, difficulty);
@@ -91,10 +97,10 @@ public class DefaultMcqService implements McqService {
     @Transactional(readOnly = true)
     public McqResponse getById(UUID tenantId, UUID noteId, UUID mcqId) {
         Mcq mcq = mcqRepository.findByIdAndTenantId(mcqId, tenantId)
-                .orElseThrow(() -> new RuntimeException("MCQ not found"));
+                .orElseThrow(() -> new NotFoundException("MCQ not found"));
 
         if (!mcq.getNoteId().equals(noteId)) {
-            throw new RuntimeException("MCQ does not belong to this note");
+            throw new BadRequestException("MCQ does not belong to this note");
         }
 
         return toResponse(mcq);
@@ -105,10 +111,10 @@ public class DefaultMcqService implements McqService {
     public McqResponse update(UUID tenantId, UUID noteId, UUID mcqId,
                                UpdateMcqRequest request) {
         Mcq mcq = mcqRepository.findByIdAndTenantId(mcqId, tenantId)
-                .orElseThrow(() -> new RuntimeException("MCQ not found"));
+                .orElseThrow(() -> new NotFoundException("MCQ not found"));
 
         if (!mcq.getNoteId().equals(noteId)) {
-            throw new RuntimeException("MCQ does not belong to this note");
+            throw new BadRequestException("MCQ does not belong to this note");
         }
 
         if (request.getQuestionText() != null) {
@@ -136,13 +142,14 @@ public class DefaultMcqService implements McqService {
     @Transactional
     public void delete(UUID tenantId, UUID noteId, UUID mcqId) {
         Mcq mcq = mcqRepository.findByIdAndTenantId(mcqId, tenantId)
-                .orElseThrow(() -> new RuntimeException("MCQ not found"));
+                .orElseThrow(() -> new NotFoundException("MCQ not found"));
 
         if (!mcq.getNoteId().equals(noteId)) {
-            throw new RuntimeException("MCQ does not belong to this note");
+            throw new BadRequestException("MCQ does not belong to this note");
         }
 
         mcqRepository.delete(mcq);
+        refreshDeckIfExists(tenantId, noteId);
     }
 
     @Override
@@ -151,7 +158,7 @@ public class DefaultMcqService implements McqService {
                                         BatchMcqsRequest request) {
         // Verify note exists
         noteRepository.findByIdAndTenantIdAndDeletedFalse(noteId, tenantId)
-                .orElseThrow(() -> new RuntimeException("Note not found"));
+                .orElseThrow(() -> new NotFoundException("Note not found"));
 
         Instant now = Instant.now();
 
@@ -190,7 +197,14 @@ public class DefaultMcqService implements McqService {
             mcqRepository.save(mcq);
         }
 
+        refreshDeckIfExists(tenantId, noteId);
         return listByNote(tenantId, noteId);
+    }
+
+    private void refreshDeckIfExists(UUID tenantId, UUID noteId) {
+        if (deckRepository.existsByTenantIdAndNoteId(tenantId, noteId)) {
+            deckService.refreshStatus(tenantId, noteId);
+        }
     }
 
     private McqResponse toResponse(Mcq mcq) {

@@ -3,6 +3,7 @@ package com.learning.content_workflow_service.controller;
 import com.learning.content_workflow_service.dto.CreateWorkflowRequest;
 import com.learning.content_workflow_service.dto.PublishWorkflowRequest;
 import com.learning.content_workflow_service.dto.ReleaseContentRequest;
+import com.learning.content_workflow_service.dto.ReleaseHistoryResponse;
 import com.learning.content_workflow_service.dto.ReleasedContentResponse;
 import com.learning.content_workflow_service.dto.ReviewActionRequest;
 import com.learning.content_workflow_service.dto.SubmitForReviewRequest;
@@ -119,5 +120,14 @@ public class WorkflowController {
             @RequestParam UUID classId,
             @RequestParam(required = false) String contentType) {
         return workflowService.getReleasedContent(tenantId, classId, contentType);
+    }
+
+    @GetMapping("/history")
+    public ReleaseHistoryResponse getReleaseHistory(
+            @RequestHeader("X-Tenant-Id") String tenantId,
+            @RequestHeader(value = "X-User-Id", required = false) String userId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return workflowService.getReleaseHistory(tenantId, userId, page, size);
     }
 }

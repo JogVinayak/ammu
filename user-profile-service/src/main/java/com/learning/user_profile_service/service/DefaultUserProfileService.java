@@ -6,6 +6,7 @@ import com.learning.user_profile_service.model.dto.UpdateUserProfileRequest;
 import com.learning.user_profile_service.model.dto.UserProfileResponse;
 import com.learning.user_profile_service.model.entity.UserProfile;
 import com.learning.user_profile_service.model.enums.ProfileStatus;
+import com.learning.user_profile_service.repository.StudentProfileRepository;
 import com.learning.user_profile_service.repository.UserProfileRepository;
 import java.time.Instant;
 import java.util.List;
@@ -16,9 +17,12 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class DefaultUserProfileService implements UserProfileService {
     private final UserProfileRepository profileRepository;
+    private final StudentProfileRepository studentProfileRepository;
 
-    public DefaultUserProfileService(UserProfileRepository profileRepository) {
+    public DefaultUserProfileService(UserProfileRepository profileRepository,
+            StudentProfileRepository studentProfileRepository) {
         this.profileRepository = profileRepository;
+        this.studentProfileRepository = studentProfileRepository;
     }
 
     @Override
@@ -100,6 +104,16 @@ public class DefaultUserProfileService implements UserProfileService {
         profile.setUpdatedAt(Instant.now());
         profile.setUpdatedBy(actorId);
         return toResponse(profileRepository.save(profile));
+    }
+
+    @Override
+    @Transactional
+    public void deleteProfile(UUID tenantId, UUID profileId) {
+        UserProfile profile = getProfileEntity(tenantId, profileId);
+        // Also clean up any associated student profile
+        studentProfileRepository.findByTenantIdAndUserId(tenantId, profile.getUserId())
+                .ifPresent(studentProfileRepository::delete);
+        profileRepository.delete(profile);
     }
 
     private UserProfile getProfileEntity(UUID tenantId, UUID profileId) {

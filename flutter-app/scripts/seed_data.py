@@ -401,47 +401,37 @@ MINDMAPS = [
     }
 ]
 
-# Sample Classes Data
+# Sample Classes Data (matches CreateClassRequest: name, subject, grade, description)
 CLASSES = [
     {
         "name": "Class 8A - Mathematics",
         "description": "8th Grade Mathematics class focusing on algebra and geometry",
         "grade": "8",
-        "section": "A",
-        "subject": "Mathematics",
-        "studentCount": 32
+        "subject": "Mathematics"
     },
     {
         "name": "Class 8B - Science",
         "description": "8th Grade Science class covering physics, chemistry, and biology",
         "grade": "8",
-        "section": "B",
-        "subject": "Science",
-        "studentCount": 30
+        "subject": "Science"
     },
     {
         "name": "Class 9A - English",
         "description": "9th Grade English class focusing on literature and grammar",
         "grade": "9",
-        "section": "A",
-        "subject": "English",
-        "studentCount": 28
+        "subject": "English"
     },
     {
         "name": "Class 9B - History",
         "description": "9th Grade History class covering world history",
         "grade": "9",
-        "section": "B",
-        "subject": "History",
-        "studentCount": 35
+        "subject": "History"
     },
     {
         "name": "Class 10A - Computer Science",
         "description": "10th Grade Computer Science class covering programming basics",
         "grade": "10",
-        "section": "A",
-        "subject": "Computer Science",
-        "studentCount": 25
+        "subject": "Computer Science"
     }
 ]
 
@@ -493,6 +483,8 @@ def main():
     print_info("Logging in as teacher1@school.com")
 
     access_token = None
+    user_id = None
+    tenant_id = None
     try:
         response = requests.post(
             f"{AUTH_URL}/auth/login",
@@ -507,9 +499,14 @@ def main():
         if response.status_code == 200:
             data = response.json()
             access_token = data.get("accessToken") or data.get("access_token") or data.get("token")
+            user_id = data.get("userId")
+            tenant_id = data.get("tenantId") or TENANT_ID
             if access_token:
-                print_success("Got access token")
+                print_success(f"Got access token (userId={user_id}, tenantId={tenant_id})")
                 headers["Authorization"] = f"Bearer {access_token}"
+                headers["X-Tenant-Id"] = str(tenant_id)
+                if user_id:
+                    headers["X-User-Id"] = str(user_id)
             else:
                 print_error("No token in response")
         else:
@@ -521,6 +518,7 @@ def main():
 
     if not access_token:
         print("Continuing without authentication...")
+        headers["X-Tenant-Id"] = TENANT_ID
     print()
 
     # Step 3: Seed Notes

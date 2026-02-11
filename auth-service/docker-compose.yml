@@ -11,14 +11,14 @@ services:
     environment:
       - SPRING_APPLICATION_NAME=auth-service
       - SERVER_PORT=8081
-      # Use shared postgres container from role-permission-service
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://role-permission-postgres:5432/auth
-      - SPRING_DATASOURCE_USERNAME=auth_user
-      - SPRING_DATASOURCE_PASSWORD=auth_password
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://brain-postgres:5432/brain_auth
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
       - SPRING_LIQUIBASE_ENABLED=true
       # Service URLs for Docker network
-      - SERVICES_PROFILE_URL=${SERVICES_PROFILE_URL:-http://host.docker.internal:8083}
-      - SERVICES_TENANT_URL=${SERVICES_TENANT_URL:-http://host.docker.internal:8082}
+      - SERVICES_PROFILE_URL=http://user-profile-service:8083
+      - SERVICES_TENANT_URL=http://tenant-service:8082
+      - SERVICES_PERMISSION_URL=http://role-permission-service:8080
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
       interval: 30s

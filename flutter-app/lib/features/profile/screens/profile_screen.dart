@@ -55,9 +55,9 @@ class ProfileScreen extends ConsumerWidget {
                 color: AppColors.secondary.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(AppRadius.chip),
               ),
-              child: const Text(
-                'Subject Teacher',
-                style: TextStyle(
+              child: Text(
+                _getRoleDisplayName(user?.userType),
+                style: const TextStyle(
                   color: AppColors.secondary,
                   fontWeight: FontWeight.w600,
                 ),
@@ -74,6 +74,23 @@ class ProfileScreen extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  String _getRoleDisplayName(String? userType) {
+    switch (userType?.toUpperCase()) {
+      case 'ADMIN':
+        return 'School Admin';
+      case 'TEACHER':
+        return 'Subject Teacher';
+      case 'STUDENT':
+        return 'Student';
+      case 'PRINCIPAL':
+        return 'Principal';
+      case 'SUPER_ADMIN':
+        return 'Super Admin';
+      default:
+        return userType ?? 'User';
+    }
   }
 
   Widget _buildInfoCard(
@@ -113,8 +130,28 @@ class ProfileScreen extends ConsumerWidget {
   }
 
   Widget _buildMenuSection(BuildContext context, WidgetRef ref) {
+    final authState = ref.watch(authProvider);
+    final user = authState.user;
+
     return Column(
       children: [
+        if (user?.isAdmin == true) ...[
+          _MenuTile(
+            icon: Icons.group_outlined,
+            title: 'Manage Users',
+            onTap: () => context.push('/admin/users'),
+          ),
+          _MenuTile(
+            icon: Icons.class_outlined,
+            title: 'Manage Classes',
+            onTap: () => context.push('/admin/classes'),
+          ),
+          _MenuTile(
+            icon: Icons.security_outlined,
+            title: 'Manage Roles',
+            onTap: () => context.push('/admin/roles'),
+          ),
+        ],
         _MenuTile(
           icon: Icons.person_outline,
           title: 'Edit Profile',

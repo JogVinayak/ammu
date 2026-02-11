@@ -2,12 +2,12 @@
   "info": {
     "name": "user-profile-service",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "description": "Postman collection for user-profile-service APIs"
+    "description": "Postman collection for user-profile-service APIs.\n\nService: http://localhost:8083"
   },
   "variable": [
     {
       "key": "baseUrl",
-      "value": "http://localhost:8080"
+      "value": "http://localhost:8083"
     },
     {
       "key": "tenantId",
@@ -32,6 +32,26 @@
     {
       "key": "actorId",
       "value": "99999999-9999-9999-9999-999999999999"
+    },
+    {
+      "key": "noteId",
+      "value": "66666666-6666-6666-6666-666666666666"
+    },
+    {
+      "key": "contentId",
+      "value": "77777777-7777-7777-7777-777777777777"
+    },
+    {
+      "key": "mindmapId",
+      "value": "88888888-8888-8888-8888-888888888888"
+    },
+    {
+      "key": "nodeId",
+      "value": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+    },
+    {
+      "key": "classId",
+      "value": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"
     }
   ],
   "item": [
@@ -43,23 +63,13 @@
           "request": {
             "method": "POST",
             "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "X-User-Id",
-                "value": "{{actorId}}"
-              }
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-User-Id", "value": "{{actorId}}" }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"userId\": \"{{userId}}\",\n  \"displayName\": \"Demo User\",\n  \"firstName\": \"Demo\",\n  \"lastName\": \"User\",\n  \"email\": \"demo.user@example.com\",\n  \"phone\": \"+919999999999\",\n  \"avatarUrl\": \"https://example.com/avatar.png\",\n  \"userType\": \"STUDENT\",\n  \"status\": \"ACTIVE\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
+              "options": { "raw": { "language": "json" } }
             },
             "url": "{{baseUrl}}/v1/tenants/{{tenantId}}/profiles"
           }
@@ -90,23 +100,13 @@
           "request": {
             "method": "PUT",
             "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "X-User-Id",
-                "value": "{{actorId}}"
-              }
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-User-Id", "value": "{{actorId}}" }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"displayName\": \"Updated User\",\n  \"status\": \"SUSPENDED\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
+              "options": { "raw": { "language": "json" } }
             },
             "url": "{{baseUrl}}/v1/tenants/{{tenantId}}/profiles/{{profileId}}"
           }
@@ -128,23 +128,13 @@
           "request": {
             "method": "PUT",
             "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "X-User-Id",
-                "value": "{{actorId}}"
-              }
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-User-Id", "value": "{{actorId}}" }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"grade\": \"10\",\n  \"section\": \"A\",\n  \"rollNumber\": \"12\",\n  \"classId\": \"66666666-6666-6666-6666-666666666666\",\n  \"board\": \"CBSE\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
+              "raw": "{\n  \"grade\": \"10\",\n  \"section\": \"A\",\n  \"rollNumber\": \"12\",\n  \"classId\": \"{{classId}}\",\n  \"board\": \"CBSE\"\n}",
+              "options": { "raw": { "language": "json" } }
             },
             "url": "{{baseUrl}}/v1/tenants/{{tenantId}}/users/{{userId}}/student-profile"
           }
@@ -166,23 +156,13 @@
           "request": {
             "method": "PUT",
             "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "X-User-Id",
-                "value": "{{actorId}}"
-              }
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-User-Id", "value": "{{actorId}}" }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"language\": \"en\",\n  \"timezone\": \"Asia/Kolkata\",\n  \"notificationsEnabled\": true,\n  \"channels\": {\n    \"inApp\": true,\n    \"email\": true,\n    \"sms\": false,\n    \"whatsapp\": false\n  },\n  \"extra\": {\n    \"theme\": \"light\",\n    \"compact\": false\n  }\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
+              "options": { "raw": { "language": "json" } }
             },
             "url": "{{baseUrl}}/v1/tenants/{{tenantId}}/users/{{userId}}/preferences"
           }
@@ -197,23 +177,13 @@
           "request": {
             "method": "POST",
             "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "X-User-Id",
-                "value": "{{actorId}}"
-              }
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-User-Id", "value": "{{actorId}}" }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"userId\": \"{{userId}}\",\n  \"relatedUserId\": \"{{relatedUserId}}\",\n  \"relationshipType\": \"PARENT_OF\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
+              "options": { "raw": { "language": "json" } }
             },
             "url": "{{baseUrl}}/v1/tenants/{{tenantId}}/relationships"
           }
@@ -230,6 +200,209 @@
           "request": {
             "method": "DELETE",
             "url": "{{baseUrl}}/v1/tenants/{{tenantId}}/relationships/{{relationshipId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Class Students",
+      "item": [
+        {
+          "name": "Get Students in Class",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-Tenant-Id", "value": "{{tenantId}}" }
+            ],
+            "url": "{{baseUrl}}/v1/classes/{{classId}}/students"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Progress",
+      "item": [
+        {
+          "name": "Get Aggregate Progress",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/v1/tenants/{{tenantId}}/users/{{userId}}/progress"
+          }
+        },
+        {
+          "name": "Record Content Progress",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"eventType\": \"COMPLETE\",\n  \"contentId\": \"{{contentId}}\",\n  \"contentType\": \"VIDEO\",\n  \"progressPercent\": 100,\n  \"score\": 85.5,\n  \"timeSpentSeconds\": 1200,\n  \"lastPosition\": \"end\",\n  \"eventData\": {}\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/v1/tenants/{{tenantId}}/users/{{userId}}/progress/content"
+          }
+        },
+        {
+          "name": "Get Content Progress",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/v1/tenants/{{tenantId}}/users/{{userId}}/progress/content"
+          }
+        },
+        {
+          "name": "Get Content Progress By Type",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/v1/tenants/{{tenantId}}/users/{{userId}}/progress/content?type=VIDEO"
+          }
+        },
+        {
+          "name": "Get Content Progress By ID",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/v1/tenants/{{tenantId}}/users/{{userId}}/progress/content/{{contentId}}?type=VIDEO"
+          }
+        },
+        {
+          "name": "Record Node Review",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mindmapId\": \"{{mindmapId}}\",\n  \"nodeId\": \"{{nodeId}}\",\n  \"correct\": true,\n  \"confidenceRating\": 4\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/v1/tenants/{{tenantId}}/users/{{userId}}/progress/knowledge"
+          }
+        },
+        {
+          "name": "Get Mindmap Coverage",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/v1/tenants/{{tenantId}}/users/{{userId}}/progress/knowledge/mindmap/{{mindmapId}}?totalNodes=20"
+          }
+        },
+        {
+          "name": "Get Due For Review",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/v1/tenants/{{tenantId}}/users/{{userId}}/progress/knowledge/due-for-review?limit=10"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Concept Progress",
+      "item": [
+        {
+          "name": "Record Exam Result",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"noteId\": \"{{noteId}}\",\n  \"score\": 85,\n  \"passed\": true\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/v1/tenants/{{tenantId}}/users/{{userId}}/progress/concepts/exam-result"
+          }
+        },
+        {
+          "name": "Record Flashcard Review",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"noteId\": \"{{noteId}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/v1/tenants/{{tenantId}}/users/{{userId}}/progress/concepts/flashcard-review"
+          }
+        },
+        {
+          "name": "Record Reading Session",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"noteId\": \"{{noteId}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/v1/tenants/{{tenantId}}/users/{{userId}}/progress/concepts/reading-session"
+          }
+        },
+        {
+          "name": "List All Concept Progress",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/v1/tenants/{{tenantId}}/users/{{userId}}/progress/concepts"
+          }
+        },
+        {
+          "name": "Get Concept Progress for Note",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/v1/tenants/{{tenantId}}/users/{{userId}}/progress/concepts/{{noteId}}"
+          }
+        },
+        {
+          "name": "Get Concept Retention",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/v1/tenants/{{tenantId}}/users/{{userId}}/progress/concepts/{{noteId}}/retention"
+          }
+        },
+        {
+          "name": "Get Decaying Concepts",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/v1/tenants/{{tenantId}}/users/{{userId}}/progress/concepts/decaying?threshold=0.5"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Activity Rings",
+      "item": [
+        {
+          "name": "Get Today's Activity",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/v1/tenants/{{tenantId}}/users/{{userId}}/progress/activity-rings/today"
+          }
+        },
+        {
+          "name": "Get Activity History",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/v1/tenants/{{tenantId}}/users/{{userId}}/progress/activity-rings/history?from=2026-02-01&to=2026-02-08"
+          }
+        },
+        {
+          "name": "Get Streak Info",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/v1/tenants/{{tenantId}}/users/{{userId}}/progress/activity-rings/streak"
+          }
+        },
+        {
+          "name": "Get Weekly Summary",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/v1/tenants/{{tenantId}}/users/{{userId}}/progress/activity-rings/weekly-summary"
           }
         }
       ]

@@ -6,6 +6,7 @@ import com.learning.content_workflow_service.dto.CreateWorkflowRequest;
 import com.learning.content_workflow_service.dto.PublishTargets;
 import com.learning.content_workflow_service.dto.PublishWorkflowRequest;
 import com.learning.content_workflow_service.dto.ReleaseContentRequest;
+import com.learning.content_workflow_service.dto.ReleaseHistoryResponse;
 import com.learning.content_workflow_service.dto.ReleasedContentResponse;
 import com.learning.content_workflow_service.dto.ReviewActionRequest;
 import com.learning.content_workflow_service.dto.ReviewTaskDto;
@@ -22,13 +23,17 @@ import com.learning.content_workflow_service.exception.ConflictException;
 import com.learning.content_workflow_service.exception.NotFoundException;
 import com.learning.content_workflow_service.repository.ReleasedContentRepository;
 import com.learning.content_workflow_service.repository.ReviewTaskRepository;
+import com.learning.content_workflow_service.repository.SchoolClassRepository;
 import com.learning.content_workflow_service.repository.WorkflowRepository;
+import com.learning.content_workflow_service.entity.SchoolClass;
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -51,6 +56,7 @@ public class DefaultWorkflowService implements WorkflowService {
     private final WorkflowRepository workflowRepository;
     private final ReviewTaskRepository reviewTaskRepository;
     private final ReleasedContentRepository releasedContentRepository;
+    private final SchoolClassRepository schoolClassRepository;
     private final ObjectMapper objectMapper;
     private final UserProfileClient userProfileClient;
     private final NotificationClient notificationClient;
@@ -555,6 +561,55 @@ public class DefaultWorkflowService implements WorkflowService {
         response.setClassId(entity.getClassId());
         response.setReleasedBy(entity.getReleasedBy());
         response.setReleasedAt(entity.getReleasedAt());
+        return response;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ReleaseHistoryResponse getReleaseHistory(String tenantId, String userId, int page, int size) {
+        PageRequest pageRequest = PageRequest.of(normalizePage(page), normalizeSize(size));
+
+        Page<ReleasedContent> results;
+        if (userId != null && !userId.isBlank()) {
+            try {
+                UUID releasedBy = UUID.fromString(userId.trim());
+                results = releasedContentRepository.findByTenantIdAndReleasedByOrderByReleasedAtDesc(
+                        tenantId, releasedBy, pageRequest);
+            } catch (IllegalArgumentException e) {
+                results = releasedContentRepository.findByTenantIdOrderByReleasedAtDesc(tenantId, pageRequest);
+            }
+        } else {
+            results = releasedContentRepository.findByTenantIdOrderByReleasedAtDesc(tenantId, pageRequest);
+        }
+
+        // Batch-load class names for all classIds in this page
+        List<UUID> classIds = results.getContent().stream()
+                .map(ReleasedContent::getClassId)
+                .distinct()
+                .collect(Collectors.toList());
+        Map<UUID, String> classNameMap = schoolClassRepository.findByTenantIdAndIdIn(tenantId, classIds)
+                .stream()
+                .collect(Collectors.toMap(SchoolClass::getId, SchoolClass::getName));
+
+        List<ReleaseHistoryResponse.ReleaseHistoryItem> items = results.getContent().stream()
+                .map(rc -> {
+                    ReleaseHistoryResponse.ReleaseHistoryItem item = new ReleaseHistoryResponse.ReleaseHistoryItem();
+                    item.setId(rc.getId().toString());
+                    item.setContentId(rc.getContentId().toString());
+                    item.setContentType(rc.getContentType());
+                    item.setClassId(rc.getClassId().toString());
+                    item.setClassName(classNameMap.getOrDefault(rc.getClassId(), ""));
+                    item.setReleasedBy(rc.getReleasedBy() != null ? rc.getReleasedBy().toString() : null);
+                    item.setReleasedAt(rc.getReleasedAt() != null ? rc.getReleasedAt().toString() : null);
+                    return item;
+                })
+                .collect(Collectors.toList());
+
+        ReleaseHistoryResponse response = new ReleaseHistoryResponse();
+        response.setItems(items);
+        response.setPage(results.getNumber());
+        response.setSize(results.getSize());
+        response.setTotal(results.getTotalElements());
         return response;
     }
 }

@@ -225,9 +225,11 @@ public class GatewayConfig {
         if (method == HttpMethod.POST || method == HttpMethod.PUT || method == HttpMethod.PATCH) {
             responseMono = request.bodyToMono(byte[].class)
                 .defaultIfEmpty(new byte[0])
-                .map(body -> requestSpec.bodyValue(body).retrieve());
+                .map(body -> requestSpec.bodyValue(body).retrieve()
+                    .onStatus(status -> true, response -> Mono.empty()));
         } else {
-            responseMono = Mono.just(requestSpec.retrieve());
+            responseMono = Mono.just(requestSpec.retrieve()
+                .onStatus(status -> true, response -> Mono.empty()));
         }
 
         return responseMono.flatMap(responseSpec ->

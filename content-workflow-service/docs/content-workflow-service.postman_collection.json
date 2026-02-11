@@ -44,6 +44,22 @@
     {
       "key": "reviewerUserId2",
       "value": "55555555-5555-5555-5555-555555555555"
+    },
+    {
+      "key": "classId",
+      "value": "cccccccc-cccc-cccc-cccc-cccccccccccc"
+    },
+    {
+      "key": "noteId",
+      "value": "dddddddd-dddd-dddd-dddd-dddddddddddd"
+    },
+    {
+      "key": "assignmentId",
+      "value": "eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee"
+    },
+    {
+      "key": "studentId",
+      "value": "ffffffff-ffff-ffff-ffff-ffffffffffff"
     }
   ],
   "item": [
@@ -289,6 +305,131 @@
               }
             ],
             "url": "{{baseUrl}}/workflow/{{workflowId}}/archive"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Assignments",
+      "item": [
+        {
+          "name": "Create Assignment",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Id", "value": "{{tenantId}}" },
+              { "key": "X-User-Id", "value": "{{userId}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"noteId\": \"{{noteId}}\",\n  \"classId\": \"{{classId}}\",\n  \"title\": \"Chapter 1 Review\",\n  \"description\": \"Complete the Chapter 1 review assignment\",\n  \"dueDate\": \"2026-02-15T23:59:59Z\",\n  \"cycleConfig\": {\n    \"intervalDays\": [1, 3, 7, 14, 30],\n    \"autoRemind\": true,\n    \"reminderHoursBefore\": 24\n  }\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/assignments"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  var json = pm.response.json();",
+                  "  if (json && json.assignmentId) {",
+                  "    pm.collectionVariables.set(\"assignmentId\", json.assignmentId);",
+                  "  }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List Assignments",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-Tenant-Id", "value": "{{tenantId}}" }
+            ],
+            "url": "{{baseUrl}}/assignments?page=0&size=20"
+          }
+        },
+        {
+          "name": "List Assignments By Class",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-Tenant-Id", "value": "{{tenantId}}" }
+            ],
+            "url": "{{baseUrl}}/assignments?classId={{classId}}&page=0&size=20"
+          }
+        },
+        {
+          "name": "List Assignments By Status",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-Tenant-Id", "value": "{{tenantId}}" }
+            ],
+            "url": "{{baseUrl}}/assignments?status=ACTIVE&page=0&size=20"
+          }
+        },
+        {
+          "name": "Get Assignment",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-Tenant-Id", "value": "{{tenantId}}" }
+            ],
+            "url": "{{baseUrl}}/assignments/{{assignmentId}}"
+          }
+        },
+        {
+          "name": "Update Assignment",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Id", "value": "{{tenantId}}" },
+              { "key": "X-User-Id", "value": "{{userId}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated Assignment Title\",\n  \"dueDate\": \"2026-02-20T23:59:59Z\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/assignments/{{assignmentId}}"
+          }
+        },
+        {
+          "name": "Cancel Assignment",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "X-Tenant-Id", "value": "{{tenantId}}" }
+            ],
+            "url": "{{baseUrl}}/assignments/{{assignmentId}}"
+          }
+        },
+        {
+          "name": "Get Student Assignments",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-Tenant-Id", "value": "{{tenantId}}" }
+            ],
+            "url": "{{baseUrl}}/assignments/users/{{studentId}}?page=0&size=20"
+          }
+        },
+        {
+          "name": "Get Assignment Progress",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-Tenant-Id", "value": "{{tenantId}}" }
+            ],
+            "url": "{{baseUrl}}/assignments/{{assignmentId}}/progress"
           }
         }
       ]

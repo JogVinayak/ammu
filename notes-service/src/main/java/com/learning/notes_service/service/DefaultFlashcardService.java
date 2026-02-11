@@ -1,11 +1,14 @@
 package com.learning.notes_service.service;
 
+import com.learning.notes_service.exception.BadRequestException;
+import com.learning.notes_service.exception.NotFoundException;
 import com.learning.notes_service.model.dto.BatchFlashcardsRequest;
 import com.learning.notes_service.model.dto.CreateFlashcardRequest;
 import com.learning.notes_service.model.dto.FlashcardListResponse;
 import com.learning.notes_service.model.dto.FlashcardResponse;
 import com.learning.notes_service.model.dto.UpdateFlashcardRequest;
 import com.learning.notes_service.model.entity.Flashcard;
+import com.learning.notes_service.repository.DeckRepository;
 import com.learning.notes_service.repository.FlashcardRepository;
 import com.learning.notes_service.repository.NoteRepository;
 import java.time.Instant;
@@ -22,13 +25,15 @@ public class DefaultFlashcardService implements FlashcardService {
 
     private final FlashcardRepository flashcardRepository;
     private final NoteRepository noteRepository;
+    private final DeckRepository deckRepository;
+    private final DeckService deckService;
 
     @Override
     @Transactional
     public FlashcardResponse create(UUID tenantId, UUID noteId, CreateFlashcardRequest request) {
         // Verify note exists
         noteRepository.findByIdAndTenantIdAndDeletedFalse(noteId, tenantId)
-                .orElseThrow(() -> new RuntimeException("Note not found"));
+                .orElseThrow(() -> new NotFoundException("Note not found"));
 
         Instant now = Instant.now();
         Integer position = request.getPosition();
@@ -49,6 +54,7 @@ public class DefaultFlashcardService implements FlashcardService {
         flashcard.setUpdatedAt(now);
 
         flashcardRepository.save(flashcard);
+        refreshDeckIfExists(tenantId, noteId);
         return toResponse(flashcard);
     }
 
@@ -57,7 +63,7 @@ public class DefaultFlashcardService implements FlashcardService {
     public FlashcardListResponse listByNote(UUID tenantId, UUID noteId) {
         // Verify note exists
         noteRepository.findByIdAndTenantIdAndDeletedFalse(noteId, tenantId)
-                .orElseThrow(() -> new RuntimeException("Note not found"));
+                .orElseThrow(() -> new NotFoundException("Note not found"));
 
         List<Flashcard> flashcards = flashcardRepository
                 .findByTenantIdAndNoteIdOrderByPositionAsc(tenantId, noteId);
@@ -74,7 +80,7 @@ public class DefaultFlashcardService implements FlashcardService {
     public FlashcardListResponse listByNoteAndDifficulty(UUID tenantId, UUID noteId, String difficulty) {
         // Verify note exists
         noteRepository.findByIdAndTenantIdAndDeletedFalse(noteId, tenantId)
-                .orElseThrow(() -> new RuntimeException("Note not found"));
+                .orElseThrow(() -> new NotFoundException("Note not found"));
 
         List<Flashcard> flashcards = flashcardRepository
                 .findByTenantIdAndNoteIdAndDifficultyOrderByPositionAsc(tenantId, noteId, difficulty);
@@ -90,10 +96,10 @@ public class DefaultFlashcardService implements FlashcardService {
     @Transactional(readOnly = true)
     public FlashcardResponse getById(UUID tenantId, UUID noteId, UUID flashcardId) {
         Flashcard flashcard = flashcardRepository.findByIdAndTenantId(flashcardId, tenantId)
-                .orElseThrow(() -> new RuntimeException("Flashcard not found"));
+                .orElseThrow(() -> new NotFoundException("Flashcard not found"));
 
         if (!flashcard.getNoteId().equals(noteId)) {
-            throw new RuntimeException("Flashcard does not belong to this note");
+            throw new BadRequestException("Flashcard does not belong to this note");
         }
 
         return toResponse(flashcard);
@@ -104,10 +110,10 @@ public class DefaultFlashcardService implements FlashcardService {
     public FlashcardResponse update(UUID tenantId, UUID noteId, UUID flashcardId,
                                      UpdateFlashcardRequest request) {
         Flashcard flashcard = flashcardRepository.findByIdAndTenantId(flashcardId, tenantId)
-                .orElseThrow(() -> new RuntimeException("Flashcard not found"));
+                .orElseThrow(() -> new NotFoundException("Flashcard not found"));
 
         if (!flashcard.getNoteId().equals(noteId)) {
-            throw new RuntimeException("Flashcard does not belong to this note");
+            throw new BadRequestException("Flashcard does not belong to this note");
         }
 
         if (request.getFrontText() != null) {
@@ -132,13 +138,14 @@ public class DefaultFlashcardService implements FlashcardService {
     @Transactional
     public void delete(UUID tenantId, UUID noteId, UUID flashcardId) {
         Flashcard flashcard = flashcardRepository.findByIdAndTenantId(flashcardId, tenantId)
-                .orElseThrow(() -> new RuntimeException("Flashcard not found"));
+                .orElseThrow(() -> new NotFoundException("Flashcard not found"));
 
         if (!flashcard.getNoteId().equals(noteId)) {
-            throw new RuntimeException("Flashcard does not belong to this note");
+            throw new BadRequestException("Flashcard does not belong to this note");
         }
 
         flashcardRepository.delete(flashcard);
+        refreshDeckIfExists(tenantId, noteId);
     }
 
     @Override
@@ -147,7 +154,7 @@ public class DefaultFlashcardService implements FlashcardService {
                                               BatchFlashcardsRequest request) {
         // Verify note exists
         noteRepository.findByIdAndTenantIdAndDeletedFalse(noteId, tenantId)
-                .orElseThrow(() -> new RuntimeException("Note not found"));
+                .orElseThrow(() -> new NotFoundException("Note not found"));
 
         Instant now = Instant.now();
 
@@ -185,7 +192,14 @@ public class DefaultFlashcardService implements FlashcardService {
             flashcardRepository.save(flashcard);
         }
 
+        refreshDeckIfExists(tenantId, noteId);
         return listByNote(tenantId, noteId);
+    }
+
+    private void refreshDeckIfExists(UUID tenantId, UUID noteId) {
+        if (deckRepository.existsByTenantIdAndNoteId(tenantId, noteId)) {
+            deckService.refreshStatus(tenantId, noteId);
+        }
     }
 
     private FlashcardResponse toResponse(Flashcard flashcard) {

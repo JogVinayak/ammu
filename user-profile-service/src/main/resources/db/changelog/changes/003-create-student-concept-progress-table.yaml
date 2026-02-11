@@ -1,0 +1,110 @@
+databaseChangeLog:
+  - changeSet:
+      id: 9
+      author: user-profile-service
+      comment: Create student_concept_progress table for Brain System concept mastery tracking
+      changes:
+        - createTable:
+            tableName: student_concept_progress
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: note_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: mastery_state
+                  type: varchar(50)
+                  defaultValue: INITIAL
+              - column:
+                  name: memory_strength
+                  type: double
+                  defaultValueNumeric: 1.0
+              - column:
+                  name: last_exam_score
+                  type: integer
+              - column:
+                  name: last_exam_passed_at
+                  type: timestamp with time zone
+              - column:
+                  name: total_exam_attempts
+                  type: integer
+                  defaultValueNumeric: 0
+              - column:
+                  name: passed_exam_count
+                  type: integer
+                  defaultValueNumeric: 0
+              - column:
+                  name: total_flashcards_reviewed
+                  type: integer
+                  defaultValueNumeric: 0
+              - column:
+                  name: total_reading_sessions
+                  type: integer
+                  defaultValueNumeric: 0
+              - column:
+                  name: last_reviewed_at
+                  type: timestamp with time zone
+              - column:
+                  name: mastery_achieved_at
+                  type: timestamp with time zone
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+              - column:
+                  name: updated_at
+                  type: timestamp with time zone
+        - addUniqueConstraint:
+            tableName: student_concept_progress
+            columnNames: tenant_id, user_id, note_id
+            constraintName: uk_student_concept_progress_tenant_user_note
+        - createIndex:
+            tableName: student_concept_progress
+            indexName: idx_student_concept_progress_tenant_user
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: user_id
+        - createIndex:
+            tableName: student_concept_progress
+            indexName: idx_student_concept_progress_note
+            columns:
+              - column:
+                  name: note_id
+        - createIndex:
+            tableName: student_concept_progress
+            indexName: idx_student_concept_progress_mastery_state
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: user_id
+              - column:
+                  name: mastery_state
+        - createIndex:
+            tableName: student_concept_progress
+            indexName: idx_student_concept_progress_last_reviewed
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: user_id
+              - column:
+                  name: last_reviewed_at

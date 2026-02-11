@@ -234,6 +234,27 @@ class _SuperAdminDashboardScreenState extends ConsumerState<SuperAdminDashboardS
                 onTap: () => context.push('/super-admin/users'),
               ),
             ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: _QuickActionButton(
+                icon: Icons.admin_panel_settings,
+                label: 'Permissions',
+                onTap: () => context.push('/super-admin/permissions'),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.md),
+        Row(
+          children: [
+            Expanded(
+              child: _QuickActionButton(
+                icon: Icons.security,
+                label: 'Manage\nRoles',
+                onTap: () => context.push('/super-admin/roles'),
+              ),
+            ),
+            const Spacer(flex: 3),
           ],
         ),
       ],

@@ -3,16 +3,32 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/widgets.dart';
+import '../data/super_admin_models.dart';
+import '../providers/super_admin_provider.dart';
 
-class SchoolsManagementScreen extends ConsumerWidget {
+class SchoolsManagementScreen extends ConsumerStatefulWidget {
   const SchoolsManagementScreen({super.key});
 
+  @override
+  ConsumerState<SchoolsManagementScreen> createState() =>
+      _SchoolsManagementScreenState();
+}
+
+class _SchoolsManagementScreenState
+    extends ConsumerState<SchoolsManagementScreen> {
   static const _accentColor = Color(0xFFDC2626);
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    // TODO: Fetch schools from API
-    final schools = <Map<String, dynamic>>[];
+  void initState() {
+    super.initState();
+    Future.microtask(
+      () => ref.read(schoolsProvider.notifier).loadSchools(),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final state = ref.watch(schoolsProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -20,33 +36,73 @@ class SchoolsManagementScreen extends ConsumerWidget {
         centerTitle: true,
         automaticallyImplyLeading: false,
       ),
-      body: schools.isEmpty
-          ? _buildEmptyState(context)
-          : RefreshIndicator(
-              onRefresh: () async {
-                // TODO: Refresh schools
-              },
-              child: ListView.builder(
-                padding: const EdgeInsets.all(AppSpacing.md),
-                itemCount: schools.length,
-                itemBuilder: (context, index) {
-                  final school = schools[index];
-                  return _SchoolCard(
-                    name: school['name'] ?? '',
-                    code: school['code'] ?? '',
-                    status: school['status'] ?? 'ACTIVE',
-                    teacherCount: school['teacherCount'] ?? 0,
-                    studentCount: school['studentCount'] ?? 0,
-                    onTap: () => context.push('/super-admin/schools/${school['id']}'),
-                  );
-                },
-              ),
-            ),
+      body: state.isLoading && state.schools.isEmpty
+          ? const Center(child: CircularProgressIndicator())
+          : state.error != null && state.schools.isEmpty
+              ? _buildErrorState(context, state.error!)
+              : state.schools.isEmpty
+                  ? _buildEmptyState(context)
+                  : RefreshIndicator(
+                      onRefresh: () =>
+                          ref.read(schoolsProvider.notifier).loadSchools(),
+                      child: ListView.builder(
+                        padding: const EdgeInsets.all(AppSpacing.md),
+                        itemCount: state.schools.length,
+                        itemBuilder: (context, index) {
+                          final school = state.schools[index];
+                          return _SchoolCard(
+                            school: school,
+                            onTap: () => context
+                                .push('/super-admin/schools/${school.id}'),
+                          );
+                        },
+                      ),
+                    ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push('/super-admin/schools/create'),
         backgroundColor: _accentColor,
         icon: const Icon(Icons.add),
         label: const Text('Create School'),
+      ),
+    );
+  }
+
+  Widget _buildErrorState(BuildContext context, String error) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.xl),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.error_outline,
+              size: 64,
+              color: AppColors.error.withValues(alpha: 0.7),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            Text(
+              'Failed to load schools',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              error,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            ElevatedButton.icon(
+              onPressed: () =>
+                  ref.read(schoolsProvider.notifier).loadSchools(),
+              icon: const Icon(Icons.refresh),
+              label: const Text('Retry'),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -61,7 +117,7 @@ class SchoolsManagementScreen extends ConsumerWidget {
             Icon(
               Icons.school_outlined,
               size: 80,
-              color: AppColors.textSecondary.withOpacity(0.5),
+              color: AppColors.textSecondary.withValues(alpha: 0.5),
             ),
             const SizedBox(height: AppSpacing.lg),
             Text(
@@ -99,24 +155,16 @@ class SchoolsManagementScreen extends ConsumerWidget {
 }
 
 class _SchoolCard extends StatelessWidget {
-  final String name;
-  final String code;
-  final String status;
-  final int teacherCount;
-  final int studentCount;
+  final School school;
   final VoidCallback onTap;
 
   const _SchoolCard({
-    required this.name,
-    required this.code,
-    required this.status,
-    required this.teacherCount,
-    required this.studentCount,
+    required this.school,
     required this.onTap,
   });
 
   Color _getStatusColor() {
-    switch (status.toUpperCase()) {
+    switch (school.status.toUpperCase()) {
       case 'ACTIVE':
         return AppColors.success;
       case 'SUSPENDED':
@@ -142,7 +190,7 @@ class _SchoolCard extends StatelessWidget {
                 width: 56,
                 height: 56,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF3B82F6).withOpacity(0.1),
+                  color: const Color(0xFF3B82F6).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(AppRadius.card),
                 ),
                 child: const Icon(
@@ -157,68 +205,41 @@ class _SchoolCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      name,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
+                      school.name,
+                      style:
+                          Theme.of(context).textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: AppSpacing.xs),
                     Text(
-                      code,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
+                      school.tenantKey,
+                      style:
+                          Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: AppColors.textSecondary,
+                              ),
                     ),
                     const SizedBox(height: AppSpacing.sm),
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: AppSpacing.sm,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: _getStatusColor().withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(AppRadius.chip),
-                          ),
-                          child: Text(
-                            status,
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w600,
-                              color: _getStatusColor(),
-                            ),
-                          ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.sm,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: _getStatusColor().withValues(alpha: 0.1),
+                        borderRadius:
+                            BorderRadius.circular(AppRadius.chip),
+                      ),
+                      child: Text(
+                        school.status,
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          color: _getStatusColor(),
                         ),
-                        const SizedBox(width: AppSpacing.sm),
-                        Icon(
-                          Icons.person,
-                          size: 14,
-                          color: AppColors.textSecondary,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '$teacherCount teachers',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: AppColors.textSecondary,
-                              ),
-                        ),
-                        const SizedBox(width: AppSpacing.sm),
-                        Icon(
-                          Icons.people,
-                          size: 14,
-                          color: AppColors.textSecondary,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '$studentCount students',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: AppColors.textSecondary,
-                              ),
-                        ),
-                      ],
+                      ),
                     ),
                   ],
                 ),

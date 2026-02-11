@@ -1,0 +1,11 @@
+databaseChangeLog:
+  - changeSet:
+      id: 012-seed-new-permission-scopes
+      author: tenant-service
+      changes:
+        - sql:
+            sql: |
+              INSERT INTO permission_scopes (code, description) VALUES ('DIVISION', 'Permission applies to resources within assigned division') ON CONFLICT (code) DO NOTHING;
+              INSERT INTO permission_scopes (code, description) VALUES ('SUBJECT', 'Permission applies to resources within assigned subject') ON CONFLICT (code) DO NOTHING;
+              INSERT INTO permission_scopes (code, description) VALUES ('STUDENT', 'Permission applies to linked student (for parents)') ON CONFLICT (code) DO NOTHING;
+              INSERT INTO permission_scopes (code, description) VALUES ('SYSTEM', 'Permission applies system-wide across all tenants') ON CONFLICT (code) DO NOTHING;

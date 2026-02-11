@@ -220,6 +220,311 @@ final usersProvider = StateNotifierProvider<UsersNotifier, UsersState>((ref) {
   return UsersNotifier(repository);
 });
 
+// ============== Permissions State (global, super admin only) ==============
+
+class PermissionsState {
+  final List<Permission> permissions;
+  final bool isLoading;
+  final String? error;
+
+  const PermissionsState({
+    this.permissions = const [],
+    this.isLoading = false,
+    this.error,
+  });
+
+  PermissionsState copyWith({
+    List<Permission>? permissions,
+    bool? isLoading,
+    String? error,
+  }) {
+    return PermissionsState(
+      permissions: permissions ?? this.permissions,
+      isLoading: isLoading ?? this.isLoading,
+      error: error,
+    );
+  }
+}
+
+class PermissionsNotifier extends StateNotifier<PermissionsState> {
+  final SuperAdminRepository _repository;
+
+  PermissionsNotifier(this._repository) : super(const PermissionsState());
+
+  Future<void> loadPermissions() async {
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      final permissions = await _repository.getPermissions();
+      state = state.copyWith(permissions: permissions, isLoading: false);
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+    }
+  }
+
+  Future<bool> createPermission({
+    required String name,
+    required String code,
+    String? resource,
+    String? action,
+    String? description,
+  }) async {
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      await _repository.createPermission(
+        name: name,
+        code: code,
+        resource: resource,
+        action: action,
+        description: description,
+      );
+      await loadPermissions();
+      return true;
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+      return false;
+    }
+  }
+
+  Future<bool> updatePermission(
+    int permissionId, {
+    String? name,
+    String? description,
+    String? resource,
+    String? action,
+    bool? active,
+  }) async {
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      await _repository.updatePermission(
+        permissionId,
+        name: name,
+        description: description,
+        resource: resource,
+        action: action,
+        active: active,
+      );
+      await loadPermissions();
+      return true;
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+      return false;
+    }
+  }
+
+  Future<bool> deletePermission(int permissionId) async {
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      await _repository.deletePermission(permissionId);
+      await loadPermissions();
+      return true;
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+      return false;
+    }
+  }
+}
+
+final permissionsProvider =
+    StateNotifierProvider<PermissionsNotifier, PermissionsState>((ref) {
+  final repository = ref.watch(superAdminRepositoryProvider);
+  return PermissionsNotifier(repository);
+});
+
+// ============== Roles State (super admin, all tenants) ==============
+
+/// Roles for a single school
+class SchoolRoles {
+  final School school;
+  final List<Role> roles;
+  final bool isLoading;
+  final String? error;
+
+  const SchoolRoles({
+    required this.school,
+    this.roles = const [],
+    this.isLoading = false,
+    this.error,
+  });
+}
+
+class SuperAdminRolesState {
+  final List<SchoolRoles> schoolRoles;
+  final bool isLoading;
+  final String? error;
+  // For the permission grants panel
+  final Role? selectedRole;
+  final String? selectedTenantId;
+  final List<RolePermissionGrant> grants;
+  final List<Permission> allPermissions;
+  final bool isLoadingGrants;
+
+  const SuperAdminRolesState({
+    this.schoolRoles = const [],
+    this.isLoading = false,
+    this.error,
+    this.selectedRole,
+    this.selectedTenantId,
+    this.grants = const [],
+    this.allPermissions = const [],
+    this.isLoadingGrants = false,
+  });
+
+  SuperAdminRolesState copyWith({
+    List<SchoolRoles>? schoolRoles,
+    bool? isLoading,
+    String? error,
+    Role? selectedRole,
+    String? selectedTenantId,
+    bool clearSelection = false,
+    List<RolePermissionGrant>? grants,
+    List<Permission>? allPermissions,
+    bool? isLoadingGrants,
+  }) {
+    return SuperAdminRolesState(
+      schoolRoles: schoolRoles ?? this.schoolRoles,
+      isLoading: isLoading ?? this.isLoading,
+      error: error,
+      selectedRole:
+          clearSelection ? null : (selectedRole ?? this.selectedRole),
+      selectedTenantId:
+          clearSelection ? null : (selectedTenantId ?? this.selectedTenantId),
+      grants: clearSelection ? const [] : (grants ?? this.grants),
+      allPermissions: allPermissions ?? this.allPermissions,
+      isLoadingGrants: isLoadingGrants ?? this.isLoadingGrants,
+    );
+  }
+}
+
+class SuperAdminRolesNotifier extends StateNotifier<SuperAdminRolesState> {
+  final SuperAdminRepository _repository;
+
+  SuperAdminRolesNotifier(this._repository)
+      : super(const SuperAdminRolesState());
+
+  Future<void> loadAllRoles() async {
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      final schools = await _repository.getSchools();
+      final filtered = schools
+          .where((s) => s.id != '00000000-0000-0000-0000-000000000001')
+          .toList();
+
+      final List<SchoolRoles> results = [];
+      for (final school in filtered) {
+        try {
+          final roles = await _repository.getRoles(school.id);
+          results.add(SchoolRoles(school: school, roles: roles));
+        } catch (e) {
+          results.add(
+              SchoolRoles(school: school, error: e.toString()));
+        }
+      }
+      state = state.copyWith(schoolRoles: results, isLoading: false);
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+    }
+  }
+
+  Future<bool> createRole(
+      String tenantId, String name, String? description) async {
+    try {
+      await _repository.createRole(tenantId,
+          name: name, description: description);
+      await loadAllRoles();
+      return true;
+    } catch (e) {
+      state = state.copyWith(error: e.toString());
+      return false;
+    }
+  }
+
+  Future<bool> updateRole(String tenantId, int roleId,
+      {String? name, String? description, bool? active}) async {
+    try {
+      await _repository.updateRole(tenantId, roleId,
+          name: name, description: description, active: active);
+      await loadAllRoles();
+      return true;
+    } catch (e) {
+      state = state.copyWith(error: e.toString());
+      return false;
+    }
+  }
+
+  Future<bool> deleteRole(String tenantId, int roleId) async {
+    try {
+      await _repository.deleteRole(tenantId, roleId);
+      if (state.selectedRole?.id == roleId) {
+        state = state.copyWith(clearSelection: true);
+      }
+      await loadAllRoles();
+      return true;
+    } catch (e) {
+      state = state.copyWith(error: e.toString());
+      return false;
+    }
+  }
+
+  Future<void> selectRole(String tenantId, Role role) async {
+    state = state.copyWith(
+      selectedRole: role,
+      selectedTenantId: tenantId,
+      isLoadingGrants: true,
+      error: null,
+    );
+    try {
+      final results = await Future.wait([
+        _repository.getRoleGrants(tenantId, role.id),
+        _repository.getPermissions(),
+      ]);
+      state = state.copyWith(
+        grants: results[0] as List<RolePermissionGrant>,
+        allPermissions: results[1] as List<Permission>,
+        isLoadingGrants: false,
+      );
+    } catch (e) {
+      state = state.copyWith(isLoadingGrants: false, error: e.toString());
+    }
+  }
+
+  Future<bool> addGrant(
+      String tenantId, int roleId, String permissionCode) async {
+    try {
+      await _repository.createRoleGrant(tenantId, roleId,
+          permissionCode: permissionCode);
+      final grants = await _repository.getRoleGrants(tenantId, roleId);
+      state = state.copyWith(grants: grants);
+      return true;
+    } catch (e) {
+      state = state.copyWith(error: e.toString());
+      return false;
+    }
+  }
+
+  Future<bool> removeGrant(
+      String tenantId, int roleId, int grantId) async {
+    try {
+      await _repository.deleteRoleGrant(tenantId, roleId, grantId);
+      final grants = await _repository.getRoleGrants(tenantId, roleId);
+      state = state.copyWith(grants: grants);
+      return true;
+    } catch (e) {
+      state = state.copyWith(error: e.toString());
+      return false;
+    }
+  }
+
+  void clearSelection() {
+    state = state.copyWith(clearSelection: true);
+  }
+}
+
+final superAdminRolesProvider =
+    StateNotifierProvider<SuperAdminRolesNotifier, SuperAdminRolesState>((ref) {
+  final repository = ref.watch(superAdminRepositoryProvider);
+  return SuperAdminRolesNotifier(repository);
+});
+
 // Convenience providers
 final teachersProvider = Provider<List<UserProfile>>((ref) {
   return ref.watch(usersProvider).teachers;

@@ -1,3 +1,7 @@
 databaseChangeLog:
   - include:
       file: db/changelog/changes/001-create-tables.yaml
+  - include:
+      file: db/changelog/changes/002-create-class-division-tables.yaml
+  - include:
+      file: db/changelog/changes/003-create-teacher-class-assignments.yaml

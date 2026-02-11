@@ -1,0 +1,75 @@
+databaseChangeLog:
+  - changeSet:
+      id: 9
+      author: tenant-service
+      changes:
+        - createTable:
+            tableName: teacher_class_assignments
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: class_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: teacher_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: role
+                  type: varchar(32)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: subject
+                  type: varchar(100)
+              - column:
+                  name: assigned_at
+                  type: timestamp with time zone
+              - column:
+                  name: assigned_by
+                  type: varchar(255)
+        - addForeignKeyConstraint:
+            baseTableName: teacher_class_assignments
+            baseColumnNames: tenant_id
+            referencedTableName: tenants
+            referencedColumnNames: id
+            constraintName: fk_teacher_assignment_tenant
+        - addForeignKeyConstraint:
+            baseTableName: teacher_class_assignments
+            baseColumnNames: class_id
+            referencedTableName: school_classes
+            referencedColumnNames: id
+            constraintName: fk_teacher_assignment_class
+        - addUniqueConstraint:
+            tableName: teacher_class_assignments
+            columnNames: tenant_id, class_id, teacher_id, role
+            constraintName: uk_teacher_class_role
+        - createIndex:
+            indexName: idx_teacher_assignment_class
+            tableName: teacher_class_assignments
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: class_id
+        - createIndex:
+            indexName: idx_teacher_assignment_teacher
+            tableName: teacher_class_assignments
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: teacher_id

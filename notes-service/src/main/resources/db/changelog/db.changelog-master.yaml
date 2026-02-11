@@ -439,3 +439,291 @@ databaseChangeLog:
                   name: note_id
               - column:
                   name: difficulty
+  - changeSet:
+      id: 010-create-decks
+      author: codex
+      changes:
+        - createTable:
+            tableName: decks
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: note_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: title
+                  type: varchar(500)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: description
+                  type: varchar(2000)
+              - column:
+                  name: status
+                  type: varchar(32)
+                  constraints:
+                    nullable: false
+                  remarks: INCOMPLETE, READY, ACTIVE, or ARCHIVED
+              - column:
+                  name: required_mcq_count
+                  type: integer
+                  defaultValueNumeric: 40
+                  constraints:
+                    nullable: false
+              - column:
+                  name: required_flashcard_count
+                  type: integer
+                  defaultValueNumeric: 40
+                  constraints:
+                    nullable: false
+              - column:
+                  name: easy_pct
+                  type: integer
+                  defaultValueNumeric: 30
+                  constraints:
+                    nullable: false
+              - column:
+                  name: medium_pct
+                  type: integer
+                  defaultValueNumeric: 30
+                  constraints:
+                    nullable: false
+              - column:
+                  name: hard_pct
+                  type: integer
+                  defaultValueNumeric: 40
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_by
+                  type: uuid
+              - column:
+                  name: updated_by
+                  type: uuid
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  defaultValueComputed: "CURRENT_TIMESTAMP"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamp with time zone
+                  defaultValueComputed: "CURRENT_TIMESTAMP"
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            baseTableName: decks
+            baseColumnNames: note_id
+            constraintName: fk_decks_note_id
+            referencedTableName: notes
+            referencedColumnNames: id
+            onDelete: CASCADE
+        - addUniqueConstraint:
+            tableName: decks
+            columnNames: tenant_id, note_id
+            constraintName: uk_deck_tenant_note
+        - createIndex:
+            tableName: decks
+            indexName: idx_decks_tenant_note
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: note_id
+        - createIndex:
+            tableName: decks
+            indexName: idx_decks_tenant_status
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: status
+  - changeSet:
+      id: 011-create-exam-attempts
+      author: codex
+      changes:
+        - createTable:
+            tableName: exam_attempts
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: note_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: deck_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: student_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: total_questions
+                  type: integer
+                  constraints:
+                    nullable: false
+              - column:
+                  name: correct_count
+                  type: integer
+              - column:
+                  name: score_percent
+                  type: integer
+              - column:
+                  name: passed
+                  type: boolean
+              - column:
+                  name: status
+                  type: varchar(32)
+                  constraints:
+                    nullable: false
+                  remarks: IN_PROGRESS, COMPLETED, or ABANDONED
+              - column:
+                  name: started_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+              - column:
+                  name: completed_at
+                  type: timestamp with time zone
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  defaultValueComputed: "CURRENT_TIMESTAMP"
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            baseTableName: exam_attempts
+            baseColumnNames: note_id
+            constraintName: fk_exam_attempts_note_id
+            referencedTableName: notes
+            referencedColumnNames: id
+            onDelete: CASCADE
+        - addForeignKeyConstraint:
+            baseTableName: exam_attempts
+            baseColumnNames: deck_id
+            constraintName: fk_exam_attempts_deck_id
+            referencedTableName: decks
+            referencedColumnNames: id
+            onDelete: CASCADE
+        - createIndex:
+            tableName: exam_attempts
+            indexName: idx_exam_attempts_tenant_note_student
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: note_id
+              - column:
+                  name: student_id
+        - createIndex:
+            tableName: exam_attempts
+            indexName: idx_exam_attempts_tenant_deck
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: deck_id
+        - createIndex:
+            tableName: exam_attempts
+            indexName: idx_exam_attempts_tenant_status
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: status
+  - changeSet:
+      id: 012-create-exam-answers
+      author: codex
+      changes:
+        - createTable:
+            tableName: exam_answers
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: exam_attempt_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: mcq_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: selected_option_index
+                  type: integer
+                  constraints:
+                    nullable: false
+              - column:
+                  name: correct
+                  type: boolean
+                  constraints:
+                    nullable: false
+              - column:
+                  name: answered_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            baseTableName: exam_answers
+            baseColumnNames: exam_attempt_id
+            constraintName: fk_exam_answers_attempt_id
+            referencedTableName: exam_attempts
+            referencedColumnNames: id
+            onDelete: CASCADE
+        - addForeignKeyConstraint:
+            baseTableName: exam_answers
+            baseColumnNames: mcq_id
+            constraintName: fk_exam_answers_mcq_id
+            referencedTableName: mcqs
+            referencedColumnNames: id
+            onDelete: CASCADE
+        - addUniqueConstraint:
+            tableName: exam_answers
+            columnNames: tenant_id, exam_attempt_id, mcq_id
+            constraintName: uk_exam_answer_attempt_mcq
+        - createIndex:
+            tableName: exam_answers
+            indexName: idx_exam_answers_tenant_attempt
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: exam_attempt_id

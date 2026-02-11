@@ -1,0 +1,180 @@
+databaseChangeLog:
+  - changeSet:
+      id: 005-create-assignments
+      author: claude
+      changes:
+        - createTable:
+            tableName: assignments
+            columns:
+              - column:
+                  name: assignment_id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: note_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: class_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: teacher_id
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: title
+                  type: varchar(200)
+              - column:
+                  name: description
+                  type: varchar(1000)
+              - column:
+                  name: status
+                  type: varchar(32)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: due_date
+                  type: timestamp with time zone
+              - column:
+                  name: cycle_config_json
+                  type: text
+              - column:
+                  name: student_count
+                  type: integer
+                  defaultValue: 0
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  defaultValueComputed: "CURRENT_TIMESTAMP"
+              - column:
+                  name: updated_at
+                  type: timestamp with time zone
+                  defaultValueComputed: "CURRENT_TIMESTAMP"
+              - column:
+                  name: lock_version
+                  type: bigint
+        - createIndex:
+            tableName: assignments
+            indexName: idx_assignment_tenant_class
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: class_id
+        - createIndex:
+            tableName: assignments
+            indexName: idx_assignment_tenant_teacher
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: teacher_id
+        - createIndex:
+            tableName: assignments
+            indexName: idx_assignment_tenant_status
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: status
+        - createIndex:
+            tableName: assignments
+            indexName: idx_assignment_tenant_note
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: note_id
+  - changeSet:
+      id: 006-create-student-assignments
+      author: claude
+      changes:
+        - createTable:
+            tableName: student_assignments
+            columns:
+              - column:
+                  name: student_assignment_id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: assignment_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: student_id
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: student_name
+                  type: varchar(200)
+              - column:
+                  name: status
+                  type: varchar(32)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: started_at
+                  type: timestamp with time zone
+              - column:
+                  name: completed_at
+                  type: timestamp with time zone
+              - column:
+                  name: recall_schedule_id
+                  type: uuid
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  defaultValueComputed: "CURRENT_TIMESTAMP"
+              - column:
+                  name: updated_at
+                  type: timestamp with time zone
+                  defaultValueComputed: "CURRENT_TIMESTAMP"
+        - addForeignKeyConstraint:
+            baseTableName: student_assignments
+            baseColumnNames: assignment_id
+            referencedTableName: assignments
+            referencedColumnNames: assignment_id
+            constraintName: fk_student_assignment_assignment
+            onDelete: CASCADE
+        - createIndex:
+            tableName: student_assignments
+            indexName: idx_student_assign_assignment
+            columns:
+              - column:
+                  name: assignment_id
+        - createIndex:
+            tableName: student_assignments
+            indexName: idx_student_assign_student
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: student_id
+        - createIndex:
+            tableName: student_assignments
+            indexName: idx_student_assign_status
+            columns:
+              - column:
+                  name: assignment_id
+              - column:
+                  name: status

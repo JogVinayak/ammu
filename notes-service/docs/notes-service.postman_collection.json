@@ -1,7 +1,8 @@
 {
   "info": {
     "name": "notes-service",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Postman collection for notes-service APIs.\n\nService: http://localhost:8088"
   },
   "variable": [
     {
@@ -23,6 +24,22 @@
     {
       "key": "versionId",
       "value": "44444444-4444-4444-4444-444444444444"
+    },
+    {
+      "key": "mcqId",
+      "value": "55555555-5555-5555-5555-555555555555"
+    },
+    {
+      "key": "flashcardId",
+      "value": "66666666-6666-6666-6666-666666666666"
+    },
+    {
+      "key": "attemptId",
+      "value": "77777777-7777-7777-7777-777777777777"
+    },
+    {
+      "key": "studentId",
+      "value": "22222222-2222-2222-2222-222222222222"
     }
   ],
   "item": [
@@ -34,27 +51,14 @@
           "request": {
             "method": "POST",
             "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "X-Tenant-Id",
-                "value": "{{tenantId}}"
-              },
-              {
-                "key": "X-User-Id",
-                "value": "{{userId}}"
-              }
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Id", "value": "{{tenantId}}" },
+              { "key": "X-User-Id", "value": "{{userId}}" }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"tenantId\": \"{{tenantId}}\",\n  \"title\": \"Kinematics Basics\",\n  \"summary\": \"Intro note for motion\",\n  \"contentMd\": \"# Motion\\n\\n$ v = u + at $\",\n  \"changeSummary\": \"Initial draft\",\n  \"tags\": [\"physics\", \"motion\"],\n  \"scopeType\": \"TENANT\",\n  \"createdBy\": \"{{userId}}\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
+              "options": { "raw": { "language": "json" } }
             },
             "url": "{{baseUrl}}/notes"
           },
@@ -83,14 +87,8 @@
           "request": {
             "method": "GET",
             "header": [
-              {
-                "key": "X-Tenant-Id",
-                "value": "{{tenantId}}"
-              },
-              {
-                "key": "X-User-Id",
-                "value": "{{userId}}"
-              }
+              { "key": "X-Tenant-Id", "value": "{{tenantId}}" },
+              { "key": "X-User-Id", "value": "{{userId}}" }
             ],
             "url": "{{baseUrl}}/notes/{{noteId}}"
           }
@@ -100,14 +98,8 @@
           "request": {
             "method": "GET",
             "header": [
-              {
-                "key": "X-Tenant-Id",
-                "value": "{{tenantId}}"
-              },
-              {
-                "key": "X-User-Id",
-                "value": "{{userId}}"
-              }
+              { "key": "X-Tenant-Id", "value": "{{tenantId}}" },
+              { "key": "X-User-Id", "value": "{{userId}}" }
             ],
             "url": "{{baseUrl}}/notes?tag=physics&createdBy={{userId}}&status=DRAFT&scopeType=TENANT&q=motion&page=0&size=20"
           }
@@ -117,27 +109,14 @@
           "request": {
             "method": "PATCH",
             "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "X-Tenant-Id",
-                "value": "{{tenantId}}"
-              },
-              {
-                "key": "X-User-Id",
-                "value": "{{userId}}"
-              }
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Id", "value": "{{tenantId}}" },
+              { "key": "X-User-Id", "value": "{{userId}}" }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"title\": \"Kinematics Basics - Updated\",\n  \"summary\": \"Updated intro note\",\n  \"tags\": [\"physics\", \"basics\"],\n  \"scopeType\": \"TENANT\",\n  \"status\": \"DRAFT\",\n  \"updatedBy\": \"{{userId}}\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
+              "options": { "raw": { "language": "json" } }
             },
             "url": "{{baseUrl}}/notes/{{noteId}}"
           }
@@ -147,27 +126,14 @@
           "request": {
             "method": "POST",
             "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "X-Tenant-Id",
-                "value": "{{tenantId}}"
-              },
-              {
-                "key": "X-User-Id",
-                "value": "{{userId}}"
-              }
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Id", "value": "{{tenantId}}" },
+              { "key": "X-User-Id", "value": "{{userId}}" }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"contentMd\": \"# Motion\\n\\nUpdated content\",\n  \"changeSummary\": \"Added examples\",\n  \"createdBy\": \"{{userId}}\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
+              "raw": "{\n  \"contentMd\": \"# Motion\\n\\nUpdated content with examples\",\n  \"changeSummary\": \"Added examples\",\n  \"createdBy\": \"{{userId}}\"\n}",
+              "options": { "raw": { "language": "json" } }
             },
             "url": "{{baseUrl}}/notes/{{noteId}}/versions"
           },
@@ -193,10 +159,7 @@
           "request": {
             "method": "GET",
             "header": [
-              {
-                "key": "X-Tenant-Id",
-                "value": "{{tenantId}}"
-              }
+              { "key": "X-Tenant-Id", "value": "{{tenantId}}" }
             ],
             "url": "{{baseUrl}}/notes/{{noteId}}/versions"
           }
@@ -206,42 +169,105 @@
           "request": {
             "method": "GET",
             "header": [
-              {
-                "key": "X-Tenant-Id",
-                "value": "{{tenantId}}"
-              }
+              { "key": "X-Tenant-Id", "value": "{{tenantId}}" }
             ],
             "url": "{{baseUrl}}/notes/{{noteId}}/versions/{{versionId}}"
           }
         },
         {
-          "name": "Publish Note",
+          "name": "Submit For Review",
           "request": {
             "method": "POST",
             "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "X-Tenant-Id",
-                "value": "{{tenantId}}"
-              },
-              {
-                "key": "X-User-Id",
-                "value": "{{userId}}"
-              }
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Id", "value": "{{tenantId}}" },
+              { "key": "X-User-Id", "value": "{{userId}}" }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"versionId\": \"{{versionId}}\",\n  \"publishedBy\": \"{{userId}}\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
+              "raw": "{\n  \"submittedBy\": \"{{userId}}\",\n  \"submissionNotes\": \"Ready for review\"\n}",
+              "options": { "raw": { "language": "json" } }
             },
-            "url": "{{baseUrl}}/notes/{{noteId}}/publish"
+            "url": "{{baseUrl}}/notes/{{noteId}}/submit-for-review"
+          }
+        },
+        {
+          "name": "Approve Note",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Id", "value": "{{tenantId}}" },
+              { "key": "X-User-Id", "value": "{{userId}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"approvedBy\": \"{{userId}}\",\n  \"approvalNotes\": \"Looks good\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/notes/{{noteId}}/approve"
+          }
+        },
+        {
+          "name": "Reject Note",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Id", "value": "{{tenantId}}" },
+              { "key": "X-User-Id", "value": "{{userId}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rejectedBy\": \"{{userId}}\",\n  \"rejectionReason\": \"Needs more detail\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/notes/{{noteId}}/reject"
+          }
+        },
+        {
+          "name": "Mark Ready",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "X-Tenant-Id", "value": "{{tenantId}}" },
+              { "key": "X-User-Id", "value": "{{userId}}" }
+            ],
+            "url": "{{baseUrl}}/notes/{{noteId}}/mark-ready?readyBy={{userId}}"
+          }
+        },
+        {
+          "name": "Release Note",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Id", "value": "{{tenantId}}" },
+              { "key": "X-User-Id", "value": "{{userId}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"versionId\": \"{{versionId}}\",\n  \"releasedBy\": \"{{userId}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/notes/{{noteId}}/release"
+          }
+        },
+        {
+          "name": "Archive Note",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Id", "value": "{{tenantId}}" },
+              { "key": "X-User-Id", "value": "{{userId}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"archivedBy\": \"{{userId}}\",\n  \"archiveReason\": \"Superseded by new content\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/notes/{{noteId}}/archive"
           }
         },
         {
@@ -249,10 +275,7 @@
           "request": {
             "method": "GET",
             "header": [
-              {
-                "key": "X-Tenant-Id",
-                "value": "{{tenantId}}"
-              }
+              { "key": "X-Tenant-Id", "value": "{{tenantId}}" }
             ],
             "url": "{{baseUrl}}/notes/{{noteId}}/render"
           }
@@ -262,10 +285,7 @@
           "request": {
             "method": "GET",
             "header": [
-              {
-                "key": "X-Tenant-Id",
-                "value": "{{tenantId}}"
-              }
+              { "key": "X-Tenant-Id", "value": "{{tenantId}}" }
             ],
             "url": "{{baseUrl}}/notes/{{noteId}}/access?userId={{userId}}"
           }
@@ -275,16 +295,444 @@
           "request": {
             "method": "DELETE",
             "header": [
-              {
-                "key": "X-Tenant-Id",
-                "value": "{{tenantId}}"
-              },
-              {
-                "key": "X-User-Id",
-                "value": "{{userId}}"
-              }
+              { "key": "X-Tenant-Id", "value": "{{tenantId}}" },
+              { "key": "X-User-Id", "value": "{{userId}}" }
             ],
             "url": "{{baseUrl}}/notes/{{noteId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "MCQs",
+      "item": [
+        {
+          "name": "Create MCQ",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Id", "value": "{{tenantId}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"questionText\": \"What is the SI unit of force?\",\n  \"optionsJson\": \"[{\\\"index\\\":0,\\\"text\\\":\\\"Newton\\\",\\\"correct\\\":true},{\\\"index\\\":1,\\\"text\\\":\\\"Joule\\\",\\\"correct\\\":false},{\\\"index\\\":2,\\\"text\\\":\\\"Watt\\\",\\\"correct\\\":false},{\\\"index\\\":3,\\\"text\\\":\\\"Pascal\\\",\\\"correct\\\":false}]\",\n  \"difficulty\": \"EASY\",\n  \"explanation\": \"Newton is the SI unit of force (F = ma)\",\n  \"position\": 1,\n  \"createdBy\": \"{{userId}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/notes/{{noteId}}/mcqs"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  var json = pm.response.json();",
+                  "  if (json && json.id) {",
+                  "    pm.collectionVariables.set(\"mcqId\", json.id);",
+                  "  }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List MCQs",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-Tenant-Id", "value": "{{tenantId}}" }
+            ],
+            "url": "{{baseUrl}}/notes/{{noteId}}/mcqs"
+          }
+        },
+        {
+          "name": "List MCQs By Difficulty",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-Tenant-Id", "value": "{{tenantId}}" }
+            ],
+            "url": "{{baseUrl}}/notes/{{noteId}}/mcqs?difficulty=EASY"
+          }
+        },
+        {
+          "name": "Get MCQ",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-Tenant-Id", "value": "{{tenantId}}" }
+            ],
+            "url": "{{baseUrl}}/notes/{{noteId}}/mcqs/{{mcqId}}"
+          }
+        },
+        {
+          "name": "Update MCQ",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Id", "value": "{{tenantId}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"questionText\": \"What is the SI unit of force (updated)?\",\n  \"difficulty\": \"MEDIUM\",\n  \"updatedBy\": \"{{userId}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/notes/{{noteId}}/mcqs/{{mcqId}}"
+          }
+        },
+        {
+          "name": "Batch Upsert MCQs",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Id", "value": "{{tenantId}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mcqs\": [\n    {\n      \"questionText\": \"What is velocity?\",\n      \"optionsJson\": \"[{\\\"index\\\":0,\\\"text\\\":\\\"Rate of change of displacement\\\",\\\"correct\\\":true},{\\\"index\\\":1,\\\"text\\\":\\\"Rate of change of distance\\\",\\\"correct\\\":false}]\",\n      \"difficulty\": \"EASY\",\n      \"explanation\": \"Velocity is displacement per unit time\",\n      \"position\": 1\n    },\n    {\n      \"questionText\": \"What is acceleration?\",\n      \"optionsJson\": \"[{\\\"index\\\":0,\\\"text\\\":\\\"Rate of change of velocity\\\",\\\"correct\\\":true},{\\\"index\\\":1,\\\"text\\\":\\\"Rate of change of speed\\\",\\\"correct\\\":false}]\",\n      \"difficulty\": \"MEDIUM\",\n      \"explanation\": \"Acceleration is velocity change per unit time\",\n      \"position\": 2\n    }\n  ],\n  \"createdBy\": \"{{userId}}\",\n  \"replaceAll\": false\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/notes/{{noteId}}/mcqs/batch"
+          }
+        },
+        {
+          "name": "Delete MCQ",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "X-Tenant-Id", "value": "{{tenantId}}" }
+            ],
+            "url": "{{baseUrl}}/notes/{{noteId}}/mcqs/{{mcqId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Flashcards",
+      "item": [
+        {
+          "name": "Create Flashcard",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Id", "value": "{{tenantId}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"frontText\": \"What is Newton's First Law?\",\n  \"backText\": \"An object at rest stays at rest, and an object in motion stays in motion unless acted upon by an external force.\",\n  \"difficulty\": \"EASY\",\n  \"position\": 1,\n  \"createdBy\": \"{{userId}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/notes/{{noteId}}/flashcards"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  var json = pm.response.json();",
+                  "  if (json && json.id) {",
+                  "    pm.collectionVariables.set(\"flashcardId\", json.id);",
+                  "  }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List Flashcards",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-Tenant-Id", "value": "{{tenantId}}" }
+            ],
+            "url": "{{baseUrl}}/notes/{{noteId}}/flashcards"
+          }
+        },
+        {
+          "name": "List Flashcards By Difficulty",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-Tenant-Id", "value": "{{tenantId}}" }
+            ],
+            "url": "{{baseUrl}}/notes/{{noteId}}/flashcards?difficulty=EASY"
+          }
+        },
+        {
+          "name": "Get Flashcard",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-Tenant-Id", "value": "{{tenantId}}" }
+            ],
+            "url": "{{baseUrl}}/notes/{{noteId}}/flashcards/{{flashcardId}}"
+          }
+        },
+        {
+          "name": "Update Flashcard",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Id", "value": "{{tenantId}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"frontText\": \"State Newton's First Law of Motion\",\n  \"difficulty\": \"MEDIUM\",\n  \"updatedBy\": \"{{userId}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/notes/{{noteId}}/flashcards/{{flashcardId}}"
+          }
+        },
+        {
+          "name": "Batch Upsert Flashcards",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Id", "value": "{{tenantId}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"flashcards\": [\n    {\n      \"frontText\": \"What is inertia?\",\n      \"backText\": \"The tendency of an object to resist changes in its state of motion.\",\n      \"difficulty\": \"EASY\",\n      \"position\": 1\n    },\n    {\n      \"frontText\": \"F = ma represents which law?\",\n      \"backText\": \"Newton's Second Law of Motion\",\n      \"difficulty\": \"MEDIUM\",\n      \"position\": 2\n    }\n  ],\n  \"createdBy\": \"{{userId}}\",\n  \"replaceAll\": false\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/notes/{{noteId}}/flashcards/batch"
+          }
+        },
+        {
+          "name": "Delete Flashcard",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "X-Tenant-Id", "value": "{{tenantId}}" }
+            ],
+            "url": "{{baseUrl}}/notes/{{noteId}}/flashcards/{{flashcardId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Deck",
+      "item": [
+        {
+          "name": "Create Deck",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Id", "value": "{{tenantId}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Kinematics Exam Deck\",\n  \"description\": \"Exam deck for kinematics chapter\",\n  \"requiredMcqCount\": 10,\n  \"requiredFlashcardCount\": 5,\n  \"easyPct\": 30,\n  \"mediumPct\": 50,\n  \"hardPct\": 20,\n  \"createdBy\": \"{{userId}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/notes/{{noteId}}/deck"
+          }
+        },
+        {
+          "name": "Get Deck",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-Tenant-Id", "value": "{{tenantId}}" }
+            ],
+            "url": "{{baseUrl}}/notes/{{noteId}}/deck"
+          }
+        },
+        {
+          "name": "Update Deck",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Id", "value": "{{tenantId}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Kinematics Exam Deck - Updated\",\n  \"requiredMcqCount\": 15,\n  \"easyPct\": 20,\n  \"mediumPct\": 50,\n  \"hardPct\": 30,\n  \"updatedBy\": \"{{userId}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/notes/{{noteId}}/deck"
+          }
+        },
+        {
+          "name": "Get Deck Composition",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-Tenant-Id", "value": "{{tenantId}}" }
+            ],
+            "url": "{{baseUrl}}/notes/{{noteId}}/deck/composition"
+          }
+        },
+        {
+          "name": "Refresh Deck Status",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "X-Tenant-Id", "value": "{{tenantId}}" }
+            ],
+            "url": "{{baseUrl}}/notes/{{noteId}}/deck/refresh-status"
+          }
+        },
+        {
+          "name": "Activate Deck",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "X-Tenant-Id", "value": "{{tenantId}}" }
+            ],
+            "url": "{{baseUrl}}/notes/{{noteId}}/deck/activate?activatedBy={{userId}}"
+          }
+        },
+        {
+          "name": "Archive Deck",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "X-Tenant-Id", "value": "{{tenantId}}" }
+            ],
+            "url": "{{baseUrl}}/notes/{{noteId}}/deck/archive?archivedBy={{userId}}"
+          }
+        },
+        {
+          "name": "Delete Deck",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "X-Tenant-Id", "value": "{{tenantId}}" }
+            ],
+            "url": "{{baseUrl}}/notes/{{noteId}}/deck"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Exam Attempts",
+      "item": [
+        {
+          "name": "Start Exam Attempt",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Id", "value": "{{tenantId}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"studentId\": \"{{studentId}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/notes/{{noteId}}/deck/exam-attempts/start"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  var json = pm.response.json();",
+                  "  if (json && json.id) {",
+                  "    pm.collectionVariables.set(\"attemptId\", json.id);",
+                  "  }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Submit Answer",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Id", "value": "{{tenantId}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mcqId\": \"{{mcqId}}\",\n  \"selectedOptionIndex\": 0\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/notes/{{noteId}}/deck/exam-attempts/{{attemptId}}/answers"
+          }
+        },
+        {
+          "name": "Complete Attempt",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "X-Tenant-Id", "value": "{{tenantId}}" }
+            ],
+            "url": "{{baseUrl}}/notes/{{noteId}}/deck/exam-attempts/{{attemptId}}/complete"
+          }
+        },
+        {
+          "name": "Abandon Attempt",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "X-Tenant-Id", "value": "{{tenantId}}" }
+            ],
+            "url": "{{baseUrl}}/notes/{{noteId}}/deck/exam-attempts/{{attemptId}}/abandon"
+          }
+        },
+        {
+          "name": "Submit Complete Exam",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Id", "value": "{{tenantId}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"studentId\": \"{{studentId}}\",\n  \"answers\": [\n    {\n      \"mcqId\": \"{{mcqId}}\",\n      \"selectedOptionIndex\": 0\n    }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/notes/{{noteId}}/deck/exam-attempts/submit"
+          }
+        },
+        {
+          "name": "Get Attempt",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-Tenant-Id", "value": "{{tenantId}}" }
+            ],
+            "url": "{{baseUrl}}/notes/{{noteId}}/deck/exam-attempts/{{attemptId}}"
+          }
+        },
+        {
+          "name": "List Attempts",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-Tenant-Id", "value": "{{tenantId}}" }
+            ],
+            "url": "{{baseUrl}}/notes/{{noteId}}/deck/exam-attempts?studentId={{studentId}}"
+          }
+        },
+        {
+          "name": "Get Attempt Summary",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-Tenant-Id", "value": "{{tenantId}}" }
+            ],
+            "url": "{{baseUrl}}/notes/{{noteId}}/deck/exam-attempts/summary?studentId={{studentId}}"
           }
         }
       ]

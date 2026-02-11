@@ -13,4 +13,6 @@ public interface StudentProfileService {
             String actorId);
 
     List<ClassStudentDto> getStudentsByClassId(UUID tenantId, UUID classId);
+
+    List<StudentProfileResponse> listStudentProfiles(UUID tenantId);
 }

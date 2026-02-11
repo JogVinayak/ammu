@@ -15,6 +15,7 @@ public class StudentProfileResponse {
     private String section;
     private String rollNumber;
     private UUID classId;
+    private UUID divisionId;
     private String board;
     private Instant createdAt;
     private Instant updatedAt;

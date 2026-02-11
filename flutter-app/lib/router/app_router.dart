@@ -20,6 +20,9 @@ import '../features/release/screens/release_content_screen.dart';
 import '../features/release/screens/release_history_screen.dart';
 import '../features/profile/screens/profile_screen.dart';
 import '../features/profile/screens/settings_screen.dart';
+import '../features/admin/screens/admin_users_screen.dart';
+import '../features/admin/screens/admin_classes_screen.dart';
+import '../features/admin/screens/admin_roles_screen.dart';
 import '../features/student/screens/screens.dart';
 import '../features/super_admin/screens/screens.dart';
 import 'main_shell.dart';
@@ -206,6 +209,28 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/super-admin/users',
         builder: (context, state) => const UsersManagementScreen(),
+      ),
+      GoRoute(
+        path: '/super-admin/permissions',
+        builder: (context, state) => const PermissionsManagementScreen(),
+      ),
+      GoRoute(
+        path: '/super-admin/roles',
+        builder: (context, state) => const RolesManagementScreen(),
+      ),
+
+      // Admin user management (tenant-scoped)
+      GoRoute(
+        path: '/admin/users',
+        builder: (context, state) => const AdminUsersScreen(),
+      ),
+      GoRoute(
+        path: '/admin/classes',
+        builder: (context, state) => const AdminClassesScreen(),
+      ),
+      GoRoute(
+        path: '/admin/roles',
+        builder: (context, state) => const AdminRolesScreen(),
       ),
 
       // Student full-screen routes (outside shell)

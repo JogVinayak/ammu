@@ -3,3 +3,9 @@ databaseChangeLog:
       file: db/changelog/changes/001-create-user-profile-tables.yaml
   - include:
       file: db/changelog/changes/002-create-progress-tables.yaml
+  - include:
+      file: db/changelog/changes/003-create-student-concept-progress-table.yaml
+  - include:
+      file: db/changelog/changes/004-create-daily-activity-table.yaml
+  - include:
+      file: db/changelog/changes/005-add-division-id-to-student-profiles.yaml

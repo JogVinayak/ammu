@@ -3,6 +3,7 @@ package com.learning.content_workflow_service.service;
 import com.learning.content_workflow_service.dto.CreateWorkflowRequest;
 import com.learning.content_workflow_service.dto.PublishWorkflowRequest;
 import com.learning.content_workflow_service.dto.ReleaseContentRequest;
+import com.learning.content_workflow_service.dto.ReleaseHistoryResponse;
 import com.learning.content_workflow_service.dto.ReleasedContentResponse;
 import com.learning.content_workflow_service.dto.ReviewActionRequest;
 import com.learning.content_workflow_service.dto.SubmitForReviewRequest;
@@ -56,4 +57,6 @@ public interface WorkflowService {
     void releaseContent(String tenantId, String userId, ReleaseContentRequest request);
 
     List<ReleasedContentResponse> getReleasedContent(String tenantId, UUID classId, String contentType);
+
+    ReleaseHistoryResponse getReleaseHistory(String tenantId, String userId, int page, int size);
 }

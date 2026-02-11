@@ -142,10 +142,13 @@ class SuperAdminRepository {
   }
 
   /// Create a user identity in auth service
+  /// Auth-service signup also creates profile and assigns default role.
   Future<UserIdentity> createUserIdentity({
     required String email,
     required String password,
     required String tenantId,
+    String? name,
+    String? userType,
   }) async {
     try {
       final response = await _dioClient.post(
@@ -154,6 +157,8 @@ class SuperAdminRepository {
           'email': email,
           'password': password,
           'tenantId': tenantId,
+          if (name != null) 'name': name,
+          if (userType != null) 'userType': userType,
         },
       );
       return UserIdentity.fromJson(response.data);
@@ -178,8 +183,221 @@ class SuperAdminRepository {
     }
   }
 
-  /// Create a complete user (identity + profile)
-  Future<UserProfile> createUser({
+  /// Upsert student profile (set classId, divisionId, grade, etc.)
+  Future<void> upsertStudentProfile({
+    required String tenantId,
+    required String userId,
+    String? classId,
+    String? divisionId,
+    String? grade,
+  }) async {
+    try {
+      await _dioClient.put(
+        '/v1/tenants/$tenantId/users/$userId/student-profile',
+        data: {
+          if (classId != null) 'classId': classId,
+          if (divisionId != null) 'divisionId': divisionId,
+          if (grade != null) 'grade': grade,
+        },
+      );
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  /// Update a user profile
+  Future<void> updateUserProfile({
+    required String tenantId,
+    required String profileId,
+    String? displayName,
+    String? email,
+  }) async {
+    try {
+      await _dioClient.put(
+        '/v1/tenants/$tenantId/profiles/$profileId',
+        data: {
+          if (displayName != null) 'displayName': displayName,
+          if (email != null) 'email': email,
+        },
+      );
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  /// Delete a user profile (also deletes associated student profile)
+  Future<void> deleteUserProfile({
+    required String tenantId,
+    required String profileId,
+  }) async {
+    try {
+      await _dioClient.delete('/v1/tenants/$tenantId/profiles/$profileId');
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  /// Delete user identity from auth service
+  Future<void> deleteUserIdentity(String userId) async {
+    try {
+      await _dioClient.delete('/v1/auth/users/$userId');
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  // ============== School Classes & Divisions ==============
+
+  /// Fetch student profiles (with classId/divisionId) for a tenant
+  Future<List<Map<String, dynamic>>> getStudentProfiles(String tenantId) async {
+    try {
+      final response =
+          await _dioClient.get('/v1/tenants/$tenantId/profiles/student-summaries');
+      final List<dynamic> data = response.data;
+      return data.cast<Map<String, dynamic>>();
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  /// Fetch school classes (with embedded divisions) for a tenant
+  Future<List<Map<String, dynamic>>> getSchoolClasses(String tenantId) async {
+    try {
+      final response = await _dioClient.get('/v1/tenants/$tenantId/classes');
+      final List<dynamic> data = response.data;
+      return data.cast<Map<String, dynamic>>();
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  /// Create a school class
+  Future<Map<String, dynamic>> createSchoolClass({
+    required String tenantId,
+    required String name,
+    required int gradeLevel,
+    String? description,
+  }) async {
+    try {
+      final response = await _dioClient.post(
+        '/v1/tenants/$tenantId/classes',
+        data: {
+          'name': name,
+          'gradeLevel': gradeLevel,
+          if (description != null) 'description': description,
+        },
+      );
+      return Map<String, dynamic>.from(response.data);
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  /// Delete a school class
+  Future<void> deleteSchoolClass({
+    required String tenantId,
+    required String classId,
+  }) async {
+    try {
+      await _dioClient.delete('/v1/tenants/$tenantId/classes/$classId');
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  /// Create a division within a class
+  Future<Map<String, dynamic>> createDivision({
+    required String tenantId,
+    required String classId,
+    required String name,
+    String? displayName,
+  }) async {
+    try {
+      final response = await _dioClient.post(
+        '/v1/tenants/$tenantId/classes/$classId/divisions',
+        data: {
+          'name': name,
+          if (displayName != null) 'displayName': displayName,
+        },
+      );
+      return Map<String, dynamic>.from(response.data);
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  /// Delete a division
+  Future<void> deleteDivision({
+    required String tenantId,
+    required String classId,
+    required String divisionId,
+  }) async {
+    try {
+      await _dioClient
+          .delete('/v1/tenants/$tenantId/classes/$classId/divisions/$divisionId');
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  // ============== Teacher-Class Assignments ==============
+
+  /// List teachers assigned to a class
+  Future<List<Map<String, dynamic>>> getClassTeachers({
+    required String tenantId,
+    required String classId,
+  }) async {
+    try {
+      final response = await _dioClient
+          .get('/v1/tenants/$tenantId/classes/$classId/teachers');
+      final List<dynamic> data = response.data;
+      return data.cast<Map<String, dynamic>>();
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  /// Assign a teacher to a class
+  Future<Map<String, dynamic>> assignTeacher({
+    required String tenantId,
+    required String classId,
+    required String teacherId,
+    required String role,
+    String? subject,
+  }) async {
+    try {
+      final response = await _dioClient.post(
+        '/v1/tenants/$tenantId/classes/$classId/teachers',
+        data: {
+          'teacherId': teacherId,
+          'role': role,
+          if (subject != null) 'subject': subject,
+        },
+      );
+      return Map<String, dynamic>.from(response.data);
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  /// Remove a teacher assignment from a class
+  Future<void> removeTeacherAssignment({
+    required String tenantId,
+    required String classId,
+    required String assignmentId,
+  }) async {
+    try {
+      await _dioClient.delete(
+        '/v1/tenants/$tenantId/classes/$classId/teachers/$assignmentId',
+      );
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  /// Create a complete user (identity + profile + role).
+  /// Auth-service signup now handles profile creation and role assignment.
+  Future<UserIdentity> createUser({
     required String tenantId,
     required String email,
     required String password,
@@ -188,24 +406,198 @@ class SuperAdminRepository {
     String? lastName,
     required String userType,
   }) async {
-    // First create identity
-    final identity = await createUserIdentity(
+    return createUserIdentity(
       email: email,
       password: password,
       tenantId: tenantId,
-    );
-
-    // Then create profile
-    final profileRequest = CreateUserProfileRequest(
-      userId: identity.id,
-      displayName: displayName,
-      firstName: firstName,
-      lastName: lastName,
-      email: email,
+      name: displayName,
       userType: userType,
     );
+  }
 
-    return createUserProfile(tenantId: tenantId, request: profileRequest);
+  // ============== Roles (tenant-scoped) ==============
+
+  Future<List<Role>> getRoles(String tenantId) async {
+    try {
+      final response = await _dioClient.get('/v1/tenants/$tenantId/roles');
+      final List<dynamic> data = response.data;
+      return data.map((json) => Role.fromJson(json)).toList();
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  Future<Role> createRole(
+    String tenantId, {
+    required String name,
+    String? description,
+  }) async {
+    try {
+      final response = await _dioClient.post(
+        '/v1/tenants/$tenantId/roles',
+        data: {
+          'name': name,
+          if (description != null) 'description': description,
+          'active': true,
+        },
+      );
+      return Role.fromJson(response.data);
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  Future<Role> updateRole(
+    String tenantId,
+    int roleId, {
+    String? name,
+    String? description,
+    bool? active,
+  }) async {
+    try {
+      final response = await _dioClient.put(
+        '/v1/tenants/$tenantId/roles/$roleId',
+        data: {
+          'id': roleId,
+          if (name != null) 'name': name,
+          if (description != null) 'description': description,
+          if (active != null) 'active': active,
+        },
+      );
+      return Role.fromJson(response.data);
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  Future<void> deleteRole(String tenantId, int roleId) async {
+    try {
+      await _dioClient.delete('/v1/tenants/$tenantId/roles/$roleId');
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  // ============== Role Permission Grants ==============
+
+  Future<List<RolePermissionGrant>> getRoleGrants(
+    String tenantId,
+    int roleId,
+  ) async {
+    try {
+      final response = await _dioClient.get(
+        '/v1/tenants/$tenantId/roles/$roleId/grants',
+      );
+      final List<dynamic> data = response.data;
+      return data.map((json) => RolePermissionGrant.fromJson(json)).toList();
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  Future<RolePermissionGrant> createRoleGrant(
+    String tenantId,
+    int roleId, {
+    required String permissionCode,
+    String? scopeCode,
+  }) async {
+    try {
+      final response = await _dioClient.post(
+        '/v1/tenants/$tenantId/roles/$roleId/grants',
+        data: {
+          'permissionCode': permissionCode,
+          if (scopeCode != null) 'scopeCode': scopeCode,
+        },
+      );
+      return RolePermissionGrant.fromJson(response.data);
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  Future<void> deleteRoleGrant(
+    String tenantId,
+    int roleId,
+    int grantId,
+  ) async {
+    try {
+      await _dioClient.delete(
+        '/v1/tenants/$tenantId/roles/$roleId/grants/$grantId',
+      );
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  // ============== Permissions (global) ==============
+
+  Future<List<Permission>> getPermissions() async {
+    try {
+      final response = await _dioClient.get('/v1/permissions');
+      final List<dynamic> data = response.data;
+      return data.map((json) => Permission.fromJson(json)).toList();
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  Future<Permission> createPermission({
+    required String name,
+    required String code,
+    String? resource,
+    String? action,
+    String? description,
+  }) async {
+    try {
+      final response = await _dioClient.post(
+        '/v1/permissions',
+        data: {
+          'name': name,
+          'code': code,
+          if (resource != null) 'resource': resource,
+          if (action != null) 'action': action,
+          if (description != null) 'description': description,
+          'active': true,
+        },
+      );
+      return Permission.fromJson(response.data);
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  Future<Permission> updatePermission(
+    int permissionId, {
+    String? name,
+    String? description,
+    String? resource,
+    String? action,
+    bool? active,
+  }) async {
+    try {
+      final response = await _dioClient.put(
+        '/v1/permissions/$permissionId',
+        data: {
+          'id': permissionId,
+          if (name != null) 'name': name,
+          if (description != null) 'description': description,
+          if (resource != null) 'resource': resource,
+          if (action != null) 'action': action,
+          if (active != null) 'active': active,
+        },
+      );
+      return Permission.fromJson(response.data);
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  Future<void> deletePermission(int permissionId) async {
+    try {
+      await _dioClient.delete('/v1/permissions/$permissionId');
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
   }
 
   String _handleError(DioException e) {

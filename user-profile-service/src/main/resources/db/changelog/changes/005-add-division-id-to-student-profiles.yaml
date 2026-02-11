@@ -1,0 +1,13 @@
+databaseChangeLog:
+  - changeSet:
+      id: 005-add-division-id-to-student-profiles
+      author: system
+      changes:
+        - addColumn:
+            tableName: student_profiles
+            columns:
+              - column:
+                  name: division_id
+                  type: uuid
+                  constraints:
+                    nullable: true

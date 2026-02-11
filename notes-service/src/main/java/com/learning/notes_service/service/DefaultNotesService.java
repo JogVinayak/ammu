@@ -22,6 +22,9 @@ import com.learning.notes_service.model.enums.NoteStatus;
 import com.learning.notes_service.repository.NoteRepository;
 import com.learning.notes_service.repository.NoteTagRepository;
 import com.learning.notes_service.repository.NoteVersionRepository;
+import com.learning.notes_service.exception.BadRequestException;
+import com.learning.notes_service.exception.ConflictException;
+import com.learning.notes_service.exception.NotFoundException;
 import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
@@ -90,7 +93,7 @@ public class DefaultNotesService implements NotesService {
     @Transactional(readOnly = true)
     public NoteResponse getById(UUID tenantId, UUID noteId) {
         Note note = noteRepository.findByIdAndTenantIdAndDeletedFalse(noteId, tenantId)
-                .orElseThrow(() -> new RuntimeException("Note not found"));
+                .orElseThrow(() -> new NotFoundException("Note not found"));
         return toNoteResponse(note, getTags(tenantId, noteId));
     }
 
@@ -114,15 +117,20 @@ public class DefaultNotesService implements NotesService {
 
         Page<Note> notesPage;
 
-        if (status != null) {
-            notesPage = noteRepository.findByTenantIdAndStatusAndDeletedFalse(tenantId, status, pageable);
+        if (createdBy != null && status != null) {
+            // Filter by both creator and status
+            notesPage = noteRepository.findByTenantIdAndCreatedByAndStatusAndDeletedFalse(
+                    tenantId, createdBy, status, pageable);
         } else if (createdBy != null) {
+            // Show only this user's notes (all statuses)
             notesPage = noteRepository.findByTenantIdAndCreatedByAndDeletedFalse(tenantId, createdBy, pageable);
         } else if (scopeType != null && scopeId != null) {
             notesPage = noteRepository.findByTenantIdAndScopeTypeAndScopeIdAndDeletedFalse(
                     tenantId, scopeType, scopeId, pageable);
         } else if (scopeType != null) {
             notesPage = noteRepository.findByTenantIdAndScopeTypeAndDeletedFalse(tenantId, scopeType, pageable);
+        } else if (status != null) {
+            notesPage = noteRepository.findByTenantIdAndStatusAndDeletedFalse(tenantId, status, pageable);
         } else {
             // Default: return only RELEASED notes (students should not see drafts)
             notesPage = noteRepository.findByTenantIdAndStatusAndDeletedFalse(
@@ -145,7 +153,7 @@ public class DefaultNotesService implements NotesService {
     @Transactional
     public NoteResponse update(UUID tenantId, UUID noteId, UpdateNoteRequest request) {
         Note note = noteRepository.findByIdAndTenantIdAndDeletedFalse(noteId, tenantId)
-                .orElseThrow(() -> new RuntimeException("Note not found"));
+                .orElseThrow(() -> new NotFoundException("Note not found"));
 
         Instant now = Instant.now();
 
@@ -193,7 +201,7 @@ public class DefaultNotesService implements NotesService {
     @Transactional
     public NoteVersionResponse createVersion(UUID tenantId, UUID noteId, CreateNoteVersionRequest request) {
         Note note = noteRepository.findByIdAndTenantIdAndDeletedFalse(noteId, tenantId)
-                .orElseThrow(() -> new RuntimeException("Note not found"));
+                .orElseThrow(() -> new NotFoundException("Note not found"));
 
         Integer maxVersion = versionRepository.findMaxVersionNo(tenantId, noteId);
         int newVersionNo = maxVersion + 1;
@@ -227,7 +235,7 @@ public class DefaultNotesService implements NotesService {
     @Transactional(readOnly = true)
     public NoteVersionListResponse listVersions(UUID tenantId, UUID noteId) {
         noteRepository.findByIdAndTenantIdAndDeletedFalse(noteId, tenantId)
-                .orElseThrow(() -> new RuntimeException("Note not found"));
+                .orElseThrow(() -> new NotFoundException("Note not found"));
 
         List<NoteVersion> versions = versionRepository.findByTenantIdAndNoteIdOrderByVersionNoDesc(tenantId, noteId);
 
@@ -241,13 +249,13 @@ public class DefaultNotesService implements NotesService {
     @Transactional(readOnly = true)
     public NoteVersionResponse getVersion(UUID tenantId, UUID noteId, UUID versionId) {
         noteRepository.findByIdAndTenantIdAndDeletedFalse(noteId, tenantId)
-                .orElseThrow(() -> new RuntimeException("Note not found"));
+                .orElseThrow(() -> new NotFoundException("Note not found"));
 
         NoteVersion version = versionRepository.findByIdAndTenantId(versionId, tenantId)
-                .orElseThrow(() -> new RuntimeException("Version not found"));
+                .orElseThrow(() -> new NotFoundException("Version not found"));
 
         if (!version.getNoteId().equals(noteId)) {
-            throw new RuntimeException("Version does not belong to this note");
+            throw new BadRequestException("Version does not belong to this note");
         }
 
         return toVersionResponse(version);
@@ -257,7 +265,7 @@ public class DefaultNotesService implements NotesService {
     @Transactional(readOnly = true)
     public NoteRenderResponse render(UUID tenantId, UUID noteId) {
         Note note = noteRepository.findByIdAndTenantIdAndDeletedFalse(noteId, tenantId)
-                .orElseThrow(() -> new RuntimeException("Note not found"));
+                .orElseThrow(() -> new NotFoundException("Note not found"));
 
         NoteVersion version = null;
         if (note.getLatestReleasedVersionId() != null) {
@@ -316,10 +324,10 @@ public class DefaultNotesService implements NotesService {
     @Transactional
     public NoteResponse submitForReview(UUID tenantId, UUID noteId, SubmitForReviewRequest request) {
         Note note = noteRepository.findByIdAndTenantIdAndDeletedFalse(noteId, tenantId)
-                .orElseThrow(() -> new RuntimeException("Note not found"));
+                .orElseThrow(() -> new NotFoundException("Note not found"));
 
         if (note.getStatus() != NoteStatus.DRAFT) {
-            throw new RuntimeException("Only DRAFT notes can be submitted for review");
+            throw new ConflictException("Only DRAFT notes can be submitted for review");
         }
 
         Instant now = Instant.now();
@@ -337,10 +345,10 @@ public class DefaultNotesService implements NotesService {
     @Transactional
     public NoteResponse approve(UUID tenantId, UUID noteId, ApproveNoteRequest request) {
         Note note = noteRepository.findByIdAndTenantIdAndDeletedFalse(noteId, tenantId)
-                .orElseThrow(() -> new RuntimeException("Note not found"));
+                .orElseThrow(() -> new NotFoundException("Note not found"));
 
         if (note.getStatus() != NoteStatus.IN_REVIEW) {
-            throw new RuntimeException("Only IN_REVIEW notes can be approved");
+            throw new ConflictException("Only IN_REVIEW notes can be approved");
         }
 
         Instant now = Instant.now();
@@ -357,10 +365,10 @@ public class DefaultNotesService implements NotesService {
     @Transactional
     public NoteResponse reject(UUID tenantId, UUID noteId, RejectNoteRequest request) {
         Note note = noteRepository.findByIdAndTenantIdAndDeletedFalse(noteId, tenantId)
-                .orElseThrow(() -> new RuntimeException("Note not found"));
+                .orElseThrow(() -> new NotFoundException("Note not found"));
 
         if (note.getStatus() != NoteStatus.IN_REVIEW) {
-            throw new RuntimeException("Only IN_REVIEW notes can be rejected");
+            throw new ConflictException("Only IN_REVIEW notes can be rejected");
         }
 
         Instant now = Instant.now();
@@ -378,10 +386,10 @@ public class DefaultNotesService implements NotesService {
     @Transactional
     public NoteResponse markReady(UUID tenantId, UUID noteId, UUID readyBy) {
         Note note = noteRepository.findByIdAndTenantIdAndDeletedFalse(noteId, tenantId)
-                .orElseThrow(() -> new RuntimeException("Note not found"));
+                .orElseThrow(() -> new NotFoundException("Note not found"));
 
         if (note.getStatus() != NoteStatus.DRAFT) {
-            throw new RuntimeException("Only DRAFT notes can be marked as ready");
+            throw new ConflictException("Only DRAFT notes can be marked as ready");
         }
 
         Instant now = Instant.now();
@@ -398,10 +406,10 @@ public class DefaultNotesService implements NotesService {
     @Transactional
     public NoteResponse release(UUID tenantId, UUID noteId, ReleaseNoteRequest request) {
         Note note = noteRepository.findByIdAndTenantIdAndDeletedFalse(noteId, tenantId)
-                .orElseThrow(() -> new RuntimeException("Note not found"));
+                .orElseThrow(() -> new NotFoundException("Note not found"));
 
         if (note.getStatus() != NoteStatus.READY) {
-            throw new RuntimeException("Only READY notes can be released");
+            throw new ConflictException("Only READY notes can be released");
         }
 
         Instant now = Instant.now();
@@ -409,7 +417,7 @@ public class DefaultNotesService implements NotesService {
 
         if (versionId != null) {
             versionRepository.findByIdAndTenantId(versionId, tenantId)
-                    .orElseThrow(() -> new RuntimeException("Version not found"));
+                    .orElseThrow(() -> new NotFoundException("Version not found"));
         }
 
         note.setStatus(NoteStatus.RELEASED);
@@ -426,7 +434,7 @@ public class DefaultNotesService implements NotesService {
     @Transactional
     public NoteResponse archive(UUID tenantId, UUID noteId, ArchiveNoteRequest request) {
         Note note = noteRepository.findByIdAndTenantIdAndDeletedFalse(noteId, tenantId)
-                .orElseThrow(() -> new RuntimeException("Note not found"));
+                .orElseThrow(() -> new NotFoundException("Note not found"));
 
         Instant now = Instant.now();
         note.setStatus(NoteStatus.ARCHIVED);

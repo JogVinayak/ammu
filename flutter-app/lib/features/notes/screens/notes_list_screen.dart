@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/widgets.dart';
+import '../../release/data/workflow_repository.dart';
 import '../data/note_models.dart';
 import '../providers/notes_provider.dart';
 
@@ -18,12 +19,31 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
   late TabController _tabController;
   final _searchController = TextEditingController();
   final _searchFocusNode = FocusNode();
+  // Map of contentId -> list of class names it's released to
+  Map<String, List<String>>? _releaseMap;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
     _tabController.addListener(_onTabChanged);
+    _loadReleaseHistory();
+  }
+
+  Future<void> _loadReleaseHistory() async {
+    try {
+      final repo = ref.read(workflowRepositoryProvider);
+      final history = await repo.getReleaseHistory(size: 200);
+      final map = <String, List<String>>{};
+      for (final item in history) {
+        map.putIfAbsent(item.contentId, () => []);
+        if (item.className.isNotEmpty &&
+            !map[item.contentId]!.contains(item.className)) {
+          map[item.contentId]!.add(item.className);
+        }
+      }
+      if (mounted) setState(() => _releaseMap = map);
+    } catch (_) {}
   }
 
   @override
@@ -138,8 +158,10 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
                                 : null,
                           )
                           : RefreshIndicator(
-                            onRefresh: () =>
-                                ref.read(notesProvider.notifier).refresh(),
+                            onRefresh: () async {
+                                await ref.read(notesProvider.notifier).refresh();
+                                await _loadReleaseHistory();
+                            },
                             child: ListView.separated(
                               keyboardDismissBehavior:
                                   ScrollViewKeyboardDismissBehavior.onDrag,
@@ -151,6 +173,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
                                 final note = filteredNotes[index];
                                 return _NoteCard(
                                   note: note,
+                                  releasedTo: _releaseMap?[note.id],
                                   onTap: () =>
                                       context.push('/notes/${note.id}'),
                                   onEdit: () =>
@@ -235,6 +258,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen>
 
 class _NoteCard extends StatelessWidget {
   final Note note;
+  final List<String>? releasedTo;
   final VoidCallback onTap;
   final VoidCallback onEdit;
   final VoidCallback onRelease;
@@ -242,6 +266,7 @@ class _NoteCard extends StatelessWidget {
 
   const _NoteCard({
     required this.note,
+    this.releasedTo,
     required this.onTap,
     required this.onEdit,
     required this.onRelease,
@@ -454,6 +479,26 @@ class _NoteCard extends StatelessWidget {
               ),
             ],
           ),
+          if (releasedTo != null && releasedTo!.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.xs),
+            Row(
+              children: [
+                const Icon(Icons.school, size: 12, color: AppColors.success),
+                const SizedBox(width: AppSpacing.xs),
+                Expanded(
+                  child: Text(
+                    'Released to: ${releasedTo!.join(", ")}',
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: AppColors.success,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          ],
         ],
       ),
     );

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/widgets.dart';
 import '../../classes/providers/classes_provider.dart';
+import '../../notes/data/note_models.dart';
 import '../../notes/providers/notes_provider.dart';
 import '../../mindmaps/providers/mindmaps_provider.dart';
 import '../data/workflow_repository.dart';
@@ -30,6 +31,9 @@ class _ReleaseContentScreenState extends ConsumerState<ReleaseContentScreen> {
   final Set<String> _selectedContent = {};
   final Set<String> _selectedClasses = {};
   bool _isReleasing = false;
+  // Map of contentId -> list of class names it's released to
+  Map<String, List<String>>? _releaseMap;
+  bool _loadingHistory = false;
 
   @override
   void initState() {
@@ -39,6 +43,30 @@ class _ReleaseContentScreenState extends ConsumerState<ReleaseContentScreen> {
     }
     if (widget.classId != null) {
       _selectedClasses.add(widget.classId!);
+    }
+    _loadReleaseHistory();
+  }
+
+  Future<void> _loadReleaseHistory() async {
+    setState(() => _loadingHistory = true);
+    try {
+      final repo = ref.read(workflowRepositoryProvider);
+      final history = await repo.getReleaseHistory(size: 100);
+      final map = <String, List<String>>{};
+      for (final item in history) {
+        map.putIfAbsent(item.contentId, () => []);
+        if (item.className.isNotEmpty && !map[item.contentId]!.contains(item.className)) {
+          map[item.contentId]!.add(item.className);
+        }
+      }
+      if (mounted) {
+        setState(() {
+          _releaseMap = map;
+          _loadingHistory = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) setState(() => _loadingHistory = false);
     }
   }
 
@@ -137,6 +165,8 @@ class _ReleaseContentScreenState extends ConsumerState<ReleaseContentScreen> {
     return Column(
       children: allContent.map((item) {
         final isSelected = _selectedContent.contains(item.id);
+        final releasedTo = _releaseMap?[item.id];
+        final typeLabel = item.type == 'note' ? 'Note' : 'Mindmap';
         return CheckboxListTile(
           value: isSelected,
           onChanged: (value) {
@@ -149,7 +179,23 @@ class _ReleaseContentScreenState extends ConsumerState<ReleaseContentScreen> {
             });
           },
           title: Text(item.title),
-          subtitle: Text(item.type == 'note' ? 'Note' : 'Mindmap'),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(typeLabel),
+              if (releasedTo != null && releasedTo.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 2),
+                  child: Text(
+                    'Released to: ${releasedTo.join(", ")}',
+                    style: TextStyle(
+                      color: AppColors.success,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+            ],
+          ),
           secondary: Icon(
             item.type == 'note' ? Icons.description : Icons.account_tree,
             color:
@@ -163,10 +209,44 @@ class _ReleaseContentScreenState extends ConsumerState<ReleaseContentScreen> {
   Widget _buildClassSelection() {
     final classesState = ref.watch(classesProvider);
 
-    if (classesState.classes.isEmpty) {
+    if (classesState.isLoading) {
       return const Padding(
         padding: EdgeInsets.symmetric(vertical: AppSpacing.lg),
-        child: Text('No classes available'),
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (classesState.error != null) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
+        child: Column(
+          children: [
+            Text('Error loading classes: ${classesState.error}'),
+            const SizedBox(height: AppSpacing.sm),
+            AppButton(
+              text: 'Retry',
+              variant: AppButtonVariant.outline,
+              onPressed: () => ref.read(classesProvider.notifier).refresh(),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (classesState.classes.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
+        child: Column(
+          children: [
+            const Text('No classes available'),
+            const SizedBox(height: AppSpacing.sm),
+            AppButton(
+              text: 'Refresh',
+              variant: AppButtonVariant.outline,
+              onPressed: () => ref.read(classesProvider.notifier).refresh(),
+            ),
+          ],
+        ),
       );
     }
 
@@ -290,6 +370,8 @@ class _ReleaseContentScreenState extends ConsumerState<ReleaseContentScreen> {
         );
         return;
       }
+      // Refresh classes when moving to step 2
+      ref.read(classesProvider.notifier).refresh();
       setState(() => _currentStep++);
     } else if (_currentStep == 1) {
       if (_selectedClasses.isEmpty) {
@@ -327,6 +409,19 @@ class _ReleaseContentScreenState extends ConsumerState<ReleaseContentScreen> {
           .toList();
 
       if (selectedNoteIds.isNotEmpty) {
+        // Auto mark-ready any notes that aren't already READY or RELEASED
+        for (final noteId in selectedNoteIds) {
+          final note = notesState.notes.firstWhere((n) => n.id == noteId);
+          if (note.status == NoteStatus.draft || note.status == NoteStatus.inReview) {
+            try {
+              await notesNotifier.markReady(noteId);
+              print('DEBUG: Auto marked note $noteId as READY');
+            } catch (e) {
+              print('DEBUG: Failed to mark note $noteId ready: $e');
+            }
+          }
+        }
+
         // Create release record in workflow service
         await workflowRepository.releaseContent(ReleaseRequest(
           contentIds: selectedNoteIds,
@@ -340,7 +435,6 @@ class _ReleaseContentScreenState extends ConsumerState<ReleaseContentScreen> {
             await notesNotifier.releaseNote(noteId, classIds: _selectedClasses.toList());
           } catch (e) {
             print('DEBUG: Failed to update note $noteId status: $e');
-            // Continue with other notes even if one fails
           }
         }
       }
@@ -363,11 +457,23 @@ class _ReleaseContentScreenState extends ConsumerState<ReleaseContentScreen> {
       await ref.read(notesProvider.notifier).refresh();
       ref.read(mindmapsProvider.notifier).refresh();
 
+      // Refresh release history to show updated release info
+      await _loadReleaseHistory();
+
       if (mounted) {
+        final classesState = ref.read(classesProvider);
+        final releasedClassNames = classesState.classes
+            .where((c) => _selectedClasses.contains(c.id))
+            .map((c) => c.name)
+            .toList();
+
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Content released successfully!'),
+          SnackBar(
+            content: Text(
+              'Released to: ${releasedClassNames.join(", ")}',
+            ),
             backgroundColor: AppColors.success,
+            duration: const Duration(seconds: 3),
           ),
         );
         context.pop();

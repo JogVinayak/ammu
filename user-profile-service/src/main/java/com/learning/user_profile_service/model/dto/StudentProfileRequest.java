@@ -11,5 +11,6 @@ public class StudentProfileRequest {
     private String section;
     private String rollNumber;
     private UUID classId;
+    private UUID divisionId;
     private String board;
 }

@@ -10,4 +10,6 @@ public interface StudentProfileRepository extends JpaRepository<StudentProfile, 
     Optional<StudentProfile> findByTenantIdAndUserId(UUID tenantId, UUID userId);
 
     List<StudentProfile> findByTenantIdAndClassId(UUID tenantId, UUID classId);
+
+    List<StudentProfile> findByTenantId(UUID tenantId);
 }

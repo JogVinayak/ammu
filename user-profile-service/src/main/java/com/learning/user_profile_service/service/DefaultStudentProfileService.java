@@ -64,6 +64,9 @@ public class DefaultStudentProfileService implements StudentProfileService {
         if (request.getClassId() != null) {
             profile.setClassId(request.getClassId());
         }
+        if (request.getDivisionId() != null) {
+            profile.setDivisionId(request.getDivisionId());
+        }
         if (request.getBoard() != null) {
             profile.setBoard(request.getBoard());
         }
@@ -80,10 +83,19 @@ public class DefaultStudentProfileService implements StudentProfileService {
         response.setSection(profile.getSection());
         response.setRollNumber(profile.getRollNumber());
         response.setClassId(profile.getClassId());
+        response.setDivisionId(profile.getDivisionId());
         response.setBoard(profile.getBoard());
         response.setCreatedAt(profile.getCreatedAt());
         response.setUpdatedAt(profile.getUpdatedAt());
         return response;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<StudentProfileResponse> listStudentProfiles(UUID tenantId) {
+        return studentProfileRepository.findByTenantId(tenantId).stream()
+                .map(this::toResponse)
+                .toList();
     }
 
     @Override
