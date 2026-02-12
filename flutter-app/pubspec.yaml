@@ -52,6 +52,9 @@ dependencies:
   flutter_markdown: ^0.6.18
   google_fonts: ^6.1.0
 
+  # Image Capture
+  image_picker: ^1.0.7
+
   # Utils
   intl: ^0.18.1
   equatable: ^2.0.5

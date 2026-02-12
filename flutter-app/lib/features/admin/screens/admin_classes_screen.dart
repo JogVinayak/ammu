@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../shared/widgets/widgets.dart';
+import '../../super_admin/data/super_admin_models.dart';
 import '../providers/admin_classes_provider.dart';
 import '../providers/admin_users_provider.dart';
 
@@ -44,7 +44,8 @@ class _AdminClassesScreenState extends ConsumerState<AdminClassesScreen> {
               ? _buildErrorState(context, state.error!)
               : state.classes.isEmpty
                   ? _buildEmptyState(context)
-                  : _buildClassesList(context, state.classes, teacherNameMap),
+                  : _buildClassesList(
+                      context, state.classes, teacherNameMap, usersState),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showCreateClassSheet(context),
         icon: const Icon(Icons.add),
@@ -128,7 +129,8 @@ class _AdminClassesScreenState extends ConsumerState<AdminClassesScreen> {
   Widget _buildClassesList(
       BuildContext context,
       List<Map<String, dynamic>> classes,
-      Map<String, String> teacherNameMap) {
+      Map<String, String> teacherNameMap,
+      AdminUsersState usersState) {
     return RefreshIndicator(
       onRefresh: () async {
         await ref.read(adminClassesProvider.notifier).loadClasses();
@@ -142,6 +144,8 @@ class _AdminClassesScreenState extends ConsumerState<AdminClassesScreen> {
           return _ClassCard(
             cls: cls,
             teacherNameMap: teacherNameMap,
+            students: usersState.students,
+            studentProfileMap: usersState.studentProfileMap,
             onAddDivision: () => _showCreateDivisionSheet(
               context,
               cls['id'].toString(),
@@ -164,6 +168,13 @@ class _AdminClassesScreenState extends ConsumerState<AdminClassesScreen> {
               context,
               cls['id'].toString(),
               assignmentId,
+            ),
+            onViewDivisionStudents: (divisionId, divisionName) =>
+                _showDivisionStudentsSheet(
+              context,
+              divisionId,
+              divisionName,
+              usersState,
             ),
           );
         },
@@ -344,26 +355,188 @@ class _AdminClassesScreenState extends ConsumerState<AdminClassesScreen> {
       ),
     );
   }
+
+  void _showDivisionStudentsSheet(
+    BuildContext context,
+    String divisionId,
+    String divisionName,
+    AdminUsersState usersState,
+  ) {
+    final divisionStudents = usersState.students.where((s) {
+      final profile = usersState.studentProfileMap[s.userId];
+      return profile?['divisionId']?.toString() == divisionId;
+    }).toList();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.6,
+        minChildSize: 0.3,
+        maxChildSize: 0.9,
+        expand: false,
+        builder: (context, scrollController) => Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              child: Column(
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color:
+                            AppColors.textSecondary.withValues(alpha: 0.3),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Students in $divisionName',
+                          style: Theme.of(context)
+                              .textTheme
+                              .titleLarge
+                              ?.copyWith(fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.sm,
+                          vertical: AppSpacing.xs,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.1),
+                          borderRadius:
+                              BorderRadius.circular(AppRadius.chip),
+                        ),
+                        child: Text(
+                          '${divisionStudents.length}',
+                          style: const TextStyle(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const Divider(height: 1),
+            Expanded(
+              child: divisionStudents.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.people_outline,
+                            size: 48,
+                            color: AppColors.textSecondary
+                                .withValues(alpha: 0.5),
+                          ),
+                          const SizedBox(height: AppSpacing.sm),
+                          Text(
+                            'No students enrolled',
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium
+                                ?.copyWith(color: AppColors.textSecondary),
+                          ),
+                        ],
+                      ),
+                    )
+                  : ListView.separated(
+                      controller: scrollController,
+                      padding:
+                          const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+                      itemCount: divisionStudents.length,
+                      separatorBuilder: (_, _) => const Divider(height: 1),
+                      itemBuilder: (context, index) {
+                        final student = divisionStudents[index];
+                        final profile =
+                            usersState.studentProfileMap[student.userId];
+                        final rollNumber =
+                            profile?['rollNumber']?.toString();
+                        final initials = student.displayName.isNotEmpty
+                            ? student.displayName[0].toUpperCase()
+                            : '?';
+
+                        return ListTile(
+                          leading: CircleAvatar(
+                            backgroundColor:
+                                AppColors.secondary.withValues(alpha: 0.1),
+                            child: Text(
+                              initials,
+                              style: const TextStyle(
+                                color: AppColors.secondary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                          title: Text(student.displayName),
+                          subtitle: Text(
+                            [
+                              if (student.email != null) student.email!,
+                              if (rollNumber != null)
+                                'Roll: $rollNumber',
+                            ].join(' · '),
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodySmall
+                                ?.copyWith(color: AppColors.textSecondary),
+                          ),
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class _ClassCard extends StatelessWidget {
   final Map<String, dynamic> cls;
   final Map<String, String> teacherNameMap;
+  final List<UserProfile> students;
+  final Map<String, Map<String, dynamic>> studentProfileMap;
   final VoidCallback onAddDivision;
   final VoidCallback onAssignTeacher;
   final VoidCallback onDeleteClass;
   final void Function(String divisionId) onDeleteDivision;
   final void Function(String assignmentId) onRemoveTeacher;
+  final void Function(String divisionId, String divisionName)
+      onViewDivisionStudents;
 
   const _ClassCard({
     required this.cls,
     required this.teacherNameMap,
+    required this.students,
+    required this.studentProfileMap,
     required this.onAddDivision,
     required this.onAssignTeacher,
     required this.onDeleteClass,
     required this.onDeleteDivision,
     required this.onRemoveTeacher,
+    required this.onViewDivisionStudents,
   });
+
+  int _studentCountForDivision(String divisionId) {
+    return students.where((s) {
+      final profile = studentProfileMap[s.userId];
+      return profile?['divisionId']?.toString() == divisionId;
+    }).length;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -378,80 +551,90 @@ class _ClassCard extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.md),
-      child: AppCard(
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+      child: Card(
+        elevation: 2,
+        shadowColor: Colors.black.withValues(alpha: 0.1),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.card),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: ExpansionTile(
+          leading: CircleAvatar(
+            backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+            child: Text(
+              gradeLevel?.toString() ?? '?',
+              style: const TextStyle(
+                color: AppColors.primary,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          title: Text(
+            name,
+            style: Theme.of(context)
+                .textTheme
+                .titleMedium
+                ?.copyWith(fontWeight: FontWeight.w600),
+          ),
+          subtitle: Text(
+            '${divisions.length} division${divisions.length == 1 ? '' : 's'} · ${teachers.length} teacher${teachers.length == 1 ? '' : 's'}',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+          ),
+          childrenPadding: EdgeInsets.zero,
+          children: [
+            // Action buttons row
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.md, vertical: AppSpacing.xs),
+              child: Row(
                 children: [
-                  CircleAvatar(
-                    backgroundColor: AppColors.primary.withValues(alpha: 0.1),
-                    child: Text(
-                      gradeLevel?.toString() ?? '?',
-                      style: const TextStyle(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          name,
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleMedium
-                              ?.copyWith(fontWeight: FontWeight.w600),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          '${divisions.length} division${divisions.length == 1 ? '' : 's'} · ${teachers.length} teacher${teachers.length == 1 ? '' : 's'}',
-                          style:
-                              Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: AppColors.textSecondary,
-                                  ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.person_add_outlined,
-                        color: AppColors.primary),
-                    tooltip: 'Assign Teacher',
+                  TextButton.icon(
                     onPressed: onAssignTeacher,
+                    icon: const Icon(Icons.person_add_outlined, size: 18),
+                    label: const Text('Assign Teacher'),
+                    style: TextButton.styleFrom(
+                      visualDensity: VisualDensity.compact,
+                    ),
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.add_circle_outline,
-                        color: AppColors.primary),
-                    tooltip: 'Add Division',
+                  const SizedBox(width: AppSpacing.sm),
+                  TextButton.icon(
                     onPressed: onAddDivision,
+                    icon: const Icon(Icons.add_circle_outline, size: 18),
+                    label: const Text('Add Division'),
+                    style: TextButton.styleFrom(
+                      visualDensity: VisualDensity.compact,
+                    ),
                   ),
+                  const Spacer(),
                   IconButton(
                     icon: Icon(Icons.delete_outline,
+                        size: 20,
                         color: AppColors.error.withValues(alpha: 0.7)),
                     tooltip: 'Delete Class',
                     onPressed: onDeleteClass,
+                    visualDensity: VisualDensity.compact,
                   ),
                 ],
               ),
-              // Teachers section
-              if (teachers.isNotEmpty) ...[
-                const SizedBox(height: AppSpacing.sm),
-                const Divider(height: 1),
-                const SizedBox(height: AppSpacing.sm),
-                Wrap(
+            ),
+            // Teachers section
+            if (teachers.isNotEmpty) ...[
+              const Divider(height: 1),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.md, AppSpacing.sm, AppSpacing.md, AppSpacing.sm),
+                child: Wrap(
                   spacing: AppSpacing.sm,
                   runSpacing: AppSpacing.xs,
                   children: teachers.map((teacher) {
-                    final teacherId = teacher['teacherId']?.toString() ?? '';
+                    final teacherId =
+                        teacher['teacherId']?.toString() ?? '';
                     final role = teacher['role']?.toString() ?? '';
                     final subject = teacher['subject']?.toString();
-                    final assignmentId = teacher['id']?.toString() ?? '';
+                    final assignmentId =
+                        teacher['id']?.toString() ?? '';
                     final teacherName =
                         teacherNameMap[teacherId] ?? 'Unknown';
 
@@ -485,36 +668,60 @@ class _ClassCard extends StatelessWidget {
                     );
                   }).toList(),
                 ),
-              ],
-              // Divisions section
-              if (divisions.isNotEmpty) ...[
-                const SizedBox(height: AppSpacing.sm),
-                if (teachers.isEmpty) const Divider(height: 1),
-                if (teachers.isEmpty) const SizedBox(height: AppSpacing.sm),
-                Wrap(
-                  spacing: AppSpacing.sm,
-                  runSpacing: AppSpacing.xs,
-                  children: divisions.map((div) {
-                    final divName =
-                        div['displayName'] ?? div['name'] ?? '';
-                    final divId = div['id'].toString();
-                    return Chip(
-                      label: Text(divName.toString()),
-                      deleteIcon: const Icon(Icons.close, size: 16),
-                      onDeleted: () => onDeleteDivision(divId),
-                      backgroundColor:
-                          AppColors.secondary.withValues(alpha: 0.1),
-                      side: BorderSide.none,
-                      labelStyle: const TextStyle(
-                        color: AppColors.secondary,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ],
+              ),
             ],
-          ),
+            // Divisions section
+            if (divisions.isNotEmpty) ...[
+              const Divider(height: 1),
+              ...divisions.map((div) {
+                final divName =
+                    (div['displayName'] ?? div['name'] ?? '').toString();
+                final divId = div['id'].toString();
+                final count = _studentCountForDivision(divId);
+                return ListTile(
+                  leading: const Icon(Icons.groups_outlined, size: 22),
+                  title: Text(divName),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.sm,
+                          vertical: AppSpacing.xs,
+                        ),
+                        decoration: BoxDecoration(
+                          color:
+                              AppColors.secondary.withValues(alpha: 0.1),
+                          borderRadius:
+                              BorderRadius.circular(AppRadius.chip),
+                        ),
+                        child: Text(
+                          '$count student${count == 1 ? '' : 's'}',
+                          style: const TextStyle(
+                            color: AppColors.secondary,
+                            fontWeight: FontWeight.w500,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.close,
+                            size: 18,
+                            color:
+                                AppColors.error.withValues(alpha: 0.7)),
+                        tooltip: 'Delete Division',
+                        onPressed: () => onDeleteDivision(divId),
+                        visualDensity: VisualDensity.compact,
+                      ),
+                    ],
+                  ),
+                  onTap: () => onViewDivisionStudents(divId, divName),
+                  dense: true,
+                );
+              }),
+            ],
+            const SizedBox(height: AppSpacing.xs),
+          ],
         ),
       ),
     );

@@ -3,6 +3,7 @@ package com.learning.tenant_service.service;
 import com.learning.tenant_service.exception.ResourceConflictException;
 import com.learning.tenant_service.exception.ResourceNotFoundException;
 import com.learning.tenant_service.model.dto.AssignTeacherRequest;
+import com.learning.tenant_service.model.dto.ClassResponse;
 import com.learning.tenant_service.model.dto.TeacherAssignmentResponse;
 import com.learning.tenant_service.model.entity.TeacherClassAssignment;
 import com.learning.tenant_service.repository.SchoolClassRepository;
@@ -10,6 +11,7 @@ import com.learning.tenant_service.repository.TeacherClassAssignmentRepository;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,12 +20,15 @@ public class DefaultTeacherAssignmentService implements TeacherAssignmentService
 
     private final TeacherClassAssignmentRepository assignmentRepository;
     private final SchoolClassRepository classRepository;
+    private final SchoolClassService schoolClassService;
 
     public DefaultTeacherAssignmentService(
             TeacherClassAssignmentRepository assignmentRepository,
-            SchoolClassRepository classRepository) {
+            SchoolClassRepository classRepository,
+            SchoolClassService schoolClassService) {
         this.assignmentRepository = assignmentRepository;
         this.classRepository = classRepository;
+        this.schoolClassService = schoolClassService;
     }
 
     @Override
@@ -68,6 +73,20 @@ public class DefaultTeacherAssignmentService implements TeacherAssignmentService
         TeacherClassAssignment assignment = assignmentRepository.findByIdAndTenantId(assignmentId, tenantId)
                 .orElseThrow(() -> new ResourceNotFoundException("Teacher assignment not found"));
         assignmentRepository.delete(assignment);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ClassResponse> getClassesForTeacher(UUID tenantId, UUID teacherId) {
+        List<UUID> classIds = assignmentRepository.findByTenantIdAndTeacherId(tenantId, teacherId)
+                .stream()
+                .map(TeacherClassAssignment::getClassId)
+                .distinct()
+                .collect(Collectors.toList());
+
+        return classIds.stream()
+                .map(classId -> schoolClassService.getClass(tenantId, classId))
+                .toList();
     }
 
     private TeacherAssignmentResponse toResponse(TeacherClassAssignment assignment) {

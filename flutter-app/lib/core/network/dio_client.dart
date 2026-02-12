@@ -83,7 +83,10 @@ class DioClient {
           final tenantId = _prefs.getString(StorageKeys.tenantId);
           final userId = _prefs.getString(StorageKeys.userId);
 
-          options.headers['Content-Type'] = 'application/json';
+          // Skip Content-Type for FormData so Dio auto-sets multipart boundary
+          if (options.data is! FormData) {
+            options.headers['Content-Type'] = 'application/json';
+          }
 
           // Skip ngrok browser warning page
           if (options.baseUrl.contains('ngrok')) {

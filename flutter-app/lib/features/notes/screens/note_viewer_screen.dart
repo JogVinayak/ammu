@@ -8,6 +8,7 @@ import '../data/note_models.dart';
 import '../providers/notes_provider.dart';
 import '../widgets/flashcard_viewer.dart';
 import '../widgets/mcq_viewer.dart';
+import '../widgets/note_image_builder.dart';
 
 class NoteViewerScreen extends ConsumerStatefulWidget {
   final String noteId;
@@ -159,6 +160,8 @@ class _NoteViewerScreenState extends ConsumerState<NoteViewerScreen> {
                                 fontStyle: FontStyle.italic,
                               ),
                     ),
+                    imageBuilder: (uri, title, alt) =>
+                        buildNoteImage(uri, title, alt, ref),
                   ),
                   const SizedBox(height: 80),
                 ],

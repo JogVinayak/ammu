@@ -16,6 +16,7 @@ import '../features/mindmaps/screens/mindmap_viewer_screen.dart';
 import '../features/mindmap/screens/mind_map_screen.dart';
 import '../features/classes/screens/classes_list_screen.dart';
 import '../features/classes/screens/class_detail_screen.dart';
+import '../features/classes/screens/division_students_screen.dart';
 import '../features/release/screens/release_content_screen.dart';
 import '../features/release/screens/release_history_screen.dart';
 import '../features/profile/screens/profile_screen.dart';
@@ -278,6 +279,14 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/mindmaps/:id/edit',
         builder: (context, state) => MindmapEditorScreen(
           mindmapId: state.pathParameters['id'],
+        ),
+      ),
+      GoRoute(
+        path: '/classes/:classId/divisions/:divisionId',
+        builder: (context, state) => DivisionStudentsScreen(
+          classId: state.pathParameters['classId']!,
+          divisionId: state.pathParameters['divisionId']!,
+          divisionName: state.uri.queryParameters['name'] ?? 'Students',
         ),
       ),
       GoRoute(

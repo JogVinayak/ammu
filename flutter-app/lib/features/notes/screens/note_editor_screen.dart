@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/widgets.dart';
 import '../../auth/providers/auth_provider.dart';
@@ -14,6 +15,7 @@ import '../providers/mcq_provider.dart';
 import '../providers/notes_provider.dart';
 import '../widgets/flashcard_editor_tab.dart';
 import '../widgets/mcq_editor_tab.dart';
+import '../widgets/note_image_builder.dart';
 
 class NoteEditorScreen extends ConsumerStatefulWidget {
   final String? noteId;
@@ -35,6 +37,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   bool _isPreview = false;
   bool _isLoading = false;
   bool _isSaving = false;
+  bool _isUploadingImage = false;
   NoteStatus? _noteStatus;
   String? _noteScopeType;
 
@@ -140,6 +143,108 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   void _onMcqsChanged(List<McqItem> mcqs) {
     _pendingMcqs = mcqs;
     _mcqsModified = true;
+  }
+
+  void _showImagePickerSheet() {
+    showModalBottomSheet(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.camera_alt),
+              title: const Text('Take Photo'),
+              onTap: () {
+                Navigator.pop(ctx);
+                _pickImage(ImageSource.camera);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: const Text('Choose from Gallery'),
+              onTap: () {
+                Navigator.pop(ctx);
+                _pickImage(ImageSource.gallery);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickImage(ImageSource source) async {
+    try {
+      final picker = ImagePicker();
+      final picked = await picker.pickImage(
+        source: source,
+        maxWidth: 1920,
+        imageQuality: 80,
+      );
+      if (picked == null) return;
+
+      setState(() => _isUploadingImage = true);
+
+      final repository = ref.read(notesRepositoryProvider);
+      String noteId;
+
+      if (isEditing) {
+        noteId = widget.noteId!;
+      } else {
+        // Auto-save the note first to get an ID
+        final user = ref.read(authProvider).user;
+        final userId = user?.id ?? '';
+        final tenantId = user?.tenantId ?? '';
+
+        if (userId.isEmpty || tenantId.isEmpty) {
+          throw Exception('User not logged in');
+        }
+
+        final note = await repository.createNote(CreateNoteRequest(
+          title: _titleController.text.isNotEmpty
+              ? _titleController.text
+              : 'Untitled Note',
+          contentMd: _contentController.text,
+          tags: _tags,
+          createdBy: userId,
+          tenantId: tenantId,
+          changeSummary: 'Auto-saved for image upload',
+        ));
+        noteId = note.id;
+        // Update the widget to reflect it's now editing an existing note
+        // We can't change widget.noteId, so we just use noteId going forward
+      }
+
+      final imageResponse = await repository.uploadImage(noteId, picked.path);
+
+      // Insert markdown image reference at cursor
+      final imageMarkdown =
+          '\n![${imageResponse.fileName}](/v1/notes/$noteId/images/${imageResponse.id})\n';
+      _insertMarkdown(imageMarkdown);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Photo attached'),
+            backgroundColor: AppColors.success,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to attach photo: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isUploadingImage = false);
+      }
+    }
   }
 
   Future<void> _saveNote() async {
@@ -467,6 +572,20 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             tooltip: 'Link',
             onPressed: () => _insertMarkdown('[', '](url)'),
           ),
+          _isUploadingImage
+              ? const Padding(
+                  padding: EdgeInsets.all(AppSpacing.sm),
+                  child: SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                )
+              : _ToolbarButton(
+                  icon: Icons.camera_alt,
+                  tooltip: 'Add Photo',
+                  onPressed: _showImagePickerSheet,
+                ),
         ],
       ),
     );
@@ -514,6 +633,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                 ? '*No content yet*'
                 : _contentController.text,
             styleSheet: MarkdownStyleSheet.fromTheme(Theme.of(context)),
+            imageBuilder: (uri, title, alt) =>
+                buildNoteImage(uri, title, alt, ref),
           ),
         ],
       ),

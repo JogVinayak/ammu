@@ -12,4 +12,6 @@ public interface TeacherClassAssignmentRepository extends JpaRepository<TeacherC
     boolean existsByTenantIdAndClassIdAndTeacherIdAndRole(UUID tenantId, UUID classId, UUID teacherId, String role);
 
     Optional<TeacherClassAssignment> findByIdAndTenantId(UUID id, UUID tenantId);
+
+    List<TeacherClassAssignment> findByTenantIdAndTeacherId(UUID tenantId, UUID teacherId);
 }

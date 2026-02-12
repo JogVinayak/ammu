@@ -141,6 +141,42 @@ class Note extends Equatable {
       ];
 }
 
+class NoteImageResponse {
+  final String id;
+  final String noteId;
+  final String fileName;
+  final String contentType;
+  final int sizeBytes;
+  final String imageUrl;
+  final String? createdBy;
+  final DateTime? createdAt;
+
+  NoteImageResponse({
+    required this.id,
+    required this.noteId,
+    required this.fileName,
+    required this.contentType,
+    required this.sizeBytes,
+    required this.imageUrl,
+    this.createdBy,
+    this.createdAt,
+  });
+
+  factory NoteImageResponse.fromJson(Map<String, dynamic> json) =>
+      NoteImageResponse(
+        id: json['id'] ?? '',
+        noteId: json['noteId'] ?? '',
+        fileName: json['fileName'] ?? '',
+        contentType: json['contentType'] ?? '',
+        sizeBytes: json['sizeBytes'] ?? 0,
+        imageUrl: json['imageUrl'] ?? '',
+        createdBy: json['createdBy'],
+        createdAt: json['createdAt'] != null
+            ? DateTime.parse(json['createdAt'])
+            : null,
+      );
+}
+
 class CreateNoteRequest {
   final String title;
   final String? summary;

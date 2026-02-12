@@ -191,6 +191,25 @@ class NotesRepository {
     }
   }
 
+  // ========== IMAGE METHODS ==========
+
+  Future<NoteImageResponse> uploadImage(String noteId, String filePath) async {
+    try {
+      final fileName = filePath.split('/').last;
+      final formData = FormData.fromMap({
+        'file': await MultipartFile.fromFile(filePath, filename: fileName),
+      });
+
+      final response = await _dioClient.post(
+        '${ApiConstants.notes}/$noteId/images',
+        data: formData,
+      );
+      return NoteImageResponse.fromJson(response.data);
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
   // ========== FLASHCARD METHODS ==========
 
   Future<List<Flashcard>> getFlashcards(String noteId, {String? difficulty}) async {

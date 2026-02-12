@@ -252,20 +252,24 @@ class _ReleaseContentScreenState extends ConsumerState<ReleaseContentScreen> {
 
     return Column(
       children: classesState.classes.map((cls) {
-        final isSelected = _selectedClasses.contains(cls.id);
+        final clsId = cls['id']?.toString() ?? '';
+        final clsName = cls['name']?.toString() ?? 'Unnamed';
+        final clsGrade = cls['grade']?.toString() ?? '';
+        final divisions = (cls['divisions'] as List?)?.length ?? 0;
+        final isSelected = _selectedClasses.contains(clsId);
         return CheckboxListTile(
           value: isSelected,
           onChanged: (value) {
             setState(() {
               if (value == true) {
-                _selectedClasses.add(cls.id);
+                _selectedClasses.add(clsId);
               } else {
-                _selectedClasses.remove(cls.id);
+                _selectedClasses.remove(clsId);
               }
             });
           },
-          title: Text(cls.name),
-          subtitle: Text('${cls.subject} - ${cls.studentCount} students'),
+          title: Text(clsName),
+          subtitle: Text('Grade $clsGrade - $divisions divisions'),
           secondary: const Icon(
             Icons.school,
             color: AppColors.primary,
@@ -287,7 +291,7 @@ class _ReleaseContentScreenState extends ConsumerState<ReleaseContentScreen> {
         .where((m) => _selectedContent.contains(m.id))
         .toList();
     final selectedClasses = classesState.classes
-        .where((c) => _selectedClasses.contains(c.id))
+        .where((c) => _selectedClasses.contains(c['id']?.toString()))
         .toList();
 
     return Column(
@@ -331,7 +335,7 @@ class _ReleaseContentScreenState extends ConsumerState<ReleaseContentScreen> {
                 children: [
                   const Icon(Icons.school, size: 16, color: AppColors.primary),
                   const SizedBox(width: AppSpacing.sm),
-                  Text('${c.name} (${c.studentCount} students)'),
+                  Text(c['name']?.toString() ?? 'Unnamed'),
                 ],
               ),
             )),
@@ -463,8 +467,8 @@ class _ReleaseContentScreenState extends ConsumerState<ReleaseContentScreen> {
       if (mounted) {
         final classesState = ref.read(classesProvider);
         final releasedClassNames = classesState.classes
-            .where((c) => _selectedClasses.contains(c.id))
-            .map((c) => c.name)
+            .where((c) => _selectedClasses.contains(c['id']?.toString()))
+            .map((c) => c['name']?.toString() ?? 'Unnamed')
             .toList();
 
         ScaffoldMessenger.of(context).showSnackBar(
