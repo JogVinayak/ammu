@@ -13,7 +13,6 @@ import '../features/notes/screens/note_viewer_screen.dart';
 import '../features/mindmaps/screens/mindmaps_list_screen.dart';
 import '../features/mindmaps/screens/mindmap_editor_screen.dart';
 import '../features/mindmaps/screens/mindmap_viewer_screen.dart';
-import '../features/mindmap/screens/mind_map_screen.dart';
 import '../features/classes/screens/classes_list_screen.dart';
 import '../features/classes/screens/class_detail_screen.dart';
 import '../features/classes/screens/division_students_screen.dart';
@@ -49,8 +48,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       final isStudentRoute = state.matchedLocation.startsWith('/student');
       final isSuperAdminRoute = state.matchedLocation.startsWith('/super-admin');
       // Routes accessible to all authenticated users
-      final isSharedRoute = state.matchedLocation == '/settings' ||
-          state.matchedLocation == '/faang-roadmap';
+      final isSharedRoute = state.matchedLocation == '/settings';
       final isTeacherRoute = !isStudentRoute &&
           !isSuperAdminRoute &&
           !isLoggingIn &&
@@ -310,11 +308,6 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/settings',
         builder: (context, state) => const SettingsScreen(),
-      ),
-      // FAANG Interview Roadmap Mind Map
-      GoRoute(
-        path: '/faang-roadmap',
-        builder: (context, state) => const MindMapScreen(),
       ),
     ],
   );

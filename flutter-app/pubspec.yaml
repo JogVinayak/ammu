@@ -52,11 +52,14 @@ dependencies:
   flutter_markdown: ^0.6.18
   google_fonts: ^6.1.0
 
+  # WYSIWYG Editor (Notion-like)
+  appflowy_editor: ^6.2.0
+
   # Image Capture
   image_picker: ^1.0.7
 
   # Utils
-  intl: ^0.18.1
+  intl: ^0.20.2
   equatable: ^2.0.5
 
 dev_dependencies:

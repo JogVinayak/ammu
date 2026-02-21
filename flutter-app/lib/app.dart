@@ -1,3 +1,4 @@
+import 'package:appflowy_editor/appflowy_editor.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/services/toast_service.dart';
@@ -17,6 +18,9 @@ class TeacherApp extends ConsumerWidget {
       theme: AppTheme.lightTheme,
       routerConfig: router,
       scaffoldMessengerKey: rootScaffoldMessengerKey,
+      localizationsDelegates: const [
+        AppFlowyEditorLocalizations.delegate,
+      ],
     );
   }
 }

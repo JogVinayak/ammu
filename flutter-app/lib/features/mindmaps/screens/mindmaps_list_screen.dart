@@ -29,15 +29,6 @@ class MindmapsListScreen extends ConsumerWidget {
                       ref.read(mindmapsProvider.notifier).refresh(),
                   child: CustomScrollView(
                     slivers: [
-                      // FAANG Roadmap featured card
-                      SliverToBoxAdapter(
-                        child: Padding(
-                          padding: const EdgeInsets.all(AppSpacing.md),
-                          child: _FaangRoadmapCard(
-                            onTap: () => context.push('/faang-roadmap'),
-                          ),
-                        ),
-                      ),
                       // My Mindmaps section header
                       if (state.mindmaps.isNotEmpty)
                         SliverToBoxAdapter(
@@ -147,120 +138,6 @@ class MindmapsListScreen extends ConsumerWidget {
             child: const Text('Delete'),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _FaangRoadmapCard extends StatelessWidget {
-  final VoidCallback onTap;
-
-  const _FaangRoadmapCard({required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Colors.purple.shade600,
-            Colors.blue.shade600,
-          ],
-        ),
-        borderRadius: BorderRadius.circular(AppRadius.card),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.purple.withOpacity(0.3),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(AppRadius.card),
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(
-                    Icons.rocket_launch,
-                    color: Colors.white,
-                    size: 28,
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'FAANG Interview Roadmap',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 0.3,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Interactive mind map for tech interview preparation',
-                        style: TextStyle(
-                          color: Colors.white.withOpacity(0.85),
-                          fontSize: 13,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          _buildTag('DSA'),
-                          const SizedBox(width: 6),
-                          _buildTag('System Design'),
-                          const SizedBox(width: 6),
-                          _buildTag('Behavioral'),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                Icon(
-                  Icons.arrow_forward_ios,
-                  color: Colors.white.withOpacity(0.8),
-                  size: 18,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTag(String label) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Text(
-        label,
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 10,
-          fontWeight: FontWeight.w600,
-        ),
       ),
     );
   }
